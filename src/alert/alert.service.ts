@@ -1,11 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AlertReceivedEvent } from './events/alert-received.event';
-import { AppLogger } from '../logger.service';
-
 @Injectable()
 export class AlertService {
-  private logger = new AppLogger(AlertService.name);
+  private logger = new Logger(AlertService.name);
 
   constructor(private eventEmitter: EventEmitter2) {}
 

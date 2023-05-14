@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -6,11 +6,10 @@ import { Setup } from './entities/setup.entity';
 import { SetupCreatedEvent } from './events/setup-created.event';
 import { SetupUpdatedEvent } from './events/setup-updated.event';
 import { SetupDeletedEvent } from './events/setup-deleted.event';
-import { AppLogger } from '../logger.service';
 
 @Injectable()
 export class SetupService {
-  private logger = new AppLogger(SetupService.name);
+  private logger = new Logger(SetupService.name);
 
   constructor(
     private eventEmitter: EventEmitter2,

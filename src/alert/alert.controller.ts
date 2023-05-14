@@ -1,13 +1,12 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { ReceiveAlertDto } from './dto/receive-alert.dto';
 import { AlertService } from './alert.service';
-import { AppLogger } from '../logger.service';
 
 @ApiTags('alerts')
 @Controller('alerts')
 export class AlertController {
-  private readonly logger = new AppLogger(AlertController.name);
+  private readonly logger = new Logger(AlertController.name);
 
   constructor(private readonly alertService: AlertService) {}
 

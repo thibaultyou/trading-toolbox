@@ -6,18 +6,18 @@ import {
   Delete,
   Body,
   Param,
+  Logger,
 } from '@nestjs/common';
 import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AccountService } from './account.service';
 import { Account } from './entities/account.entity';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
-import { AppLogger } from '../logger.service';
 
 @ApiTags('accounts')
 @Controller('accounts')
 export class AccountController {
-  private logger = new AppLogger(AccountController.name);
+  private logger = new Logger(AccountController.name);
 
   constructor(private readonly accountService: AccountService) {}
 

@@ -6,18 +6,18 @@ import {
   Delete,
   Body,
   Param,
+  Logger,
 } from '@nestjs/common';
 import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Setup } from './entities/setup.entity';
 import { CreateSetupDto } from './dto/create-setup.dto';
 import { SetupService } from './setup.service';
 import { UpdateSetupDto } from './dto/update-setup.dto';
-import { AppLogger } from '../logger.service';
 
 @ApiTags('setups')
 @Controller('setups')
 export class SetupController {
-  private readonly logger = new AppLogger(SetupController.name);
+  private readonly logger = new Logger(SetupController.name);
 
   constructor(private readonly setupService: SetupService) {}
 

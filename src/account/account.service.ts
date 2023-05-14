@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -6,11 +6,10 @@ import { Account } from './entities/account.entity';
 import { AccountCreatedEvent } from './events/account-created.event';
 import { AccountUpdatedEvent } from './events/account-updated.event';
 import { AccountDeletedEvent } from './events/account-deleted.event';
-import { AppLogger } from '../logger.service';
 
 @Injectable()
 export class AccountService {
-  private logger = new AppLogger(AccountService.name);
+  private logger = new Logger(AccountService.name);
 
   constructor(
     private eventEmitter: EventEmitter2,

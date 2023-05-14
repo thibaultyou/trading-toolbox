@@ -1,14 +1,15 @@
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { OnEvent } from '@nestjs/event-emitter';
 import { AlertReceivedEvent } from '../../alert/events/alert-received.event';
 import { SetupService } from '../setup.service';
-import { AppLogger } from '../../logger.service';
+import { Injectable, Logger } from '@nestjs/common';
 
-@EventsHandler(AlertReceivedEvent)
-export class AlertReceivedHandler implements IEventHandler<AlertReceivedEvent> {
-  private logger = new AppLogger(AlertReceivedHandler.name);
+@Injectable()
+export class AlertReceivedHandler {
+  private logger = new Logger(AlertReceivedHandler.name);
 
   constructor(private readonly setupService: SetupService) {}
 
+  @OnEvent('alert.received')
   async handle(event: AlertReceivedEvent) {
     this.logger.log(`Alert received: ${JSON.stringify(event)}`);
     try {
