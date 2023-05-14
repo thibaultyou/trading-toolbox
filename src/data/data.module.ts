@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ExchangeModule } from '../exchange/exchange.module';
-import { CoreService } from './core.service';
+import { DataService } from './data.service';
 
 @Module({
   imports: [ExchangeModule],
-  providers: [CoreService]
+  providers: [DataService],
 })
-export class CoreModule { }
+export class DataModule {}

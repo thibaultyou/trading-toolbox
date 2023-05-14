@@ -5,6 +5,6 @@ import { ExchangeService } from './exchange.service';
 @Module({
   imports: [AccountModule],
   providers: [ExchangeService],
-  exports: [ExchangeService]
+  exports: [ExchangeService],
 })
-export class ExchangeModule { }
+export class ExchangeModule {}

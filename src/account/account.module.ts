@@ -1,4 +1,3 @@
-// account.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountService } from './account.service';
@@ -11,4 +10,4 @@ import { AccountController } from './account.controller';
   controllers: [AccountController],
   exports: [AccountService],
 })
-export class AccountModule { }
+export class AccountModule {}

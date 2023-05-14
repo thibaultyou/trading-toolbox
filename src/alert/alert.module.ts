@@ -7,4 +7,4 @@ import { AlertService } from './alert.service';
   controllers: [AlertController],
   exports: [AlertService],
 })
-export class AlertModule { }
+export class AlertModule {}
