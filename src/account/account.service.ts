@@ -6,6 +6,7 @@ import { Account } from './entities/account.entity';
 import { AccountCreatedEvent } from './events/account-created.event';
 import { AccountUpdatedEvent } from './events/account-updated.event';
 import { AccountDeletedEvent } from './events/account-deleted.event';
+import { Events } from '../app.constants';
 
 @Injectable()
 export class AccountService {
@@ -35,13 +36,12 @@ export class AccountService {
     }
   }
 
-  async create(name: string, key: string, secret: string): Promise<Account> {
+  async create(account: Account): Promise<Account> {
     try {
       this.logger.log(`Creating account with name: ${name}`);
-      const account = new Account(name, key, secret);
       const savedAccount = await this.accountRepository.save(account);
       this.eventEmitter.emit(
-        'account.created',
+        Events.ACCOUNT_CREATED,
         new AccountCreatedEvent(savedAccount.id, savedAccount.name),
       );
       this.logger.log(`Account created with id: ${savedAccount.id}`);
@@ -54,25 +54,20 @@ export class AccountService {
     }
   }
 
-  async update(
-    id: string,
-    name: string,
-    key: string,
-    secret: string,
-  ): Promise<Account> {
+  async update(id: string, updatedAccount: Account): Promise<Account> {
     try {
       this.logger.log(`Updating account with id: ${id}`);
       const account = await this.findOne(id);
-      account.name = name;
-      account.key = key;
-      account.secret = secret;
-      const updatedAccount = await this.accountRepository.save(account);
+      account.name = updatedAccount.name;
+      account.key = updatedAccount.key;
+      account.secret = updatedAccount.secret;
+      const savedAccount = await this.accountRepository.save(account);
       this.eventEmitter.emit(
-        'account.updated',
-        new AccountUpdatedEvent(updatedAccount.id, updatedAccount.name),
+        Events.ACCOUNT_UPDATED,
+        new AccountUpdatedEvent(savedAccount.id, savedAccount.name),
       );
       this.logger.log(`Account updated with id: ${id}`);
-      return updatedAccount;
+      return savedAccount;
     } catch (error) {
       this.logger.error(`Error updating account with id: ${id}`, error.stack);
     }
@@ -81,7 +76,10 @@ export class AccountService {
   async delete(id: string): Promise<void> {
     try {
       await this.accountRepository.delete(id);
-      this.eventEmitter.emit('account.deleted', new AccountDeletedEvent(id));
+      this.eventEmitter.emit(
+        Events.ACCOUNT_DELETED,
+        new AccountDeletedEvent(id),
+      );
       this.logger.log(`Account deleted with id: ${id}`);
     } catch (error) {
       this.logger.error(`Error deleting account with id: ${id}`, error.stack);

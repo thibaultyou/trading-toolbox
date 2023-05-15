@@ -40,7 +40,8 @@ export class SetupController {
   @ApiBody({ type: CreateSetupDto })
   async create(@Body() createSetupDto: CreateSetupDto): Promise<Setup> {
     this.logger.log(`Creating setup with ticker: ${createSetupDto.ticker}`);
-    return this.setupService.create(createSetupDto.ticker);
+    const newSetup = Setup.fromDto(createSetupDto);
+    return this.setupService.create(newSetup);
   }
 
   @Put(':id')
@@ -50,9 +51,11 @@ export class SetupController {
     @Param('id') id: string,
     @Body() updateSetupDto: UpdateSetupDto,
   ): Promise<Setup> {
-    const { ticker } = updateSetupDto;
-    this.logger.log(`Updating setup with id: ${id} and ticker: ${ticker}`);
-    return this.setupService.update(id, ticker);
+    const updatedSetup = Setup.fromDto(updateSetupDto);
+    this.logger.log(
+      `Updating setup with id: ${id} and ticker: ${updatedSetup.ticker}`,
+    );
+    return this.setupService.update(id, updatedSetup);
   }
 
   @Delete(':id')

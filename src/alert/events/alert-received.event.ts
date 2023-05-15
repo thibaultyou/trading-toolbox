@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Setup } from '../../setup/entities/setup.entity';
 
 export class AlertReceivedEvent {
   @ApiProperty()
-  public readonly test: string;
+  public readonly setup: Setup;
 
-  constructor(test: string) {
-    this.test = test;
+  constructor(setup: Setup) {
+    this.setup = setup;
   }
 }

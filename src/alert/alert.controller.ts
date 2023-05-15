@@ -1,4 +1,11 @@
-import { Controller, Post, Body, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Logger,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { ReceiveAlertDto } from './dto/receive-alert.dto';
 import { AlertService } from './alert.service';
@@ -17,7 +24,18 @@ export class AlertController {
     description: 'The alert data sent by TradingView',
   })
   receiveAlert(@Body() alertData: ReceiveAlertDto) {
-    this.logger.log('Receiving an alert from TradingView');
-    this.alertService.notify(alertData.test);
+    try {
+      this.logger.log('Receiving an alert from TradingView');
+      this.alertService.notify(alertData);
+    } catch (error) {
+      this.logger.error(
+        'Error receiving an alert from TradingView',
+        error.stack,
+      );
+      throw new HttpException(
+        'Error receiving an alert from TradingView',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

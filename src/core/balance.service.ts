@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ExchangeService } from '../exchange/exchange.service';
 import { BalanceUpdatedEvent } from './events/balance-updated.event';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Events, Timers } from '../app.constants';
 
 @Injectable()
 export class BalanceService implements OnModuleInit {
@@ -18,7 +19,7 @@ export class BalanceService implements OnModuleInit {
       await this.updateBalance();
       setInterval(async () => {
         await this.updateBalance();
-      }, 30000);
+      }, Timers.BALANCE_UPDATE_COOLDOWN);
     } catch (error) {
       this.logger.error('Error during initialization', error.stack);
     }
@@ -34,7 +35,7 @@ export class BalanceService implements OnModuleInit {
       this.logger.log(`Updated balance: ${balance}`);
       this.balance = balance;
       this.eventEmitter.emit(
-        'balance.updated',
+        Events.BALANCE_UPDATED,
         new BalanceUpdatedEvent(balance),
       );
     } catch (error) {

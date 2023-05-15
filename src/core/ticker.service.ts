@@ -6,7 +6,7 @@ export class TickerService implements OnModuleInit {
   private tickers: Record<string, number> = {};
   private logger = new Logger(TickerService.name);
 
-  constructor(private exchangeService: ExchangeService) { }
+  constructor(private exchangeService: ExchangeService) {}
 
   async onModuleInit() {
     try {
@@ -18,9 +18,15 @@ export class TickerService implements OnModuleInit {
   }
 
   updateTicker(symbol: string, data: any): void {
-    const price = (Number(data.ask1Price) + Number(data.bid1Price)) / 2;
-    this.tickers[symbol] = price;
-    this.logger.debug(`Updated ticker for ${symbol} ${price}`);
+    try {
+      const price = (Number(data.ask1Price) + Number(data.bid1Price)) / 2;
+      if (this.tickers[symbol] !== price) {
+        this.tickers[symbol] = price;
+        this.logger.log(`Updated ticker for ${symbol} ${price}`);
+      }
+    } catch (error) {
+      this.logger.error('Error during ticker update', error.stack);
+    }
   }
 
   getTicker(symbol: string): number {

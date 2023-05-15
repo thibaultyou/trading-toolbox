@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PositionUpdatedEvent } from './events/position-updated.event';
 import { ExchangeService } from '../exchange/exchange.service';
+import { Events, Timers } from '../app.constants';
 
 @Injectable()
 export class PositionService implements OnModuleInit {
@@ -14,10 +15,14 @@ export class PositionService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.updatePositions();
-    setInterval(async () => {
+    try {
       await this.updatePositions();
-    }, 5000);
+      setInterval(async () => {
+        await this.updatePositions();
+      }, Timers.POSITION_UPDATE_COOLDOWN);
+    } catch (error) {
+      this.logger.error('Error during module initialization', error.stack);
+    }
   }
 
   async getPositions(): Promise<any[]> {
@@ -25,21 +30,29 @@ export class PositionService implements OnModuleInit {
   }
 
   private async updatePositions() {
-    const newPositions = await this.exchangeService.getOpenPositions();
-
-    if (this.hasPositionsChanged(newPositions)) {
-      this.logger.log('Positions updated');
-      this.positions = newPositions;
-      this.eventEmitter.emit(
-        'positions.updated',
-        new PositionUpdatedEvent(newPositions),
-      );
+    try {
+      const newPositions = await this.exchangeService.getOpenPositions();
+      if (this.hasPositionsChanged(newPositions)) {
+        this.positions = newPositions;
+        this.logger.log(`Updating positions: ${JSON.stringify(newPositions)}`);
+        this.eventEmitter.emit(
+          Events.POSITION_UPDATED,
+          new PositionUpdatedEvent(newPositions),
+        );
+      }
+    } catch (error) {
+      this.logger.error('Error during updating positions', error.stack);
     }
   }
 
   private hasPositionsChanged(newPositions: any[]): boolean {
     // implement comparison logic here to check if positions have changed
     // this is a simplistic example and might not suit your needs
-    return JSON.stringify(newPositions) !== JSON.stringify(this.positions);
+    try {
+      return JSON.stringify(newPositions) !== JSON.stringify(this.positions);
+    } catch (error) {
+      this.logger.error('Error during positions comparison', error.stack);
+      return false;
+    }
   }
 }

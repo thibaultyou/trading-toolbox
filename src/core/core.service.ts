@@ -1,17 +1,18 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { TickerService } from './ticker.service';
+import { Timers } from '../app.constants';
 
 @Injectable()
 export class CoreService implements OnModuleInit {
   private logger = new Logger(CoreService.name);
 
-  constructor(private tickerService: TickerService) { }
+  constructor(private tickerService: TickerService) {}
 
   async onModuleInit() {
     try {
       setInterval(async () => {
         await this.tradeLoop();
-      }, 3000);
+      }, Timers.TRADE_LOOP_COOLDOWN);
     } catch (error) {
       this.logger.error('Error during initialization', error.stack);
     }

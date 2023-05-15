@@ -2,6 +2,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { TickerUpdateEvent } from '../events/ticker-update.event';
 import { TickerService } from '../ticker.service';
 import { Injectable, Logger } from '@nestjs/common';
+import { Events } from '../../app.constants';
 
 @Injectable()
 export class TickerUpdateHandler {
@@ -9,12 +10,12 @@ export class TickerUpdateHandler {
 
   constructor(private tickerService: TickerService) {}
 
-  @OnEvent('ticker.update')
+  @OnEvent(Events.TICKER_UPDATE)
   handle(event: TickerUpdateEvent) {
     try {
-      const symbol = event.topic.split('.')[1]; // Extract symbol from topic (e.g., 'tickers.BTCUSDT')
+      const symbol = event.topic.split('.')[1];
       this.tickerService.updateTicker(symbol, event.data);
-      this.logger.log(`Ticker updated: ${symbol}`);
+      this.logger.log(`[${Events.TICKER_UPDATE}] ${symbol}`);
     } catch (error) {
       this.logger.error('Error handling TickerUpdateEvent', error.stack);
     }

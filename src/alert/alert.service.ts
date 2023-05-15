@@ -1,19 +1,28 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AlertReceivedEvent } from './events/alert-received.event';
+import { Events } from '../app.constants';
+import { ReceiveAlertDto } from './dto/receive-alert.dto';
+import { Setup } from '../setup/entities/setup.entity';
+
 @Injectable()
 export class AlertService {
   private logger = new Logger(AlertService.name);
 
   constructor(private eventEmitter: EventEmitter2) {}
 
-  notify(test: string): void {
+  notify(alertData: ReceiveAlertDto): void {
     try {
-      this.logger.log(`Notifying alert with test: ${test}`);
-      this.eventEmitter.emit('alert.received', new AlertReceivedEvent(test));
+      const setup = new Setup();
+      Object.assign(setup, alertData);
+      this.logger.log(`Notifying alert with ticker: ${setup.ticker}`);
+      this.eventEmitter.emit(
+        Events.ALERT_RECEIVED,
+        new AlertReceivedEvent(setup),
+      );
     } catch (error) {
       this.logger.error(
-        `Error notifying alert with test: ${test}`,
+        `Error notifying alert with ticker: ${alertData.ticker}`,
         error.stack,
       );
     }
