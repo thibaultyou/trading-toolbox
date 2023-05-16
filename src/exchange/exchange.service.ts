@@ -4,7 +4,9 @@ import * as ccxt from 'ccxt';
 import { Balances, Exchange, Order } from 'ccxt';
 import { WebsocketClient, WSClientConfigurableOptions } from 'bybit-api';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { TickerUpdateEvent } from '../core/events/ticker-update.event';
+import { Events } from '../app.constants';
+import { Account } from '../account/entities/account.entity';
+import { TickerUpdateEvent } from '../ticker/events/ticker-update.event';
 
 @Injectable()
 export class ExchangeService implements OnModuleInit {
@@ -17,25 +19,48 @@ export class ExchangeService implements OnModuleInit {
     private eventEmitter: EventEmitter2,
   ) {}
 
+  // Initializes the exchange with the first account found.
   async onModuleInit() {
     try {
-      const accounts = await this.accountService.findAll();
-      if (accounts.length > 0) {
-        const account = accounts[0];
-        this.exchange = new ccxt.bybit({
-          apiKey: account.key,
-          secret: account.secret,
-        });
-        this.ws = this.initWs(account.key, account.secret);
-        this.logger.log('Exchange initialized successfully');
-      } else {
-        this.logger.warn('No account found. Please create an account first.');
-      }
+      const account = await this.getFirstAccount();
+      this.initializeExchange(account);
     } catch (error) {
       this.logger.error('Error during module initialization', error.stack);
     }
   }
 
+  // Fetches the first account from the account service.
+  private async getFirstAccount() {
+    const accounts = await this.accountService.findAll();
+    if (accounts.length === 0) {
+      this.logger.warn('No account found. Please create an account first.');
+      throw new Error('No account found');
+    }
+    return accounts[0];
+  }
+
+  // Initializes the exchange and websocket with a given account.
+  private initializeExchange(account: Account) {
+    this.exchange = new ccxt.bybit({
+      apiKey: account.key,
+      secret: account.secret,
+    });
+    this.ws = this.initWs(account.key, account.secret);
+    this.logger.log('Exchange initialized successfully');
+  }
+
+  async initializeWithAccount(account: Account): Promise<void> {
+    try {
+      this.initializeExchange(account);
+    } catch (error) {
+      this.logger.error(
+        'Error during initialization with account',
+        error.stack,
+      );
+    }
+  }
+
+  // Initializes the websocket with a given api key and secret.
   private initWs(apiKey: string, apiSecret: string): WebsocketClient {
     const options: WSClientConfigurableOptions = {
       key: apiKey,
@@ -45,53 +70,67 @@ export class ExchangeService implements OnModuleInit {
     };
 
     const ws = new WebsocketClient(options);
-
-    // ws.on('response', (msg) => {
-    // });
-
-    ws.on('update', (msg) => {
-      if (msg.topic && msg.topic.startsWith('tickers.')) {
-        this.eventEmitter.emit(
-          'ticker.update',
-          new TickerUpdateEvent(msg.topic, msg.data),
-        );
-      }
-    });
-    // ws.on('error', (msg) => this.logger.error(`WS error: `, msg));
-
+    ws.on('update', this.handleWsUpdate.bind(this));
     return ws;
   }
 
+  // Handles websocket updates by emitting ticker update events.
+  private handleWsUpdate(msg: any) {
+    if (msg.topic && msg.topic.startsWith('tickers.')) {
+      this.eventEmitter.emit(
+        Events.TICKER_UPDATE,
+        new TickerUpdateEvent(msg.topic, msg.data),
+      );
+    }
+  }
+
+  // Subscribes to a ticker of a given symbol.
   subscribeTicker(symbol: string): void {
-    try {
-      this.ws.subscribe(`tickers.${symbol}`);
-      this.logger.log(`Subscribed to ${symbol} ticker`);
-    } catch (error) {
-      this.logger.error('Error subscribing to ticker', error.stack);
-    }
+    this.performWsAction(
+      'subscribe',
+      `tickers.${symbol}`,
+      'subscribing to ticker',
+    );
   }
 
+  // Unsubscribes from a ticker of a given symbol.
   unsubscribeTicker(symbol: string): void {
+    this.performWsAction(
+      'unsubscribe',
+      `tickers.${symbol}`,
+      'unsubscribing from ticker',
+    );
+  }
+
+  // Performs a websocket action with error handling.
+  private performWsAction(
+    action: string,
+    topic: string,
+    actionDescription: string,
+  ) {
     try {
-      this.ws.unsubscribe(`tickers.${symbol}`);
-      this.logger.log(`Unsubscribed from ${symbol} ticker`);
+      this.ws[action](topic);
+      this.logger.log(
+        `${
+          actionDescription.charAt(0).toUpperCase() + actionDescription.slice(1)
+        } ${topic}`,
+      );
     } catch (error) {
-      this.logger.error('Error unsubscribing from ticker', error.stack);
+      this.logger.error(`Error ${actionDescription}`, error.stack);
     }
   }
 
+  // Fetches balances from the exchange.
   private async getBalances(): Promise<Balances> {
-    if (this.exchange) {
-      try {
-        return await this.exchange.fetchBalance();
-      } catch (error) {
-        this.logger.error('Error fetching balances', error.stack);
-      }
-    } else {
-      this.logger.warn('No account found. Please create an account first.');
+    this.ensureExchangeInitialized();
+    try {
+      return await this.exchange.fetchBalance();
+    } catch (error) {
+      this.logger.error('Error fetching balances', error.stack);
     }
   }
 
+  // Fetches USDT balance from the exchange.
   async getBalance(): Promise<number> {
     try {
       const balances = await this.getBalances();
@@ -104,7 +143,9 @@ export class ExchangeService implements OnModuleInit {
     }
   }
 
+  // Fetches open positions from the exchange.
   async getOpenPositions(): Promise<any> {
+    this.ensureExchangeInitialized();
     if (this.exchange?.has?.fetchPositions) {
       try {
         return await this.exchange.fetchPositions();
@@ -116,63 +157,105 @@ export class ExchangeService implements OnModuleInit {
     }
   }
 
+  // Opens a long order on the exchange.
   async openLongOrder(symbol: string, size: number): Promise<Order> {
-    try {
-      return await this.exchange.createMarketBuyOrder(symbol, size);
-    } catch (error) {
-      this.logger.error('Error opening long order', error.stack);
-    }
+    return this.createOrder(
+      symbol,
+      size,
+      'createMarketBuyOrder',
+      'opening long order',
+    );
   }
 
+  // Opens a short order on the exchange.
   async openShortOrder(symbol: string, size: number): Promise<Order> {
+    return this.createOrder(
+      symbol,
+      size,
+      'createMarketSellOrder',
+      'opening short order',
+    );
+  }
+
+  // Creates an order with error handling.
+  private async createOrder(
+    symbol: string,
+    size: number,
+    orderType: string,
+    actionDescription: string,
+  ): Promise<Order> {
+    this.ensureExchangeInitialized();
     try {
-      return await this.exchange.createMarketSellOrder(symbol, size);
+      return await this.exchange[orderType](symbol, size);
     } catch (error) {
-      this.logger.error('Error opening short order', error.stack);
+      this.logger.error(`Error ${actionDescription}`, error.stack);
     }
   }
 
+  // Updates a stop loss on the exchange.
   async updateStopLoss(
     orderId: string,
     symbol: string,
     amount: number,
     stopLossPrice: number,
   ): Promise<Order> {
-    try {
-      return await this.exchange.editOrder(
-        orderId,
-        symbol,
-        'stop_loss',
-        'sell',
-        amount,
-        stopLossPrice,
-      );
-    } catch (error) {
-      this.logger.error('Error updating stop loss', error.stack);
-    }
+    return this.editOrder(
+      orderId,
+      symbol,
+      'stop_loss',
+      'sell',
+      amount,
+      stopLossPrice,
+      'updating stop loss',
+    );
   }
 
+  // Updates a take profit on the exchange.
   async updateTakeProfit(
     orderId: string,
     symbol: string,
     amount: number,
     takeProfitPrice: number,
   ): Promise<Order> {
+    return this.editOrder(
+      orderId,
+      symbol,
+      'take_profit',
+      'sell',
+      amount,
+      takeProfitPrice,
+      'updating take profit',
+    );
+  }
+
+  // Edits an order with error handling.
+  private async editOrder(
+    orderId: string,
+    symbol: string,
+    type: string,
+    side: string,
+    amount: number,
+    price: number,
+    actionDescription: string,
+  ): Promise<Order> {
+    this.ensureExchangeInitialized();
     try {
       return await this.exchange.editOrder(
         orderId,
         symbol,
-        'take_profit',
-        'sell',
+        type,
+        side,
         amount,
-        takeProfitPrice,
+        price,
       );
     } catch (error) {
-      this.logger.error('Error updating take profit', error.stack);
+      this.logger.error(`Error ${actionDescription}`, error.stack);
     }
   }
 
+  // Closes an order on the exchange.
   async closeOrder(orderId: string, symbol: string): Promise<Order> {
+    this.ensureExchangeInitialized();
     try {
       return await this.exchange.cancelOrder(orderId, symbol);
     } catch (error) {
@@ -181,10 +264,21 @@ export class ExchangeService implements OnModuleInit {
   }
 
   async fetchOpenOrders(): Promise<Order[]> {
+    this.ensureExchangeInitialized();
     try {
       return await this.exchange.fetchOpenOrders();
     } catch (error) {
       this.logger.error('Error fetching open orders', error.stack);
+    }
+  }
+
+  // Checks if the exchange is initialized and throws an error if not.
+  private ensureExchangeInitialized() {
+    if (!this.exchange) {
+      this.logger.error(
+        'Exchange not initialized. Please create an account first.',
+      );
+      throw new Error('Exchange not initialized');
     }
   }
 }

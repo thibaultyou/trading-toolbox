@@ -7,6 +7,8 @@ import {
   Body,
   Param,
   Logger,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Setup } from './entities/setup.entity';
@@ -40,6 +42,12 @@ export class SetupController {
   @ApiBody({ type: CreateSetupDto })
   async create(@Body() createSetupDto: CreateSetupDto): Promise<Setup> {
     this.logger.log(`Creating setup with ticker: ${createSetupDto.ticker}`);
+    if (!createSetupDto.actions || createSetupDto.actions.length === 0) {
+      throw new HttpException(
+        'A setup must have at least one action.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const newSetup = Setup.fromDto(createSetupDto);
     return this.setupService.create(newSetup);
   }

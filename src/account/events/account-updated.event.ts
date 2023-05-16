@@ -1,14 +1,11 @@
+import { Account } from '../entities/account.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class AccountUpdatedEvent {
-  @ApiProperty()
-  public readonly accountId: string;
+  @ApiProperty({ type: () => Account })
+  public readonly account: Account;
 
-  @ApiProperty()
-  public readonly name: string;
-
-  constructor(accountId: string, name: string) {
-    this.accountId = accountId;
-    this.name = name;
+  constructor(account: Account) {
+    this.account = account;
   }
 }

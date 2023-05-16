@@ -38,17 +38,17 @@ export class AccountService {
 
   async create(account: Account): Promise<Account> {
     try {
-      this.logger.log(`Creating account with name: ${name}`);
+      this.logger.log(`Creating account with name: ${account.name}`);
       const savedAccount = await this.accountRepository.save(account);
       this.eventEmitter.emit(
         Events.ACCOUNT_CREATED,
-        new AccountCreatedEvent(savedAccount.id, savedAccount.name),
+        new AccountCreatedEvent(savedAccount),
       );
       this.logger.log(`Account created with id: ${savedAccount.id}`);
       return savedAccount;
     } catch (error) {
       this.logger.error(
-        `Error creating account with name: ${name}`,
+        `Error creating account with name: ${account.name}`,
         error.stack,
       );
     }
@@ -64,7 +64,7 @@ export class AccountService {
       const savedAccount = await this.accountRepository.save(account);
       this.eventEmitter.emit(
         Events.ACCOUNT_UPDATED,
-        new AccountUpdatedEvent(savedAccount.id, savedAccount.name),
+        new AccountUpdatedEvent(savedAccount),
       );
       this.logger.log(`Account updated with id: ${id}`);
       return savedAccount;

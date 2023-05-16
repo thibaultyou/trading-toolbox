@@ -7,6 +7,7 @@ import { SetupCreatedEvent } from './events/setup-created.event';
 import { SetupUpdatedEvent } from './events/setup-updated.event';
 import { SetupDeletedEvent } from './events/setup-deleted.event';
 import { Events } from '../app.constants';
+import { Action } from '../action/entities/action.entity';
 
 @Injectable()
 export class SetupService {
@@ -16,12 +17,14 @@ export class SetupService {
     private eventEmitter: EventEmitter2,
     @InjectRepository(Setup)
     private setupRepository: Repository<Setup>,
-  ) {}
+    @InjectRepository(Action)
+    private actionRepository: Repository<Action>,
+  ) { }
 
   async findAll(): Promise<Setup[]> {
     try {
       this.logger.log('Fetching all setups');
-      return await this.setupRepository.find();
+      return await this.setupRepository.find({ relations: ['actions'] });
     } catch (error) {
       this.logger.error('Error fetching all setups', error.stack);
     }
@@ -46,16 +49,7 @@ export class SetupService {
       const savedSetup = await this.setupRepository.save(setup);
       this.eventEmitter.emit(
         Events.SETUP_CREATED,
-        new SetupCreatedEvent(
-          savedSetup.id,
-          savedSetup.ticker,
-          savedSetup.size,
-          savedSetup.account,
-          savedSetup.trigger,
-          savedSetup.value,
-          savedSetup.status,
-          savedSetup.actions,
-        ),
+        new SetupCreatedEvent(savedSetup),
       );
       this.logger.log(`Setup created with id: ${savedSetup.id}`);
       return savedSetup;
@@ -71,28 +65,11 @@ export class SetupService {
     try {
       this.logger.log(`Updating setup with id: ${id}`);
       const setup = await this.findOne(id);
-
-      setup.ticker = setupUpdate.ticker;
-      setup.size = setupUpdate.size;
-      setup.account = setupUpdate.account;
-      setup.trigger = setupUpdate.trigger;
-      setup.value = setupUpdate.value;
-      setup.status = setupUpdate.status;
-      setup.actions = setupUpdate.actions;
-
+      Object.assign(setup, setupUpdate);
       const updatedSetup = await this.setupRepository.save(setup);
       this.eventEmitter.emit(
         Events.SETUP_UPDATED,
-        new SetupUpdatedEvent(
-          updatedSetup.id,
-          updatedSetup.ticker,
-          updatedSetup.size,
-          updatedSetup.account,
-          updatedSetup.trigger,
-          updatedSetup.value,
-          updatedSetup.status,
-          updatedSetup.actions,
-        ),
+        new SetupUpdatedEvent(updatedSetup),
       );
       this.logger.log(`Setup updated with id: ${updatedSetup.id}`);
       return updatedSetup;
@@ -104,6 +81,10 @@ export class SetupService {
   async delete(id: string): Promise<void> {
     try {
       this.logger.log(`Deleting setup with id: ${id}`);
+      const setup = await this.setupRepository.findOne({ where: { id }, relations: ['actions'] });
+      for (const action of setup.actions) {
+        await this.actionRepository.delete(action.id);
+      }
       await this.setupRepository.delete(id);
       this.eventEmitter.emit(Events.SETUP_DELETED, new SetupDeletedEvent(id));
       this.logger.log(`Setup deleted with id: ${id}`);

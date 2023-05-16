@@ -1,22 +1,23 @@
 import { Module } from '@nestjs/common';
 import { ExchangeModule } from '../exchange/exchange.module';
 import { CoreService } from './core.service';
-import { BalanceService } from './balance.service';
-import { PositionService } from './position.service';
-import { TickerService } from './ticker.service';
-import { TickerUpdateHandler } from './handlers/ticker-update.event-handler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { OrderService } from './order.service';
+import { SetupModule } from '../setup/setup.module';
+import { BalanceModule } from '../balance/balance.module';
+import { OrderModule } from '../order/order.module';
+import { PositionModule } from '../position/position.module';
+import { TickerModule } from '../ticker/ticker.module';
 
 @Module({
-  imports: [EventEmitterModule, ExchangeModule],
-  providers: [
-    CoreService,
-    BalanceService,
-    OrderService,
-    PositionService,
-    TickerUpdateHandler,
-    TickerService,
+  imports: [
+    EventEmitterModule,
+    BalanceModule,
+    ExchangeModule,
+    OrderModule,
+    PositionModule,
+    SetupModule,
+    TickerModule,
   ],
+  providers: [CoreService],
 })
 export class CoreModule {}

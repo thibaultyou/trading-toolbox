@@ -1,8 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { PositionUpdatedEvent } from './events/position-updated.event';
 import { ExchangeService } from '../exchange/exchange.service';
 import { Events, Timers } from '../app.constants';
+import { PositionUpdatedEvent } from './events/position-updated.event';
 
 @Injectable()
 export class PositionService implements OnModuleInit {
@@ -34,7 +34,9 @@ export class PositionService implements OnModuleInit {
       const newPositions = await this.exchangeService.getOpenPositions();
       if (this.hasPositionsChanged(newPositions)) {
         this.positions = newPositions;
-        this.logger.log(`Updating positions: ${JSON.stringify(newPositions)}`);
+        this.logger.debug(
+          `Updating positions: ${JSON.stringify(newPositions)}`,
+        );
         this.eventEmitter.emit(
           Events.POSITION_UPDATED,
           new PositionUpdatedEvent(newPositions),

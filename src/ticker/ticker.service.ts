@@ -10,7 +10,7 @@ export class TickerService implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      const symbols = ['BTCUSDT'];
+      const symbols = [];
       symbols.forEach((symbol) => this.exchangeService.subscribeTicker(symbol));
     } catch (error) {
       this.logger.error('Error during module initialization', error.stack);
@@ -22,7 +22,7 @@ export class TickerService implements OnModuleInit {
       const price = (Number(data.ask1Price) + Number(data.bid1Price)) / 2;
       if (this.tickers[symbol] !== price) {
         this.tickers[symbol] = price;
-        this.logger.log(`Updated ticker for ${symbol} ${price}`);
+        this.logger.debug(`Updated ticker for ${symbol} ${price}`);
       }
     } catch (error) {
       this.logger.error('Error during ticker update', error.stack);

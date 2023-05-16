@@ -1,8 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ExchangeService } from '../exchange/exchange.service';
-import { BalanceUpdatedEvent } from './events/balance-updated.event';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Events, Timers } from '../app.constants';
+import { BalanceUpdatedEvent } from './events/balance-updated.event';
 
 @Injectable()
 export class BalanceService implements OnModuleInit {

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { TriggerType, StatusType } from '../../setup/setup.types';
-import { Action } from '../../setup/entities/action.entity';
+import { Action } from '../../action/entities/action.entity';
 
 export class ReceiveAlertDto {
   @ApiProperty()

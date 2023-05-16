@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Action } from '../entities/action.entity';
+import { Action } from '../../action/entities/action.entity';
 import { TriggerType, StatusType } from '../setup.types';
 
 export class UpdateSetupDto {

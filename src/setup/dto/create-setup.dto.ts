@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Action } from '../entities/action.entity';
-import { TriggerType, StatusType } from '../setup.types';
+import { Action } from '../../action/entities/action.entity';
+import { TriggerType } from '../setup.types';
 
 export class CreateSetupDto {
   @ApiProperty()
@@ -17,9 +17,6 @@ export class CreateSetupDto {
 
   @ApiProperty()
   value: number;
-
-  @ApiProperty({ enum: StatusType })
-  status: StatusType;
 
   @ApiProperty({ type: [Action] })
   actions: Action[];

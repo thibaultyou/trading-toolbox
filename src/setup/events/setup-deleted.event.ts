@@ -2,9 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class SetupDeletedEvent {
   @ApiProperty()
-  public readonly setupId: string;
+  public readonly id: string;
 
-  constructor(setupId: string) {
-    this.setupId = setupId;
+  constructor(id: string) {
+    this.id = id;
   }
 }

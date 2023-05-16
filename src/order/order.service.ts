@@ -35,7 +35,7 @@ export class OrderService implements OnModuleInit {
       const newOrders = await this.exchangeService.fetchOpenOrders();
       if (this.haveOrdersChanged(newOrders)) {
         this.orders = newOrders;
-        this.logger.log(`Updating orders`);
+        this.logger.debug(`Updating orders`, newOrders);
         this.eventEmitter.emit(
           Events.ORDER_UPDATED,
           new OrderUpdatedEvent(newOrders),

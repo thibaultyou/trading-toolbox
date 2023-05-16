@@ -6,6 +6,10 @@ import { CoreModule } from './core/core.module';
 import { ExchangeModule } from './exchange/exchange.module';
 import { AlertModule } from './alert/alert.module';
 import { SetupModule } from './setup/setup.module';
+import { BalanceModule } from './balance/balance.module';
+import { OrderModule } from './order/order.module';
+import { PositionModule } from './position/position.module';
+import { TickerModule } from './ticker/ticker.module';
 
 @Module({
   imports: [
@@ -14,13 +18,20 @@ import { SetupModule } from './setup/setup.module';
       database: 'database.db',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
+      extra: {
+        foreignKeys: true,
+      },
     }),
     EventEmitterModule.forRoot(),
     AccountModule,
-    SetupModule,
-    ExchangeModule,
-    CoreModule,
     AlertModule,
+    BalanceModule,
+    ExchangeModule,
+    OrderModule,
+    PositionModule,
+    SetupModule,
+    TickerModule,
+    CoreModule,
   ],
   controllers: [],
   providers: [],
