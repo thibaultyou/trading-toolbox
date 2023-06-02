@@ -1,0 +1,24 @@
+{
+  "extends": ["eslint:recommended"],
+  "plugins": ["import"],
+  "rules": {
+    "import/no-unused-modules": [
+      1,
+      {
+        "unusedExports": true
+      }
+    ],
+    "no-unused-vars": "off",
+    "import/no-unused-modules": "error"
+  },
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "modules": true
+    }
+  },
+  "env": {
+    "es6": true
+  }
+}
