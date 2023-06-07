@@ -14,12 +14,12 @@ const AccountSelector: React.FC = () => {
   const { accounts } = useAccountsContext();
 
   const handleAccountChange = (e: SelectChangeEvent) => {
-    setSetup(prevSetup => ({ ...prevSetup, account: e.target.value }));
+    setSetup((prevSetup) => ({ ...prevSetup, account: e.target.value }));
   };
 
   useEffect(() => {
     if (setup.account === '' && accounts.length) {
-      setSetup(prevSetup => ({ ...prevSetup, account: accounts[0].name }));
+      setSetup((prevSetup) => ({ ...prevSetup, account: accounts[0].name }));
     }
   }, [accounts, setup.account, setSetup]);
 

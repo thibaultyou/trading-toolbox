@@ -11,9 +11,9 @@ interface SetupFormContextProps {
   setActionsValidity: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export const SetupFormContext = createContext<SetupFormContextProps | undefined>(
-  undefined,
-);
+export const SetupFormContext = createContext<
+  SetupFormContextProps | undefined
+>(undefined);
 
 export const useSetupFormContext = (): SetupFormContextProps => {
   const context = useContext(SetupFormContext);
@@ -27,7 +27,9 @@ interface SetupProviderProps {
   children: ReactNode;
 }
 
-export const SetupFormProvider: React.FC<SetupProviderProps> = ({ children }) => {
+export const SetupFormProvider: React.FC<SetupProviderProps> = ({
+  children,
+}) => {
   const [setup, setSetup] = useState<Setup>({
     ticker: '',
     account: '',
@@ -43,9 +45,12 @@ export const SetupFormProvider: React.FC<SetupProviderProps> = ({ children }) =>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      console.log("submit", setup)
-      const response = await axios.post('http://127.0.0.1:1234/api/setups', setup);
-      console.log("response", response.data);
+      console.log('submit', setup);
+      const response = await axios.post(
+        'http://127.0.0.1:1234/api/setups',
+        setup,
+      );
+      console.log('response', response.data);
       setSetup({
         ticker: '',
         account: '',
@@ -55,14 +60,22 @@ export const SetupFormProvider: React.FC<SetupProviderProps> = ({ children }) =>
         actions: [],
         retries: 3,
       });
-      setActionsValidity(false)
+      setActionsValidity(false);
     } catch (error) {
       console.error(error);
     }
   };
 
   return (
-    <SetupFormContext.Provider value={{ setup, setSetup, handleSubmit, areActionsValid, setActionsValidity }}>
+    <SetupFormContext.Provider
+      value={{
+        setup,
+        setSetup,
+        handleSubmit,
+        areActionsValid,
+        setActionsValidity,
+      }}
+    >
       {children}
     </SetupFormContext.Provider>
   );

@@ -61,7 +61,9 @@ const AppBar = ({ variant, setTheme }: AppBarProps) => {
         </Button>
         <Drawer anchor="left" open={drawerOpen} onClose={handleDrawerClose}>
           <List>
-            {drawerItems.map((item) => <DrawerItem key={item.to} {...item} onClose={handleDrawerClose} />)}
+            {drawerItems.map((item) => (
+              <DrawerItem key={item.to} {...item} onClose={handleDrawerClose} />
+            ))}
           </List>
         </Drawer>
       </Toolbar>

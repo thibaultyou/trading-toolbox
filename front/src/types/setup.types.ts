@@ -11,3 +11,8 @@ export interface Setup {
   actions: Action[];
   retries: number;
 }
+
+export interface SetupRow extends Setup {
+  index: number;
+  open: boolean;
+}

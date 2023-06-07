@@ -4,7 +4,17 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ClearIcon from '@mui/icons-material/Clear';
 import { Action, ActionType } from '../../types/action.types';
 import { TriggerType } from '../../types/common.types';
-import { Box, Button, TextField, MenuItem, Select, Typography, Stack, Divider, SelectChangeEvent } from '@mui/material';
+import {
+  Box,
+  Button,
+  TextField,
+  MenuItem,
+  Select,
+  Typography,
+  Stack,
+  Divider,
+  SelectChangeEvent,
+} from '@mui/material';
 import { useSetupFormContext } from '../../containers/SetupFormContext';
 
 interface Props {
@@ -28,23 +38,36 @@ const ActionInputs: React.FC<Props> = ({ action, index }) => {
   };
 
   useEffect(() => {
-    const isTriggerValid = action.trigger === TriggerType.NONE || action.trigger_value?.length !== 0;
+    const isTriggerValid =
+      action.trigger === TriggerType.NONE || action.trigger_value?.length !== 0;
     const isActionValid = Boolean(action.value.length);
     setActionsValidity(isTriggerValid && isActionValid);
-  }, [setup, action.trigger, action.trigger_value, action.value, setActionsValidity]);
+  }, [
+    setup,
+    action.trigger,
+    action.trigger_value,
+    action.value,
+    setActionsValidity,
+  ]);
 
   const handleOrderPriority = (direction: number) => {
     let actions = [...setup.actions];
-    if ((direction === -1 && index !== 0) || (direction === 1 && index !== actions.length - 1)) {
+    if (
+      (direction === -1 && index !== 0) ||
+      (direction === 1 && index !== actions.length - 1)
+    ) {
       actions[index].order += direction;
       actions[index + direction].order -= direction;
     }
     setSetup({ ...setup, actions: actions.sort((a, b) => a.order - b.order) });
-  }
+  };
 
   const handleTriggerChange = (event: SelectChangeEvent) => {
     const trigger = event.target.value as TriggerType;
-    updateAction({ trigger, trigger_value: trigger === TriggerType.NONE ? '' : action.trigger_value });
+    updateAction({
+      trigger,
+      trigger_value: trigger === TriggerType.NONE ? '' : action.trigger_value,
+    });
   };
 
   const handleTriggerValueChange = (event: any) => {
@@ -62,16 +85,18 @@ const ActionInputs: React.FC<Props> = ({ action, index }) => {
   const removeOrder = () => {
     let actions = [...setup.actions];
     actions.splice(index, 1);
-    actions.map(action => action.order > index ? { ...action, order: action.order -= 1 } : action)
+    actions.map((action) =>
+      action.order > index ? { ...action, order: (action.order -= 1) } : action,
+    );
     setSetup({ ...setup, actions: actions });
-  }
+  };
 
   return (
     <>
       {index !== 0 && (
         <Box sx={{ mt: 3 }}>
           <Divider variant="middle" />
-        </Box >
+        </Box>
       )}
       <Box sx={{ mt: 1 }}>
         <Stack
@@ -82,11 +107,7 @@ const ActionInputs: React.FC<Props> = ({ action, index }) => {
           <Typography variant="h6" sx={{ mt: 1 }}>
             # {action.order}
           </Typography>
-          <Stack
-            direction="row"
-            justifyContent="flex-end"
-            alignItems="center"
-          >
+          <Stack direction="row" justifyContent="flex-end" alignItems="center">
             {index !== 0 && (
               <Button onClick={() => handleOrderPriority(-1)}>
                 <ArrowUpwardIcon />
@@ -105,7 +126,7 @@ const ActionInputs: React.FC<Props> = ({ action, index }) => {
           </Stack>
         </Stack>
       </Box>
-      <Box sx={{ mt: 1 }} >
+      <Box sx={{ mt: 1 }}>
         <Typography sx={{ mt: 1, mb: 1 }}>Trigger</Typography>
         <Select
           id="trigger"
@@ -136,7 +157,7 @@ const ActionInputs: React.FC<Props> = ({ action, index }) => {
           />
         </Box>
       )}
-      <Box sx={{ mt: 1 }} >
+      <Box sx={{ mt: 1 }}>
         <Typography sx={{ mt: 1, mb: 1 }}>Type</Typography>
         <Select
           id="type"

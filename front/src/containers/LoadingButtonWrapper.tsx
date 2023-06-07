@@ -4,26 +4,30 @@ import { LoadingButton } from '@mui/lab';
 import { useTickersContext } from './TickersContext';
 
 interface LoadingButtonWrapperProps {
-    children: ReactNode;
+  children: ReactNode;
 }
 
 const LoadingButtonWrapper: React.FC<LoadingButtonWrapperProps> = ({
-    children,
+  children,
 }) => {
-    const [loading, setLoading] = useState(true);
-    const { tickers } = useTickersContext();
+  const [loading, setLoading] = useState(true);
+  const { tickers } = useTickersContext();
 
-    useEffect(() => {
-        if (tickers.length) {
-            setLoading(false);
-        }
-    }, [tickers]);
+  useEffect(() => {
+    if (tickers.length) {
+      setLoading(false);
+    }
+  }, [tickers]);
 
-    return (
-        <Box sx={{ mt: 2, mb: 1 }}>
-            {loading ? (<LoadingButton loading={loading} size="large" />) : (<>{children}</>)}
-        </Box>
-    );
+  return (
+    <Box sx={{ mt: 2, mb: 1 }}>
+      {loading ? (
+        <LoadingButton loading={loading} size="large" />
+      ) : (
+        <>{children}</>
+      )}
+    </Box>
+  );
 };
 
 export default LoadingButtonWrapper;

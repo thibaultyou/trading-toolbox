@@ -4,12 +4,12 @@ import SetupsList from '../components/molecules/SetupsList';
 import Title from '../components/atoms/Title';
 
 const SetupsPage: React.FC = () => {
-    return (
-        <Page>
-            <Title>Setups</Title>
-            <SetupsList />
-        </Page>
-    );
+  return (
+    <Page>
+      <Title>Setups</Title>
+      <SetupsList />
+    </Page>
+  );
 };
 
 export default SetupsPage;

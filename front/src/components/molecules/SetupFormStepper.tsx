@@ -73,9 +73,9 @@ const SetupFormStepper: React.FC = () => {
   };
 
   const isSubmitDisabled =
-    (setup.account.length === 0 ||
-      setup.ticker.length === 0 ||
-      setup.actions.length === 0) ||
+    setup.account.length === 0 ||
+    setup.ticker.length === 0 ||
+    setup.actions.length === 0 ||
     !areActionsValid;
 
   const isNextDisabled = () => {
@@ -91,7 +91,7 @@ const SetupFormStepper: React.FC = () => {
     }
   };
 
-  const handleFinalSubmit = async (e: React.FormEvent) => {
+  const handleFinalSubmit = (e: React.FormEvent) => {
     handleSubmit(e);
     navigate('/setups');
   };

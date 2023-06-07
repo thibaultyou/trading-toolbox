@@ -17,6 +17,7 @@ const TickerSelector: React.FC = () => {
         groupBy={(option) => option[0]}
         getOptionLabel={(option) => option}
         fullWidth
+        value={setup.ticker}
         disableClearable
         renderInput={(params) => (
           <TextField
