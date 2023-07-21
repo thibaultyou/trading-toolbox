@@ -1,8 +1,10 @@
-import { OnEvent } from '@nestjs/event-emitter';
-import { AlertReceivedEvent } from '../../alert/events/alert-received.event';
-import { SetupService } from '../setup.service';
 import { Injectable, Logger } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
+
+import { AlertReceivedEvent } from '../../alert/events/alert-received.event';
 import { Events } from '../../app.constants';
+import { SetupCreateFromAlertException } from '../exceptions/setup.exceptions';
+import { SetupService } from '../setup.service';
 
 @Injectable()
 export class AlertReceivedHandler {
@@ -17,7 +19,7 @@ export class AlertReceivedHandler {
       const setup = await this.setupService.create(event.setup);
       this.logger.log(`[${Events.ALERT_RECEIVED}] ${setup.ticker}`);
     } catch (error) {
-      this.logger.error(`Error while creating setup: ${error.message}`);
+      throw new SetupCreateFromAlertException(error.message);
     }
   }
 }

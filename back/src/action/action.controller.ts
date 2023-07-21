@@ -2,37 +2,42 @@ import {
   Controller,
   Get,
   Post,
-  Put,
-  Delete,
   Body,
   Param,
-  NotFoundException
+  Put,
+  Delete,
 } from '@nestjs/common';
 import { ApiOperation, ApiBody, ApiTags } from '@nestjs/swagger';
+
+import { BaseController } from '../common/base.controller';
+import { SetupNotFoundException } from '../setup/exceptions/setup.exceptions';
+import { SetupService } from '../setup/setup.service';
+
 import { ActionService } from './action.service';
-import { Action } from './entities/action.entity';
 import { CreateActionDto } from './dto/create-action.dto';
 import { UpdateActionDto } from './dto/update-action.dto';
-import { SetupService } from '../setup/setup.service';
+import { Action } from './entities/action.entity';
 
 @ApiTags('actions')
 @Controller('actions')
-export class ActionController {
+export class ActionController extends BaseController {
   constructor(
     private readonly actionService: ActionService,
     private readonly setupService: SetupService,
-  ) { }
+  ) {
+    super('ActionController');
+  }
 
   @Get()
   @ApiOperation({ summary: 'Get all actions' })
   async findAll(): Promise<Action[]> {
-    return this.actionService.findAll();
+    return await this.actionService.findAll();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get an action by ID' })
   async findOne(@Param('id') id: string): Promise<Action> {
-    return this.actionService.findOne(id);
+    return await this.actionService.findOne(id);
   }
 
   @Post(':setupId')
@@ -45,15 +50,14 @@ export class ActionController {
     const setup = await this.setupService.findOne(setupId);
 
     if (!setup) {
-      throw new NotFoundException(`Setup with ID ${setupId} not found`);
+      throw new SetupNotFoundException(setupId);
     }
 
     const action = await this.actionService.create(createActionDto);
-    if (!setup.actions) {
-      setup.actions = [];
-    }
-    setup.actions.push(action);
-    await this.setupService.update(setupId, setup);
+    await this.setupService.update(setupId, {
+      ...setup,
+      actions: [...setup.actions, action],
+    });
     return action;
   }
 
@@ -64,12 +68,12 @@ export class ActionController {
     @Param('id') id: string,
     @Body() actionUpdateDto: UpdateActionDto,
   ): Promise<Action> {
-    return this.actionService.update(id, actionUpdateDto);
+    return await this.actionService.update(id, actionUpdateDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an action by ID' })
   async delete(@Param('id') id: string): Promise<void> {
-    return this.actionService.delete(id);
+    await this.actionService.delete(id);
   }
 }

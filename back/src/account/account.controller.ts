@@ -2,89 +2,49 @@ import {
   Controller,
   Get,
   Post,
-  Put,
-  Delete,
   Body,
   Param,
-  Logger,
-  HttpException,
-  HttpStatus,
+  Put,
+  Delete,
 } from '@nestjs/common';
 import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
+
+import { BaseController } from '../common/base.controller';
+import { maskString } from '../utils/string.utils';
+
 import { AccountService } from './account.service';
-import { Account } from './entities/account.entity';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
-import { maskString } from '../utils/string.utils';
+import { Account } from './entities/account.entity';
 
 @ApiTags('accounts')
 @Controller('accounts')
-export class AccountController {
-  private logger = new Logger(AccountController.name);
-
-  constructor(private readonly accountService: AccountService) {}
+export class AccountController extends BaseController {
+  constructor(private readonly accountService: AccountService) {
+    super('Accounts');
+  }
 
   @Get()
-  @ApiOperation({ summary: 'Get all accounts' })
+  @ApiOperation({ summary: 'Fetch all accounts' })
   async findAll(): Promise<Account[]> {
-    try {
-      this.logger.log('Fetching all accounts');
-      const accounts = await this.accountService.findAll();
-      accounts.forEach((account) => {
-        account.key = maskString(account.key);
-        account.secret = maskString(account.secret);
-      });
-      return accounts;
-    } catch (error) {
-      this.logger.error('Error fetching all accounts', error.stack);
-      throw new HttpException(
-        'Error fetching all accounts',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const accounts = await this.accountService.findAll();
+    return accounts.map(this.hideSensitiveData);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get an account by ID' })
+  @ApiOperation({ summary: 'Fetch an account by ID' })
   async findOne(@Param('id') id: string): Promise<Account> {
-    try {
-      this.logger.log(`Fetching account with id: ${id}`);
-      const account = await this.accountService.findOne(id);
-      if (account) {
-        account.key = maskString(account.key);
-        account.secret = maskString(account.secret);
-      }
-      return account;
-    } catch (error) {
-      this.logger.error(`Error fetching account with id: ${id}`, error.stack);
-      throw new HttpException(
-        `Error fetching account with id: ${id}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const account = await this.accountService.findOne(id);
+    return this.hideSensitiveData(account);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new account' })
   @ApiBody({ type: CreateAccountDto })
   async create(@Body() createAccountDto: CreateAccountDto): Promise<Account> {
-    try {
-      this.logger.log(`Creating account with name: ${createAccountDto.name}`);
-      const newAccount = Account.fromDto(createAccountDto);
-      const account = await this.accountService.create(newAccount);
-      account.key = maskString(account.key);
-      account.secret = maskString(account.secret);
-      return account;
-    } catch (error) {
-      this.logger.error(
-        `Error creating account with name: ${createAccountDto.name}`,
-        error.stack,
-      );
-      throw new HttpException(
-        `Error creating account with name: ${createAccountDto.name}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const newAccount = Account.fromDto(createAccountDto);
+    const account = await this.accountService.create(newAccount);
+    return this.hideSensitiveData(account);
   }
 
   @Put(':id')
@@ -94,35 +54,20 @@ export class AccountController {
     @Param('id') id: string,
     @Body() updateAccountDto: UpdateAccountDto,
   ): Promise<Account> {
-    try {
-      this.logger.log(`Updating account with id: ${id}`);
-      const updatedAccount = Account.fromDto(updateAccountDto);
-      const account = await this.accountService.update(id, updatedAccount);
-      account.key = maskString(account.key);
-      account.secret = maskString(account.secret);
-      return account;
-    } catch (error) {
-      this.logger.error(`Error updating account with id: ${id}`, error.stack);
-      throw new HttpException(
-        `Error updating account with id: ${id}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const updatedAccount = Account.fromDto(updateAccountDto);
+    const account = await this.accountService.update(id, updatedAccount);
+    return this.hideSensitiveData(account);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an account by ID' })
   async delete(@Param('id') id: string): Promise<void> {
-    try {
-      this.logger.log(`Deleting account with id: ${id}`);
-      await this.accountService.delete(id);
-      this.logger.log(`Account deleted with id: ${id}`);
-    } catch (error) {
-      this.logger.error(`Error deleting account with id: ${id}`, error.stack);
-      throw new HttpException(
-        `Error deleting account with id: ${id}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    await this.accountService.delete(id);
+  }
+
+  private hideSensitiveData(account: Account): Account {
+    account.key = maskString(account.key);
+    account.secret = maskString(account.secret);
+    return account;
   }
 }

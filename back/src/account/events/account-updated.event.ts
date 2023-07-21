@@ -1,5 +1,6 @@
-import { Account } from '../entities/account.entity';
 import { ApiProperty } from '@nestjs/swagger';
+
+import { Account } from '../entities/account.entity';
 
 export class AccountUpdatedEvent {
   @ApiProperty({ type: () => Account })

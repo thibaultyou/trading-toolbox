@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { Setup } from '../../setup/entities/setup.entity';
 
 export class AlertReceivedEvent {

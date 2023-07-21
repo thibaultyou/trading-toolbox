@@ -5,3 +5,9 @@ export enum ActionType {
   UPDATE_SL = 'UPDATE_SL',
   UPDATE_TP = 'UPDATE_TP',
 }
+
+export enum ValueType {
+  CONTRACTS = 'CONTRACTS',
+  COST = 'COST',
+  PERCENTAGE = 'PERCENTAGE',
+}

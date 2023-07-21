@@ -1,15 +1,18 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { SetupService } from './setup.service';
-import { Setup } from './entities/setup.entity';
-import { SetupController } from './setup.controller';
-import { AlertReceivedHandler } from './handlers/alert-received.event-handler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { ActionService } from '../action/action.service';
 import { Action } from '../action/entities/action.entity';
+
+import { Setup } from './entities/setup.entity';
+import { AlertReceivedHandler } from './handlers/alert-received.event-handler';
+import { SetupController } from './setup.controller';
+import { SetupService } from './setup.service';
 
 @Module({
   imports: [EventEmitterModule, TypeOrmModule.forFeature([Setup, Action])],
-  providers: [SetupService, AlertReceivedHandler],
+  providers: [SetupService, ActionService, AlertReceivedHandler],
   controllers: [SetupController],
   exports: [SetupService],
 })

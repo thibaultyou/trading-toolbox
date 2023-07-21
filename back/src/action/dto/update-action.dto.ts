@@ -1,9 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ActionType } from '../action.types';
-import { IsOptional, IsUUID, IsEnum, IsInt, Min } from 'class-validator';
-import { TriggerType, StatusType } from '../../common.types';
+import { IsOptional, IsEnum, IsInt, Min } from 'class-validator';
+
+import { TriggerType, StatusType } from '../../common/common.types';
+import { ActionType, ValueType } from '../action.types';
 
 export class UpdateActionDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  readonly id?: string;
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsEnum(ActionType)
@@ -12,6 +17,11 @@ export class UpdateActionDto {
   @ApiProperty({ required: false })
   @IsOptional()
   readonly value?: string;
+
+  @ApiProperty({ enum: ValueType, required: false })
+  @IsOptional()
+  @IsEnum(ValueType)
+  readonly value_type?: ValueType;
 
   @ApiProperty({ enum: TriggerType, required: false })
   @IsOptional()
@@ -32,4 +42,12 @@ export class UpdateActionDto {
   @IsOptional()
   @IsEnum(StatusType)
   readonly status?: StatusType;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  readonly take_profit?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  readonly stop_loss?: string;
 }

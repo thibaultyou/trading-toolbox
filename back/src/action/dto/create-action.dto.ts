@@ -1,9 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ActionType } from '../action.types';
 import { IsNotEmpty, IsOptional, IsEnum, IsInt, Min } from 'class-validator';
-import { StatusType, TriggerType } from '../../common.types';
+
+import { StatusType, TriggerType } from '../../common/common.types';
+import { ActionType, ValueType } from '../action.types';
 
 export class CreateActionDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  readonly id?: string;
+
   @ApiProperty()
   @IsNotEmpty()
   @IsEnum(ActionType)
@@ -12,6 +17,10 @@ export class CreateActionDto {
   @ApiProperty()
   @IsNotEmpty()
   readonly value: string;
+
+  @ApiProperty({ enum: ValueType, default: ValueType.CONTRACTS })
+  @IsEnum(ValueType)
+  readonly value_type: ValueType;
 
   @ApiProperty({ enum: TriggerType, default: TriggerType.NONE })
   @IsEnum(TriggerType)
@@ -30,4 +39,12 @@ export class CreateActionDto {
   @ApiProperty({ enum: StatusType, default: StatusType.PENDING })
   @IsEnum(StatusType)
   readonly status: StatusType;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  readonly take_profit?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  readonly stop_loss?: string;
 }

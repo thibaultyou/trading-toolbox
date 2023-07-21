@@ -1,17 +1,21 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ExchangeService } from '../exchange/exchange.service';
+
+import { AccountService } from '../account/account.service';
 import { Events, Timers } from '../app.constants';
+import { ExchangeService } from '../exchange/exchange.service';
+
 import { PositionUpdatedEvent } from './events/position-updated.event';
 
 @Injectable()
 export class PositionService implements OnModuleInit {
   private logger = new Logger(PositionService.name);
-  private positions: any[] = []; // replace with your position type
+  private positions: Record<string, any[]> = {}; // replace 'any' with your position type
 
   constructor(
     private eventEmitter: EventEmitter2,
     private exchangeService: ExchangeService,
+    private accountService: AccountService,
   ) {}
 
   async onModuleInit() {
@@ -25,33 +29,46 @@ export class PositionService implements OnModuleInit {
     }
   }
 
-  async getPositions(): Promise<any[]> {
-    return this.positions;
+  // TODO replace 'any' with your position type
+  async getPositions(accountName: string): Promise<any[]> {
+    return this.positions[accountName] || [];
   }
 
   private async updatePositions() {
     try {
-      const newPositions = await this.exchangeService.getOpenPositions();
-      if (this.hasPositionsChanged(newPositions)) {
-        this.positions = newPositions;
-        this.logger.debug(
-          `Updating positions: ${JSON.stringify(newPositions)}`,
+      const accounts = await this.accountService.findAll();
+      for (const account of accounts) {
+        const newPositions = await this.exchangeService.getOpenPositions(
+          account.name,
         );
-        this.eventEmitter.emit(
-          Events.POSITION_UPDATED,
-          new PositionUpdatedEvent(newPositions),
-        );
+        if (this.hasPositionsChanged(account.name, newPositions)) {
+          this.positions[account.name] = newPositions;
+          this.logger.debug(
+            `Updating positions for ${account.name}: ${JSON.stringify(
+              newPositions,
+            )}`,
+          );
+          this.eventEmitter.emit(
+            Events.POSITION_UPDATED,
+            new PositionUpdatedEvent(account.name, newPositions),
+          );
+        }
       }
     } catch (error) {
       this.logger.error('Error during updating positions', error.stack);
     }
   }
 
-  private hasPositionsChanged(newPositions: any[]): boolean {
+  private hasPositionsChanged(
+    accountName: string,
+    newPositions: any[],
+  ): boolean {
+    // replace 'any' with your position type
     // implement comparison logic here to check if positions have changed
     // this is a simplistic example and might not suit your needs
     try {
-      return JSON.stringify(newPositions) !== JSON.stringify(this.positions);
+      const currentPositions = this.positions[accountName] || [];
+      return JSON.stringify(newPositions) !== JSON.stringify(currentPositions);
     } catch (error) {
       this.logger.error('Error during positions comparison', error.stack);
       return false;

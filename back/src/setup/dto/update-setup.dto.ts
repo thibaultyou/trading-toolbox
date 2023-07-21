@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsOptional,
   IsEnum,
@@ -6,11 +7,15 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { TriggerType, StatusType } from '../../common.types';
+
 import { Action } from '../../action/entities/action.entity';
-import { Type } from 'class-transformer';
+import { TriggerType, StatusType } from '../../common/common.types';
 
 export class UpdateSetupDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  readonly id?: string;
+
   @ApiProperty({ required: false })
   readonly ticker?: string;
 

@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
-import { BalanceService } from './balance.service';
-import { ExchangeModule } from '../exchange/exchange.module'; // Assuming you have ExchangeModule that provides ExchangeService
 import { EventEmitterModule } from '@nestjs/event-emitter';
+
+import { ExchangeModule } from '../exchange/exchange.module'; // Assuming you have ExchangeModule that provides ExchangeService
+
+import { BalanceService } from './balance.service';
 
 @Module({
   imports: [EventEmitterModule, ExchangeModule],

@@ -1,6 +1,7 @@
-import { OnEvent } from '@nestjs/event-emitter';
-import { AccountCreatedEvent } from '../../account/events/account-created.event';
 import { Injectable, Logger } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
+
+import { AccountCreatedEvent } from '../../account/events/account-created.event';
 import { Events } from '../../app.constants';
 import { ExchangeService } from '../exchange.service';
 
@@ -13,6 +14,6 @@ export class AccountCreatedHandler {
   @OnEvent(Events.ACCOUNT_CREATED)
   handle(event: AccountCreatedEvent) {
     this.logger.log(`[${Events.ACCOUNT_CREATED}] ${event.account.name}`);
-    this.exchangeService.initializeWithAccount(event.account);
+    this.exchangeService.initializeExchange(event.account);
   }
 }

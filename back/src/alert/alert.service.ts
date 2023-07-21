@@ -1,9 +1,14 @@
+// alert.service.ts
+
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { AlertReceivedEvent } from './events/alert-received.event';
+
 import { Events } from '../app.constants';
-import { ReceiveAlertDto } from './dto/receive-alert.dto';
 import { Setup } from '../setup/entities/setup.entity';
+
+import { ReceiveAlertDto } from './dto/receive-alert.dto';
+import { AlertReceivedEvent } from './events/alert-received.event';
+import { AlertReceiveException } from './exceptions/alert.exceptions';
 
 @Injectable()
 export class AlertService {
@@ -25,6 +30,7 @@ export class AlertService {
         `Error notifying alert with ticker: ${alertData.ticker}`,
         error.stack,
       );
+      throw new AlertReceiveException(error.message);
     }
   }
 }

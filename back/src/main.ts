@@ -1,7 +1,10 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+
+import { AccountExceptionsFilter } from './account/exceptions/account-exceptions.filter';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { TickerExceptionsFilter } from './ticker/exceptions/ticker-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -15,6 +18,11 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('docs', app, document);
+
+  app.useGlobalFilters(
+    new AccountExceptionsFilter(),
+    new TickerExceptionsFilter(),
+  );
 
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors();

@@ -1,11 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { ApiProperty } from '@nestjs/swagger';
-import { Action } from '../../action/entities/action.entity';
-import { CreateSetupDto } from '../dto/create-setup.dto';
-import { TriggerType, StatusType } from '../../common.types';
-import { UpdateSetupDto } from '../dto/update-setup.dto';
-import { ValidateIf, IsNotEmpty, validate } from 'class-validator';
 import { BadRequestException } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
+import { ValidateIf, validate } from 'class-validator';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+
+import { Action } from '../../action/entities/action.entity';
+import { TriggerType, StatusType } from '../../common/common.types';
+import { CreateSetupDto } from '../dto/create-setup.dto';
+import { UpdateSetupDto } from '../dto/update-setup.dto';
 
 @Entity()
 export class Setup {
@@ -49,6 +50,7 @@ export class Setup {
 
   static async fromDto(data: CreateSetupDto | UpdateSetupDto): Promise<Setup> {
     const setup = new Setup();
+    setup.id = data.id;
     setup.ticker = data.ticker;
     setup.account = data.account;
 

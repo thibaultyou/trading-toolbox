@@ -2,12 +2,21 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
+import { ActionService } from '../action/action.service';
+import { Events } from '../app.constants';
+
 import { Setup } from './entities/setup.entity';
 import { SetupCreatedEvent } from './events/setup-created.event';
-import { SetupUpdatedEvent } from './events/setup-updated.event';
 import { SetupDeletedEvent } from './events/setup-deleted.event';
-import { Events } from '../app.constants';
-import { Action } from '../action/entities/action.entity';
+import { SetupUpdatedEvent } from './events/setup-updated.event';
+import {
+  SetupNotFoundException,
+  SetupCreateException,
+  SetupUpdateException,
+  SetupDeleteException,
+  SetupFetchAllException,
+} from './exceptions/setup.exceptions';
 
 @Injectable()
 export class SetupService {
@@ -17,37 +26,37 @@ export class SetupService {
     private eventEmitter: EventEmitter2,
     @InjectRepository(Setup)
     private setupRepository: Repository<Setup>,
-    @InjectRepository(Action)
-    private actionRepository: Repository<Action>,
+    private actionService: ActionService,
   ) {}
 
   async findAll(): Promise<Setup[]> {
     try {
-      this.logger.log('Fetching all setups');
+      // this.logger.log('Fetching all setups');
       return await this.setupRepository.find({ relations: ['actions'] });
     } catch (error) {
       this.logger.error('Error fetching all setups', error.stack);
+      throw new SetupFetchAllException(error.message);
     }
   }
 
-  async findOne(id: string): Promise<Setup> {
+  async findOne(id: string): Promise<Setup | null> {
     try {
       this.logger.log(`Fetching setup with id: ${id}`);
-      return await this.setupRepository.findOne({
-        where: {
-          id,
-        },
+      const setup = await this.setupRepository.findOne({
+        where: { id },
         relations: ['actions'],
       });
+      if (!setup) throw new SetupNotFoundException(id);
+      return setup;
     } catch (error) {
       this.logger.error(`Error fetching setup with id: ${id}`, error.stack);
+      throw new SetupNotFoundException(id);
     }
   }
 
   async create(setup: Setup): Promise<Setup> {
     try {
       this.logger.log(`Creating setup with ticker: ${setup.ticker}`);
-      this.logger.log(`Setup object: ${JSON.stringify(setup)}`);
       const savedSetup = await this.setupRepository.save(setup);
       this.eventEmitter.emit(
         Events.SETUP_CREATED,
@@ -60,6 +69,7 @@ export class SetupService {
         `Error creating setup with ticker: ${setup.ticker}`,
         error.stack,
       );
+      throw new SetupCreateException(setup.ticker, error.message);
     }
   }
 
@@ -67,27 +77,21 @@ export class SetupService {
     try {
       this.logger.log(`Updating setup with id: ${id}`);
       const setup = await this.findOne(id);
-      Object.assign(setup, setupUpdate);
-      const updatedSetup = await this.setupRepository.save(setup);
-      this.logger.log(`Setup updated with id: ${updatedSetup.id}`);
-
-      if (setupUpdate.actions) {
-        for (const actionUpdate of setupUpdate.actions) {
-          const action = await this.actionRepository.findOne({
-            where: { id: actionUpdate.id },
-          });
-          Object.assign(action, actionUpdate);
-          await this.actionRepository.save(action);
-        }
+      if (setup) {
+        const updatedSetup = this.setupRepository.merge(setup, setupUpdate);
+        const savedSetup = await this.setupRepository.save(updatedSetup);
+        this.logger.log(`Setup updated with id: ${savedSetup.id}`);
+        this.eventEmitter.emit(
+          Events.SETUP_UPDATED,
+          new SetupUpdatedEvent(savedSetup),
+        );
+        return savedSetup;
+      } else {
+        throw new SetupNotFoundException(id);
       }
-
-      this.eventEmitter.emit(
-        Events.SETUP_UPDATED,
-        new SetupUpdatedEvent(updatedSetup),
-      );
-      return updatedSetup;
     } catch (error) {
       this.logger.error(`Error updating setup with id: ${id}`, error.stack);
+      throw new SetupUpdateException(id, error.message);
     }
   }
 
@@ -98,14 +102,19 @@ export class SetupService {
         where: { id },
         relations: ['actions'],
       });
-      for (const action of setup.actions) {
-        await this.actionRepository.delete(action.id);
+      if (setup) {
+        await Promise.all(
+          setup.actions.map((action) => this.actionService.delete(action.id)),
+        );
+        await this.setupRepository.delete(id);
+        this.eventEmitter.emit(Events.SETUP_DELETED, new SetupDeletedEvent(id));
+        this.logger.log(`Setup deleted with id: ${id}`);
+      } else {
+        throw new SetupNotFoundException(id);
       }
-      await this.setupRepository.delete(id);
-      this.eventEmitter.emit(Events.SETUP_DELETED, new SetupDeletedEvent(id));
-      this.logger.log(`Setup deleted with id: ${id}`);
     } catch (error) {
       this.logger.error(`Error deleting setup with id: ${id}`, error.stack);
+      throw new SetupDeleteException(id, error.message);
     }
   }
 }

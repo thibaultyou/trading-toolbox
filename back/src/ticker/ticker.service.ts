@@ -1,10 +1,22 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import axios from 'axios';
+
 import { ExchangeService } from '../exchange/exchange.service';
 import { SetupService } from '../setup/setup.service';
 
+import {
+  TickerModuleInitException,
+  SubscribeTickerException,
+  UnsubscribeTickerException,
+  UpdateTickerException,
+  GetTickerHistoryException,
+} from './exceptions/ticker.exceptions';
+import { Candle } from './ticker.types';
+
 @Injectable()
 export class TickerService implements OnModuleInit {
-  private tickers: Record<string, number> = {};
+  private tickers: Record<string, Record<string, number>> = {};
+  private lastFetchedTimes: Record<string, number> = {};
   private logger = new Logger(TickerService.name);
 
   constructor(
@@ -15,57 +27,98 @@ export class TickerService implements OnModuleInit {
   async onModuleInit() {
     try {
       const setups = await this.setupService.findAll();
-      const symbols = [...new Set(setups.map((setup) => setup.ticker))];
-      symbols.forEach((symbol) => this.subscribeTicker(symbol));
+      const symbols = [
+        ...new Set(setups.map((setup) => [setup.account, setup.ticker])),
+      ];
+      symbols.forEach((symbol) => this.subscribeTicker(symbol[0], symbol[1]));
     } catch (error) {
-      this.logger.error('Error during module initialization', error.stack);
+      throw new TickerModuleInitException(error);
     }
   }
 
-  subscribeTicker(symbol: string): void {
+  subscribeTicker(accountName: string, symbol: string): void {
     try {
       this.exchangeService.performWsAction(
+        accountName,
         'subscribe',
         `tickers.${symbol}`,
         'subscribing to ticker',
       );
+      if (!this.tickers[accountName]) {
+        this.tickers[accountName] = {};
+      }
     } catch (error) {
-      this.logger.error(`Error subscribing to ticker ${symbol}`, error.stack);
+      throw new SubscribeTickerException(symbol, error);
     }
   }
 
-  unsubscribeTicker(symbol: string): void {
+  unsubscribeTicker(accountName: string, symbol: string): void {
     try {
       this.exchangeService.performWsAction(
+        accountName,
         'unsubscribe',
         `tickers.${symbol}`,
         'unsubscribing from ticker',
       );
+      if (this.tickers[accountName]) {
+        delete this.tickers[accountName][symbol];
+      }
     } catch (error) {
-      this.logger.error(
-        `Error unsubscribing from ticker ${symbol}`,
-        error.stack,
-      );
+      throw new UnsubscribeTickerException(symbol, error);
     }
   }
 
-  updateTicker(symbol: string, data: any): void {
+  updateTicker(accountName: string, symbol: string, data: any): void {
     try {
       const price = (Number(data.ask1Price) + Number(data.bid1Price)) / 2;
-      if (this.tickers[symbol] !== price) {
-        this.tickers[symbol] = price;
+      if (
+        !this.tickers[accountName] ||
+        this.tickers[accountName][symbol] !== price
+      ) {
+        this.tickers[accountName] = { [symbol]: price };
         this.logger.debug(`Updated ticker for ${symbol} ${price}`);
       }
     } catch (error) {
-      this.logger.error('Error during ticker update', error.stack);
+      throw new UpdateTickerException(symbol, error);
     }
   }
 
-  getTicker(symbol: string): number {
-    return this.tickers[symbol];
+  getTicker(accountName: string, symbol: string): number {
+    return this.tickers[accountName] && this.tickers[accountName][symbol];
   }
 
-  getTickers(): Record<string, number> {
-    return this.tickers;
+  getTickers(accountName: string): Record<string, number> {
+    return this.tickers[accountName];
+  }
+
+  async getHistory(symbol: string, fetchNewOnly = false): Promise<Candle[]> {
+    try {
+      let url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=1000`;
+      if (fetchNewOnly && this.lastFetchedTimes[symbol]) {
+        url += `&startTime=${this.lastFetchedTimes[symbol]}`;
+      }
+
+      this.logger.warn('lastFetchedTimes', this.lastFetchedTimes[symbol]);
+
+      const { data } = await axios.get(url);
+      const candles = data.map(([time, open, high, low, close]) => ({
+        time: time / 1000,
+        open: Number(open),
+        high: Number(high),
+        low: Number(low),
+        close: Number(close),
+      }));
+
+      if (candles.length) {
+        this.lastFetchedTimes[symbol] = candles[candles.length - 1].time * 1000;
+      }
+
+      // console.log('Start time:', this.lastFetchedTimes[symbol]);
+      // const { data } = await axios.get(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=1000`);
+      // return data.map(([time, open, high, low, close]) => ({ time: time / 1000, open: Number(open), high: Number(high), low: Number(low), close: Number(close) }));
+      return candles;
+    } catch (error) {
+      throw new GetTickerHistoryException(symbol, fetchNewOnly, error);
+    }
   }
 }

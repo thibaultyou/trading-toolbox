@@ -1,14 +1,15 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { TickerService } from '../ticker/ticker.service';
-import { Timers } from '../app.constants';
-import { SetupService } from '../setup/setup.service';
-import { Setup } from '../setup/entities/setup.entity';
-import { StatusType, TriggerType } from '../common.types';
+
 import { ActionService } from '../action/action.service';
-import { ExchangeService } from '../exchange/exchange.service';
 import { ActionType } from '../action/action.types';
-import { BalanceService } from '../balance/balance.service';
 import { Action } from '../action/entities/action.entity';
+import { Timers } from '../app.constants';
+import { BalanceService } from '../balance/balance.service';
+import { StatusType, TriggerType } from '../common/common.types';
+import { ExchangeService } from '../exchange/exchange.service';
+import { Setup } from '../setup/entities/setup.entity';
+import { SetupService } from '../setup/setup.service';
+import { TickerService } from '../ticker/ticker.service';
 
 @Injectable()
 export class CoreService implements OnModuleInit {
@@ -20,7 +21,7 @@ export class CoreService implements OnModuleInit {
     private balanceService: BalanceService,
     private actionService: ActionService,
     private exchangeService: ExchangeService,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     try {
@@ -49,15 +50,15 @@ export class CoreService implements OnModuleInit {
       .filter((a) => a.status == StatusType.DONE)
       .sort((a, b) => a.order - b.order)) {
       await this.processAction(setup, action);
-      //setup = await this.setupService.findOne(setup.id);
     }
-    await this.checkAndUpdateSetupStatus(setup);
+    // await this.checkAndUpdateSetupStatus(setup);
   }
 
   private async checkAndUpdateSetupStatus(setup: Setup) {
     const pendingOrActiveActions = setup.actions.filter(
       (action) =>
         action.status == StatusType.PENDING ||
+        action.status == StatusType.PAUSED ||
         action.status == StatusType.ACTIVE,
     );
     if (!pendingOrActiveActions.length) {
@@ -70,12 +71,34 @@ export class CoreService implements OnModuleInit {
 
   private async updateSetupStatus(setup: Setup) {
     if (setup.status == StatusType.PENDING) {
-      if (!setup.trigger) {
+      if (setup.trigger === TriggerType.NONE) {
         await this.activateSetup(setup);
       } else {
         await this.checkSetupTrigger(setup);
       }
     }
+  }
+
+  private async checkSetupTrigger(setup: Setup) {
+    const currentTickerValue = this.tickerService.getTicker(
+      setup.account,
+      setup.ticker,
+    );
+    if (
+      (setup.trigger === TriggerType.CROSSING_UP &&
+        currentTickerValue > setup.value) ||
+      (setup.trigger === TriggerType.CROSSING_DOWN &&
+        currentTickerValue < setup.value)
+    ) {
+      await this.activateSetup(setup);
+    }
+  }
+
+  private async activateSetup(setup: Setup) {
+    await this.setupService.update(setup.id, {
+      ...setup,
+      status: StatusType.ACTIVE,
+    });
   }
 
   private async processAction(setup: Setup, action: Action) {
@@ -95,7 +118,10 @@ export class CoreService implements OnModuleInit {
     if (!action.trigger) {
       await this.actionService.update(action.id, newAction);
     } else {
-      const currentTickerValue = this.tickerService.getTicker(setup.ticker);
+      const currentTickerValue = this.tickerService.getTicker(
+        setup.account,
+        setup.ticker,
+      );
       if (
         (action.trigger == TriggerType.CROSSING_UP &&
           currentTickerValue > Number(action.value)) ||
@@ -122,11 +148,14 @@ export class CoreService implements OnModuleInit {
   }
 
   private async calculateSize(setup: Setup, action: Action): Promise<number> {
-    const tickerPrice = this.tickerService.getTicker(setup.ticker);
+    const tickerPrice = this.tickerService.getTicker(
+      setup.account,
+      setup.ticker,
+    );
     const actionValue = action.value;
 
     if (actionValue.includes('%')) {
-      const balance = await this.balanceService.getBalance();
+      const balance = await this.balanceService.getBalance(setup.account);
       return (
         ((balance / 100) * Number(actionValue.replace('%', ''))) / tickerPrice
       );
@@ -137,25 +166,5 @@ export class CoreService implements OnModuleInit {
     }
 
     return Number(actionValue);
-  }
-
-  private async activateSetup(setup: Setup) {
-    await this.setupService.update(setup.id, {
-      ...setup,
-      status: StatusType.ACTIVE,
-    });
-  }
-
-  private async checkSetupTrigger(setup: Setup) {
-    const currentTickerValue = this.tickerService.getTicker(setup.ticker);
-
-    if (
-      (setup.trigger === TriggerType.CROSSING_UP &&
-        currentTickerValue > setup.value) ||
-      (setup.trigger === TriggerType.CROSSING_DOWN &&
-        currentTickerValue < setup.value)
-    ) {
-      await this.activateSetup(setup);
-    }
   }
 }

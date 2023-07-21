@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { AccountController } from './account.controller';
 import { AccountService } from './account.service';
 import { Account } from './entities/account.entity';
-import { AccountController } from './account.controller';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [EventEmitterModule, TypeOrmModule.forFeature([Account])],
