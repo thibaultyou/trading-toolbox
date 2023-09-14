@@ -1,14 +1,11 @@
 import React from 'react';
-import Page from '../components/molecules/Page';
-import SetupFormStepper from '../components/molecules/SetupFormStepper';
-import Title from '../components/atoms/Title';
+import SetupStepper from '../components/molecules/SetupForm/SetupStepper';
 
 const HomePage: React.FC = () => {
   return (
-    <Page>
-      <Title>New setup</Title>
-      <SetupFormStepper />
-    </Page>
+    <>
+      <SetupStepper />
+    </>
   );
 };
 

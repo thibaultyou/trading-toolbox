@@ -45,3 +45,17 @@ export class ExchangeNotFoundException extends Error {
     super(`Exchange not initialized for account: ${accountName}`);
   }
 }
+
+export class ClosePositionException extends Error {
+  constructor(accountName: string, error: any) {
+    super(`Error closing position for ${accountName}: ${error.message}`);
+    this.name = this.constructor.name;
+  }
+}
+
+export class UnrecognizedSideException extends Error {
+  constructor(accountName: string, side: string) {
+    super(`Unrecognized side "${side}" for account ${accountName}.`);
+    this.name = this.constructor.name;
+  }
+}

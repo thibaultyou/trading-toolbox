@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import { Box, Button, Divider } from '@mui/material';
-import { ActionType } from '../../types/action.types';
-import { TriggerType } from '../../types/common.types';
-import ActionInput from '../molecules/ActionInputs';
+import { ActionType, ValueType } from '../../types/action.types';
+import { StatusType, TriggerType } from '../../types/common.types';
+import ActionInput from '../molecules/ActionForm/ActionInputs';
 import { useSetupFormContext } from '../../containers/SetupFormContext';
 
 const ActionForm: React.FC = () => {
@@ -17,8 +17,9 @@ const ActionForm: React.FC = () => {
           order: setup.actions.length,
           type: ActionType.MARKET_LONG,
           trigger: TriggerType.NONE,
-          trigger_value: '',
-          value: '',
+          value: '0',
+          value_type: ValueType.CONTRACTS,
+          status: StatusType.PAUSED,
         },
       ],
     });

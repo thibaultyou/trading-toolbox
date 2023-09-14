@@ -4,10 +4,11 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ExchangeModule } from '../exchange/exchange.module'; // Assuming you have ExchangeModule that provides ExchangeService
 
 import { BalanceService } from './balance.service';
+import { BalanceUpdateHandler } from './handlers/update-balance.event-handler';
 
 @Module({
   imports: [EventEmitterModule, ExchangeModule],
-  providers: [BalanceService],
+  providers: [BalanceService, BalanceUpdateHandler],
   exports: [BalanceService],
 })
 export class BalanceModule {}

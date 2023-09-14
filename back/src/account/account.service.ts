@@ -25,7 +25,7 @@ export class AccountService {
   ) {}
 
   async findAll(): Promise<Account[]> {
-    this.logger.log('Fetching all accounts');
+    this.logger.debug('Fetching all accounts');
     const accounts = await this.accountRepository.find();
     return accounts;
   }

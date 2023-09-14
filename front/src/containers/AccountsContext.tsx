@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import axios from 'axios';
 import { Account } from '../types/account.types';
+import { API_URL, API_ACCOUNTS_PATH } from '../config';
 
 interface AccountsContextProps {
   accounts: Account[];
@@ -39,11 +40,9 @@ export const AccountsProvider: React.FC<AccountsProviderProps> = ({
   const fetchAccounts = async () => {
     try {
       const response = await axios.get<Account[]>(
-        'http://127.0.0.1:1234/api/accounts',
+        `${API_URL}${API_ACCOUNTS_PATH}`,
       );
       setAccounts(response.data);
-      //   if (response.data.length)
-      //     setSetup({ ...setup, account: response.data[0].name });
     } catch (error) {
       console.error('Error fetching accounts', error);
     }

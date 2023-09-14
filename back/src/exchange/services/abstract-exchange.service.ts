@@ -6,7 +6,8 @@ import { Balances, Exchange, Order } from 'ccxt';
 import { AccountService } from '../../account/account.service';
 import { Account } from '../../account/entities/account.entity';
 import { Events } from '../../app.constants';
-import { TickerUpdateEvent } from '../../ticker/events/ticker-update.event';
+import { OrderExecutedEvent } from '../events/order-executed.event';
+import { UpdateTickerEvent } from '../events/update-ticker.event';
 import {
   ExchangeOperationFailedException,
   ExchangeNotInitializedException,
@@ -34,17 +35,59 @@ export abstract class AbstractExchangeService implements IExchangeService {
   initWs(options: WSClientConfigurableOptions): WebsocketClient {
     const ws = new WebsocketClient(options);
     ws.on('update', this.handleWsUpdate.bind(this));
+    ws.subscribe(['execution']); // 'wallet', 'position', 'order'
     return ws;
   }
 
   private handleWsUpdate(msg: any) {
-    if (msg.topic && msg.topic.startsWith('tickers.')) {
-      this.eventEmitter.emit(
-        Events.TICKER_UPDATE,
-        new TickerUpdateEvent(this.account.name, msg.topic, msg.data),
-      );
+    if (msg?.topic) {
+      const topicHandlerMapping = {
+        'tickers.': this.handleTickerUpdate,
+        execution: this.handleExecutionUpdate,
+        // position: this.handlePositionUpdate,
+        // order: this.handleOrderUpdate,
+        // wallet: this.handleWalletUpdate,
+      };
+
+      for (const [key, handler] of Object.entries(topicHandlerMapping)) {
+        if (msg.topic.startsWith(key)) {
+          handler.call(this, msg);
+          return;
+        }
+      }
+
+      this.logger.warn(`Topic ${msg.topic} not supported`);
     }
   }
+
+  private handleTickerUpdate(msg: any) {
+    this.eventEmitter.emit(
+      Events.UPDATE_TICKER,
+      new UpdateTickerEvent(this.account.name, msg.topic, msg.data),
+    );
+  }
+
+  private handleExecutionUpdate(msg: any) {
+    this.eventEmitter.emit(
+      Events.ORDER_EXECUTED,
+      new OrderExecutedEvent(this.account.name, msg.data),
+    );
+  }
+
+  // private handlePositionUpdate(msg: any) {
+  //   this.logger.log('position', JSON.stringify(msg));
+  // }
+
+  // private handleOrderUpdate(msg: any) {
+  //   this.logger.log('order', JSON.stringify(msg));
+  // }
+
+  // private handleWalletUpdate(msg: any) {
+  //   this.eventEmitter.emit(
+  //     Events.UPDATE_BALANCE,
+  //     new UpdateBalanceEvent(this.account.name, msg.data),
+  //   );
+  // }
 
   performWsAction(action: string, topic: string, actionDescription: string) {
     try {
@@ -59,7 +102,7 @@ export abstract class AbstractExchangeService implements IExchangeService {
         this.ws[action](topic);
         this.subscribedTickers.delete(tickerSymbol);
       } else {
-        this.logger.warn(`Ignoring ${actionDescription}`);
+        this.logger.debug(`Ignoring ${actionDescription}`);
         return;
       }
       this.logger.log(
@@ -129,36 +172,57 @@ export abstract class AbstractExchangeService implements IExchangeService {
     }
   }
 
-  async openLongOrder(symbol: string, size: number): Promise<Order> {
-    return this.createOrder(
-      symbol,
-      size,
-      'createMarketBuyOrder',
-      'opening long order',
-    );
+  async openMarketLongOrder(symbol: string, size: number): Promise<Order> {
+    this.ensureExchangeInitialized();
+    try {
+      return await this.exchange.createMarketBuyOrder(symbol, size);
+    } catch (error) {
+      throw new ExchangeOperationFailedException(
+        'opening market long order',
+        error.message,
+      );
+    }
   }
 
-  async openShortOrder(symbol: string, size: number): Promise<Order> {
-    return this.createOrder(
-      symbol,
-      size,
-      'createMarketSellOrder',
-      'opening short order',
-    );
+  async openMarketShortOrder(symbol: string, size: number): Promise<Order> {
+    this.ensureExchangeInitialized();
+    try {
+      return await this.exchange.createMarketSellOrder(symbol, size);
+    } catch (error) {
+      throw new ExchangeOperationFailedException(
+        'opening market short order',
+        error.message,
+      );
+    }
   }
 
-  private async createOrder(
+  async openLimitLongOrder(
     symbol: string,
     size: number,
-    orderType: string,
-    actionDescription: string,
+    price: number,
   ): Promise<Order> {
     this.ensureExchangeInitialized();
     try {
-      return await this.exchange[orderType](symbol, size);
+      return await this.exchange.createLimitBuyOrder(symbol, size, price);
     } catch (error) {
       throw new ExchangeOperationFailedException(
-        actionDescription,
+        'opening limit long order',
+        error.message,
+      );
+    }
+  }
+
+  async openLimitShortOrder(
+    symbol: string,
+    size: number,
+    price: number,
+  ): Promise<Order> {
+    this.ensureExchangeInitialized();
+    try {
+      return await this.exchange.createLimitSellOrder(symbol, size, price);
+    } catch (error) {
+      throw new ExchangeOperationFailedException(
+        'opening limit short order',
         error.message,
       );
     }
@@ -220,6 +284,18 @@ export abstract class AbstractExchangeService implements IExchangeService {
     } catch (error) {
       throw new ExchangeOperationFailedException(
         actionDescription,
+        error.message,
+      );
+    }
+  }
+
+  async closeOrdersWithSymbol(symbol: string): Promise<Order> {
+    this.ensureExchangeInitialized();
+    try {
+      return await this.exchange.cancelAllOrders(symbol);
+    } catch (error) {
+      throw new ExchangeOperationFailedException(
+        `closing all ${symbol} orders`,
         error.message,
       );
     }

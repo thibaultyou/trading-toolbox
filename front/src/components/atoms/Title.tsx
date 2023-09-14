@@ -12,7 +12,7 @@ const Title: React.FC<TitleProps> = ({ children }) => {
       gutterBottom
       align="center"
       component="div"
-      sx={{ mb: 2 }}
+      sx={{ mb: 2, mt: 2 }}
     >
       {children}
     </Typography>

@@ -5,8 +5,8 @@ import {
   SelectChangeEvent,
   Typography,
 } from '@mui/material';
-import { useSetupFormContext } from '../../containers/SetupFormContext';
-import { useAccountsContext } from '../../containers/AccountsContext';
+import { useSetupFormContext } from '../../../containers/SetupFormContext';
+import { useAccountsContext } from '../../../containers/AccountsContext';
 import { useEffect } from 'react';
 
 const AccountSelector: React.FC = () => {

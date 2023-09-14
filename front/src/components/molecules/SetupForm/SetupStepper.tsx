@@ -6,15 +6,17 @@ import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import SetupForm from '../templates/SetupForm';
-import TriggerForm from '../templates/TriggerForm';
-import ActionForm from '../templates/ActionForm';
-import { TriggerType } from '../../types/common.types';
-import { useSetupFormContext } from '../../containers/SetupFormContext';
+import SetupForm from '../../templates/SetupForm';
+import TriggerForm from '../../templates/TriggerForm';
+import ActionForm from '../../templates/ActionForm';
+import { TriggerType } from '../../../types/common.types';
+import { useSetupFormContext } from '../../../containers/SetupFormContext';
+import Title from '../../atoms/Title';
+import Paper from '../../atoms/Paper';
 
 const steps = ['Create setup', 'Configure trigger', 'Add actions'];
 
-const SetupFormStepper: React.FC = () => {
+const SetupStepper: React.FC = () => {
   const navigate = useNavigate();
   const { setup, handleSubmit, areActionsValid } = useSetupFormContext();
   const [activeStep, setActiveStep] = React.useState(0);
@@ -91,13 +93,18 @@ const SetupFormStepper: React.FC = () => {
     }
   };
 
-  const handleFinalSubmit = (e: React.FormEvent) => {
-    handleSubmit(e);
-    navigate('/setups');
+  const handleFinalSubmit = async (e: React.FormEvent) => {
+    try {
+      await handleSubmit(e);
+      navigate('/setups');
+    } catch (error) {
+      console.error('Error updating setup: ', error);
+    }
   };
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Paper>
+      <Title>New setup</Title>
       <Stepper activeStep={activeStep} alternativeLabel>
         {steps.map((label, index) => {
           const stepProps: { completed?: boolean } = {};
@@ -157,8 +164,8 @@ const SetupFormStepper: React.FC = () => {
           </Box>
         </React.Fragment>
       )}
-    </Box>
+    </Paper>
   );
 };
 
-export default SetupFormStepper;
+export default SetupStepper;

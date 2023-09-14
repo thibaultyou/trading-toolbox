@@ -5,8 +5,18 @@ export interface IExchangeService {
   getBalance(): Promise<number>;
   getTickers(): Promise<string[]>;
   getOpenPositions(): Promise<any>;
-  openLongOrder(symbol: string, size: number): Promise<Order>;
-  openShortOrder(symbol: string, size: number): Promise<Order>;
+  openMarketLongOrder(symbol: string, size: number): Promise<Order>;
+  openMarketShortOrder(symbol: string, size: number): Promise<Order>;
+  openLimitLongOrder(
+    symbol: string,
+    size: number,
+    price: number,
+  ): Promise<Order>;
+  openLimitShortOrder(
+    symbol: string,
+    size: number,
+    price: number,
+  ): Promise<Order>;
   updateStopLoss(
     orderId: string,
     symbol: string,
@@ -20,6 +30,7 @@ export interface IExchangeService {
     takeProfitPrice: number,
   ): Promise<Order>;
   closeOrder(orderId: string, symbol: string): Promise<Order>;
+  closeOrdersWithSymbol(symbol: string): Promise<Order>;
   fetchOpenOrders(): Promise<Order[]>;
   cleanResources(): void;
   performWsAction(

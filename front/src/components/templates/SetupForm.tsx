@@ -1,7 +1,7 @@
 import React from 'react';
-import AccountSelector from '../molecules/AccountSelector';
-import RetriesSlider from '../molecules/SetupRetriesSlider';
-import TickerSelector from '../molecules/TickerSelector';
+import AccountSelector from '../molecules/SetupForm/AccountSelector';
+import RetriesSlider from '../molecules/SetupForm/SetupRetriesSlider';
+import TickerSelector from '../molecules/SetupForm/TickerSelector';
 import LoadingButtonWrapper from '../../containers/LoadingButtonWrapper';
 
 const SetupForm: React.FC = () => {

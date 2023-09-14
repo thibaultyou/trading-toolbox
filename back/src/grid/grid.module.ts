@@ -1,13 +1,22 @@
 import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
+import { AccountModule } from '../account/account.module';
 import { ExchangeModule } from '../exchange/exchange.module';
+import { PositionModule } from '../position/position.module';
 import { TickerModule } from '../ticker/ticker.module';
 
 import { GridService } from './grid.service';
+import { OrderExecutedHandler } from './handlers/order-executed.event-handler';
 
 @Module({
-  imports: [EventEmitterModule, ExchangeModule, TickerModule],
-  providers: [GridService],
+  imports: [
+    EventEmitterModule,
+    AccountModule,
+    ExchangeModule,
+    PositionModule,
+    TickerModule,
+  ],
+  providers: [GridService, OrderExecutedHandler],
 })
 export class GridModule {}

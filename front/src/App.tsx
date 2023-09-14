@@ -6,7 +6,7 @@ import React from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import HomePage from './pages/HomePage';
-import AppBar from './components/molecules/AppBar';
+import AppBar from './components/molecules/Menu';
 import { Route, Routes } from 'react-router';
 import { BrowserRouter } from 'react-router-dom';
 import SetupsPage from './pages/SetupsPage';

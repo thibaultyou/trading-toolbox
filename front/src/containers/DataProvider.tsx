@@ -3,6 +3,7 @@ import { SetupFormProvider } from './SetupFormContext';
 import { AccountsProvider } from './AccountsContext';
 import { TickersProvider } from './TickersContext';
 import { SetupsProvider } from './SetupsContext';
+import { ActionsProvider } from './ActionsContext';
 
 interface DataProviderProps {
   children: ReactNode;
@@ -13,7 +14,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     <AccountsProvider>
       <TickersProvider>
         <SetupsProvider>
-          <SetupFormProvider>{children}</SetupFormProvider>
+          <ActionsProvider>
+            <SetupFormProvider>{children}</SetupFormProvider>
+          </ActionsProvider>
         </SetupsProvider>
       </TickersProvider>
     </AccountsProvider>

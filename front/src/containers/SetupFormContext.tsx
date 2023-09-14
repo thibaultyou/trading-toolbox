@@ -2,6 +2,8 @@ import React, { createContext, useState, useContext, ReactNode } from 'react';
 import axios from 'axios';
 import { Setup } from '../types/setup.types';
 import { StatusType, TriggerType } from '../types/common.types';
+import { useSetupsContext } from './SetupsContext';
+import { API_URL, API_SETUPS_PATH } from '../config';
 
 interface SetupFormContextProps {
   setup: Setup;
@@ -30,6 +32,7 @@ interface SetupProviderProps {
 export const SetupFormProvider: React.FC<SetupProviderProps> = ({
   children,
 }) => {
+  const { fetchSetups } = useSetupsContext();
   const [setup, setSetup] = useState<Setup>({
     ticker: '',
     account: '',
@@ -45,12 +48,7 @@ export const SetupFormProvider: React.FC<SetupProviderProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      console.log('submit', setup);
-      const response = await axios.post(
-        'http://127.0.0.1:1234/api/setups',
-        setup,
-      );
-      console.log('response', response.data);
+      const response = await axios.post(`${API_URL}${API_SETUPS_PATH}`, setup);
       setSetup({
         ticker: '',
         account: '',
@@ -61,6 +59,7 @@ export const SetupFormProvider: React.FC<SetupProviderProps> = ({
         retries: 3,
       });
       setActionsValidity(false);
+      fetchSetups();
     } catch (error) {
       console.error(error);
     }

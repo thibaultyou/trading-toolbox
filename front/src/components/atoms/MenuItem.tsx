@@ -2,19 +2,14 @@ import { ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import { Link } from 'react-router-dom';
 import React from 'react';
 
-interface DrawerItemProps {
+interface MenuItemProps {
   to: string;
   icon: JSX.Element;
   primary: string;
   onClose: () => void;
 }
 
-const DrawerItem: React.FC<DrawerItemProps> = ({
-  to,
-  icon,
-  primary,
-  onClose,
-}) => (
+const MenuItem: React.FC<MenuItemProps> = ({ to, icon, primary, onClose }) => (
   <Link
     to={to}
     style={{ textDecoration: 'none', color: 'inherit' }}
@@ -27,4 +22,4 @@ const DrawerItem: React.FC<DrawerItemProps> = ({
   </Link>
 );
 
-export default DrawerItem;
+export default MenuItem;

@@ -6,11 +6,15 @@ import { Events, Timers } from '../app.constants';
 import { ExchangeService } from '../exchange/exchange.service';
 
 import { PositionUpdatedEvent } from './events/position-updated.event';
-
+import {
+  PositionComparisonException,
+  PositionUpdateException,
+} from './exceptions/position.exceptions';
+import { Position } from './position.types';
 @Injectable()
 export class PositionService implements OnModuleInit {
   private logger = new Logger(PositionService.name);
-  private positions: Record<string, any[]> = {}; // replace 'any' with your position type
+  private positions: Record<string, Position[]> = {};
 
   constructor(
     private eventEmitter: EventEmitter2,
@@ -29,8 +33,7 @@ export class PositionService implements OnModuleInit {
     }
   }
 
-  // TODO replace 'any' with your position type
-  async getPositions(accountName: string): Promise<any[]> {
+  async getPositions(accountName: string): Promise<Position[]> {
     return this.positions[accountName] || [];
   }
 
@@ -56,22 +59,20 @@ export class PositionService implements OnModuleInit {
       }
     } catch (error) {
       this.logger.error('Error during updating positions', error.stack);
+      throw new PositionUpdateException(error);
     }
   }
 
   private hasPositionsChanged(
     accountName: string,
-    newPositions: any[],
+    newPositions: Position[],
   ): boolean {
-    // replace 'any' with your position type
-    // implement comparison logic here to check if positions have changed
-    // this is a simplistic example and might not suit your needs
     try {
       const currentPositions = this.positions[accountName] || [];
       return JSON.stringify(newPositions) !== JSON.stringify(currentPositions);
     } catch (error) {
       this.logger.error('Error during positions comparison', error.stack);
-      return false;
+      throw new PositionComparisonException(error);
     }
   }
 }

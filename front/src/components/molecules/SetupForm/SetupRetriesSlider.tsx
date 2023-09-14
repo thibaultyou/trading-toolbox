@@ -1,5 +1,5 @@
 import { Box, Typography, Slider } from '@mui/material';
-import { useSetupFormContext } from '../../containers/SetupFormContext';
+import { useSetupFormContext } from '../../../containers/SetupFormContext';
 
 const RETRIES_MARKS = [
   { value: 0, label: '0' },

@@ -1,46 +1,47 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Button,
   Typography,
   IconButton,
   Drawer,
   List,
-  AppBar as MUIAppBar,
+  AppBar,
   Toolbar,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
-import DrawerItem from '../atoms/DrawerItem';
+import DrawerItem from '../atoms/MenuItem';
 import AddAlarmIcon from '@mui/icons-material/AddAlarm';
 import AccessAlarmIcon from '@mui/icons-material/AccessAlarm';
+import { APP_SETUPS_CREATE_PATH, APP_SETUPS_READ_PATH } from '../../config';
 
-interface AppBarProps {
+interface MenuProps {
   variant: boolean;
   setTheme: (variant: boolean) => void;
 }
 
-const AppBar = ({ variant, setTheme }: AppBarProps) => {
+const Menu = ({ variant, setTheme }: MenuProps) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const handleDrawerOpen = () => setDrawerOpen(true);
   const handleDrawerClose = () => setDrawerOpen(false);
 
   const drawerItems = [
     {
-      to: '/create',
+      to: APP_SETUPS_CREATE_PATH,
       icon: <AddAlarmIcon />,
       primary: 'Configure new setup',
     },
     {
-      to: '/setups',
+      to: APP_SETUPS_READ_PATH,
       icon: <AccessAlarmIcon />,
       primary: 'Pending setups',
     },
   ];
 
   return (
-    <MUIAppBar position="static">
-      <Toolbar>
+    <AppBar position="static">
+      <Toolbar variant="dense">
         <IconButton
           edge="start"
           color="inherit"
@@ -67,8 +68,8 @@ const AppBar = ({ variant, setTheme }: AppBarProps) => {
           </List>
         </Drawer>
       </Toolbar>
-    </MUIAppBar>
+    </AppBar>
   );
 };
 
-export default AppBar;
+export default Menu;

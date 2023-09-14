@@ -1,6 +1,6 @@
 import { Box, Typography, Autocomplete, TextField } from '@mui/material';
-import { useSetupFormContext } from '../../containers/SetupFormContext';
-import { useTickersContext } from '../../containers/TickersContext';
+import { useSetupFormContext } from '../../../containers/SetupFormContext';
+import { useTickersContext } from '../../../containers/TickersContext';
 
 const TickerSelector: React.FC = () => {
   const { tickers } = useTickersContext();
