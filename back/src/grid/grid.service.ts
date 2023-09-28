@@ -1,9 +1,12 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Interval } from '@nestjs/schedule';
+import { Order } from 'ccxt';
 
 import { AccountService } from '../account/account.service';
 import { Timers } from '../app.constants';
 import { ExchangeService } from '../exchange/exchange.service';
 import { OrderExecutionData } from '../exchange/exchange.types';
+import { OrderService } from '../order/order.service';
 import { PositionService } from '../position/position.service';
 import { Position } from '../position/position.types';
 import { TickerService } from '../ticker/ticker.service';
@@ -22,11 +25,11 @@ interface Grid {
 const gridConfiguration: Grid = {
   symbol: 'XRPUSDT',
   side: 'long',
-  firstBuyAmount: 15,
+  firstBuyAmount: 25,
   buyAmount: 1,
   sellAmount: 1,
-  deltaPercentage: 0.2,
-  levels: 5,
+  deltaPercentage: 0.1,
+  levels: 10,
 };
 
 const BUY = 'Buy';
@@ -38,95 +41,105 @@ export class GridService implements OnModuleInit {
   private readonly grid = new SortedMap();
   private delta: number;
   private totalFees = 0;
+  private missingOrderLoopCounter = 0;
+  private rearmExcessRemovalCounter = 0;
+  private removalRearmCounter = 0;
+  private rearmFillGapsCounter = 0;
+  private noOrdersRearmCounter = 5;
+  private noPositionRearmCounter = 3;
 
   constructor(
     private readonly tickerService: TickerService,
     private readonly exchangeService: ExchangeService,
     private readonly accountService: AccountService,
     private readonly positionService: PositionService,
-  ) { }
+    private readonly orderService: OrderService,
+  ) {}
 
   onModuleInit() {
-    this.logger.log('Initializing trade loop...');
+    this.logger.log(' | Initializing trade loop...');
     this.setupTradeLoop();
   }
 
   // --------------- Setup & Core Loop Methods ---------------
 
-  private setupTradeLoop() {
+  @Interval(Timers.TRADE_LOOP_COOLDOWN)
+  private async setupTradeLoop() {
     try {
-      this.logger.log(
-        'Trade loop set up with cooldown of: ' +
-        Timers.TRADE_LOOP_COOLDOWN +
-        'ms',
-      );
-      setInterval(async () => {
-        try {
-          await this.tradeLoop();
-        } catch (error) {
-          this.logger.error('Error during trade loop iteration', error.stack);
-        }
-      }, Timers.TRADE_LOOP_COOLDOWN);
+      await this.tradeLoop();
     } catch (error) {
-      this.logger.error('Error setting up trade loop', error.stack);
+      this.logger.error(' | Error in trade loop iteration', error.stack);
     }
   }
 
   private async tradeLoop() {
-    this.logger.debug('Starting trade loop iteration...');
+    this.logger.debug(' | Starting trade loop iteration...');
     try {
       const accounts = await this.accountService.findAll();
       for (const account of accounts) {
         await this.processAccount(account.name);
       }
     } catch (error) {
-      this.logger.error(`Error processing accounts`, error.stack);
+      this.logger.error(`| Error processing accounts`, error.stack);
     }
   }
 
   private async processAccount(accountName: string) {
-    this.logger.debug(`Processing account: ${accountName}`);
+    this.logger.debug(`| Processing account | Account: ${accountName}`);
     try {
       const positions = await this.positionService.getPositions(accountName);
       if (gridConfiguration.side === 'long') {
-        await this.processLongGrid(accountName, positions);
+        await this.processGrid(accountName, positions);
       }
-      // else (gridConfiguration.side === 'short') {
-      //   TODO not implemented
-      // }
     } catch (error) {
       this.logger.error(
-        `Error during processing account: ${accountName}`,
+        `| Error during processing account: ${accountName}`,
         error.stack,
       );
     }
   }
 
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   // --------------- Position & Grid Handling Methods ---------------
 
-  private async processLongGrid(accountName: string, positions: Position[]) {
-    this.logger.debug(`[${accountName}] Processing long positions...`);
+  private async processGrid(accountName: string, positions: Position[]) {
+    this.logger.debug(
+      `| Processing grid | Account: ${accountName} | Ticker: ${gridConfiguration.symbol}`,
+    );
     try {
       const position = this.findPositionForSymbol(positions);
       if (position) {
+        this.noPositionRearmCounter = 3;
+
         if (this.isGridEmptyOrPositionInvalid(position)) {
           await this.exchangeService.closePosition(accountName, position);
           await this.clearGrid(accountName);
           await this.initializeGrid(accountName, true);
+          await this.sleep(5000);
+        } else {
+          await this.gridHealthCheck(accountName);
         }
-        // else {
-        //   await this.clearGrid(accountName);
-        //   await this.initializeGrid(accountName, false);
-        // }
       } else {
         this.logger.log(
-          `[${accountName}] No current position for ticker: ${gridConfiguration.symbol}`,
+          `| No current position | Account: ${accountName} | Ticker: ${gridConfiguration.symbol}`,
         );
-        await this.initializeGrid(accountName, true);
+        this.noPositionRearmCounter--;
+
+        if (this.noPositionRearmCounter === 0) {
+          this.logger.warn(
+            `| No position detected for the third consecutive time. Resetting grid. | Account: ${accountName} | Ticker: ${gridConfiguration.symbol}`,
+          );
+          await this.clearGrid(accountName);
+          await this.initializeGrid(accountName, true);
+          this.noPositionRearmCounter = 3;
+        }
       }
     } catch (error) {
       this.logger.error(
-        `Error processing long position for account: ${accountName}`,
+        `| Error processing grid | Account: ${accountName} | Ticker: ${gridConfiguration.symbol}`,
         error.stack,
       );
     }
@@ -146,12 +159,7 @@ export class GridService implements OnModuleInit {
 
   private async clearGrid(accountName: string) {
     this.logger.log(
-      `[${accountName}] Clearing grid for ticker: ${gridConfiguration.symbol}`,
-    );
-    this.logger.log(
-      `[${accountName}] Total fees for completed grid cycle: ${this.totalFees.toFixed(
-        2,
-      )}`,
+      `| Clearing grid | Account: ${accountName} | Ticker: ${gridConfiguration.symbol} | Fees: ${this.totalFees}$`,
     );
     this.totalFees = 0;
     try {
@@ -160,10 +168,9 @@ export class GridService implements OnModuleInit {
         gridConfiguration.symbol,
       );
       this.grid.clear();
-      this.logger.warn(`[${accountName}] Current ${gridConfiguration.symbol} grid values:`, this.grid.sortedValues());
     } catch (error) {
       this.logger.error(
-        `Error clearing grid for account: ${accountName}`,
+        `| Error clearing grid | Account: ${accountName} | Ticker: ${gridConfiguration.symbol}`,
         error.stack,
       );
     }
@@ -174,7 +181,7 @@ export class GridService implements OnModuleInit {
     openFirstPosition?: boolean,
   ) {
     this.logger.log(
-      `[${accountName}] Initializing grid for ticker: ${gridConfiguration.symbol}`,
+      `| Initializing grid | Account: ${accountName} | Ticker: ${gridConfiguration.symbol}`,
     );
     try {
       this.tickerService.subscribeTicker(accountName, gridConfiguration.symbol);
@@ -185,7 +192,7 @@ export class GridService implements OnModuleInit {
       if (price) {
         this.delta = (gridConfiguration.deltaPercentage / 100) * price;
         this.logger.log(
-          `[${accountName}] Ticker: ${gridConfiguration.symbol} | Calculated delta for ${gridConfiguration.deltaPercentage}% is ${this.delta}$`,
+          `| Calculated delta | Account: ${accountName} | Ticker: ${gridConfiguration.symbol} | Delta: ${this.delta}$ (based on ${gridConfiguration.deltaPercentage}%)`,
         );
         if (openFirstPosition) {
           await this.exchangeService.openMarketLongOrder(
@@ -201,7 +208,7 @@ export class GridService implements OnModuleInit {
       }
     } catch (error) {
       this.logger.error(
-        `Error initializing grid for account: ${accountName}`,
+        `| Error initializing grid | Account: ${accountName} | Ticker: ${gridConfiguration.symbol}`,
         error.stack,
       );
     }
@@ -222,18 +229,18 @@ export class GridService implements OnModuleInit {
     try {
       if (symbol !== gridConfiguration.symbol) {
         this.logger.debug(
-          `[${accountName}] Incorrect symbol ${symbol} for order with ID: ${orderId}`,
+          `| Unsupported symbol | Account: ${accountName} | Symbol: ${symbol} | Order ID: ${orderId}`,
         );
         return;
       }
       if (orderType !== 'Limit') {
         this.logger.debug(
-          `[${accountName}] Unsupported order type ${orderType} for order with ID: ${orderId}`,
+          `| Unsupported order type | Account: ${accountName} | Type: ${orderType} | Order ID: ${orderId}`,
         );
         return;
       }
       this.logger.debug(
-        `[${accountName}] Updating grid for executed order with ID: ${orderId}`,
+        `| Updating grid for executed order | Account: ${accountName} | Order ID: ${orderId}`,
       );
       const executedOrderPrice = parseFloat(orderPrice);
       const matchingGridOrderPrice = this.grid.get(orderId);
@@ -241,7 +248,7 @@ export class GridService implements OnModuleInit {
         side === BUY
           ? matchingGridOrderPrice + (gridConfiguration.levels + 1) * this.delta
           : matchingGridOrderPrice -
-          (gridConfiguration.levels + 1) * this.delta;
+            (gridConfiguration.levels + 1) * this.delta;
       const errorMargin = this.delta * ERROR_MARGIN_PERCENTAGE;
       const orderIdToRemove = this.grid.getKeyByValueInRange(
         priceToRemove,
@@ -262,7 +269,7 @@ export class GridService implements OnModuleInit {
 
       if (!orderIdToRemove) {
         this.logger.warn(
-          `[${accountName}] Unable to find orderId for price: ${priceToRemove}`,
+          `| Missing orderId for price | Account: ${accountName} | Price: ${priceToRemove}`,
         );
         return;
       } else {
@@ -275,20 +282,383 @@ export class GridService implements OnModuleInit {
         // FIXME not sure we need the following line
         this.grid.delete(orderIdToRemove);
       }
-      this.logger.warn(`[${accountName}] Current ${gridConfiguration.symbol} grid values:`, this.grid.sortedValues());
     } catch (error) {
       this.logger.error(
-        `Error updating grid for account: ${accountName}`,
+        `| Error updating grid | Account: ${accountName} | Ticker: ${gridConfiguration.symbol}`,
         error.stack,
       );
     }
+  }
+
+  private async gridHealthCheck(accountName: string) {
+    this.logger.debug(
+      `| Grid health check started | Account: ${accountName} | Ticker: ${gridConfiguration.symbol}`,
+    );
+    try {
+      const openOrders = await this.orderService.getOrders(
+        accountName,
+        gridConfiguration.symbol,
+      );
+      const wasGridReset = await this.checkForEmptyOrderSides(
+        accountName,
+        openOrders,
+      );
+
+      if (!wasGridReset) {
+        await this.manageExcessOrders(accountName, openOrders);
+        await this.removeDuplicatedOrders(accountName, openOrders);
+        await this.fillGapsInOrders(accountName, openOrders);
+        await this.verifyOrderNearTicker(accountName, openOrders);
+      }
+    } catch (error) {
+      this.logger.error(
+        `| Error during grid health check | Account: ${accountName} | Ticker: ${gridConfiguration.symbol}`,
+        error.stack,
+      );
+    }
+    this.logger.debug(
+      `| Grid health check completed | Account: ${accountName} | Ticker: ${gridConfiguration.symbol}`,
+    );
+  }
+
+  private async checkForEmptyOrderSides(
+    accountName: string,
+    openOrders: Order[],
+  ): Promise<boolean> {
+    try {
+      const buyOrders = openOrders.filter((order) => order.side === 'buy');
+      const sellOrders = openOrders.filter((order) => order.side === 'sell');
+
+      if (buyOrders.length === 0 || sellOrders.length === 0) {
+        this.noOrdersRearmCounter--;
+
+        if (this.noOrdersRearmCounter === 0) {
+          this.logger.warn(
+            `| No buy or sell orders detected for the third consecutive time. Resetting grid | Account: ${accountName} | Ticker: ${gridConfiguration.symbol}`,
+          );
+          await this.clearGrid(accountName);
+          await this.initializeGrid(accountName, false);
+          this.noOrdersRearmCounter = 3;
+          return true;
+        } else {
+          this.logger.debug(
+            `| No buy or sell orders detected | Account: ${accountName} | Rearm counter: ${this.noOrdersRearmCounter}`,
+          );
+        }
+      } else {
+        this.noOrdersRearmCounter = 3;
+      }
+      return false;
+    } catch (error) {
+      this.logger.error(
+        `| Error checking for empty order sides | Account: ${accountName} | Ticker: ${gridConfiguration.symbol}`,
+        error.stack,
+      );
+      return false;
+    }
+  }
+
+  private async manageExcessOrders(accountName: string, openOrders: Order[]) {
+    try {
+      if (this.rearmExcessRemovalCounter > 0) {
+        this.rearmExcessRemovalCounter--;
+        if (this.rearmExcessRemovalCounter === 0) {
+          this.logger.log(
+            `| System rearmed | Account: ${accountName} | Ready to remove excess orders if needed.`,
+          );
+        }
+      }
+
+      const hasExcessBuyOrders = this.hasExcessOrders('buy', openOrders);
+      const hasExcessSellOrders = this.hasExcessOrders('sell', openOrders);
+
+      if (
+        this.rearmExcessRemovalCounter === 0 &&
+        (hasExcessBuyOrders || hasExcessSellOrders)
+      ) {
+        await this.removeExcessOrders('buy', openOrders, accountName);
+        await this.removeExcessOrders('sell', openOrders, accountName);
+        this.logger.log(
+          `| Excess orders removed | Account: ${accountName} | Rearm counter set.`,
+        );
+        this.rearmExcessRemovalCounter = 5;
+      } else if (!hasExcessBuyOrders && !hasExcessSellOrders) {
+        this.logger.debug(`| No excess orders | Account: ${accountName}`);
+      } else {
+        this.logger.debug(
+          `| Excess orders detected, but system in rearm period | Account: ${accountName} | Rearm counter: ${this.rearmExcessRemovalCounter}`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `| Error removing excess orders | Account: ${accountName}`,
+        error.stack,
+      );
+    }
+  }
+
+  private hasExcessOrders(side: 'buy' | 'sell', openOrders: Order[]): boolean {
+    const ordersForSide = openOrders.filter((order) => order.side === side);
+    return ordersForSide.length > gridConfiguration.levels;
+  }
+
+  private async removeExcessOrders(
+    side: 'buy' | 'sell',
+    openOrders: Order[],
+    accountName: string,
+  ) {
+    this.logger.debug(
+      `| Starting removal of excess ${side} orders | Account: ${accountName}`,
+    );
+    const ordersForSide = openOrders.filter((order) => order.side === side);
+    if (ordersForSide.length > gridConfiguration.levels) {
+      const excessCount = ordersForSide.length - gridConfiguration.levels;
+      const ordersToRemove = this.getOrdersToRemove(
+        ordersForSide,
+        excessCount,
+        side,
+      );
+      for (const order of ordersToRemove) {
+        this.logger.log(
+          `| Removing excess order | Account: ${accountName} | Order ID: ${order.id}`,
+        );
+        await this.exchangeService.closeOrder(
+          accountName,
+          order.id,
+          gridConfiguration.symbol,
+        );
+        this.grid.delete(order.id);
+      }
+    }
+    // Additional logic here for placing new orders at correct levels if needed.
+  }
+
+  private getOrdersToRemove(
+    orders: Order[],
+    count: number,
+    side: 'buy' | 'sell',
+  ): Order[] {
+    if (side === 'buy') {
+      return orders.sort((a, b) => a.price - b.price).slice(0, count);
+    } else {
+      return orders.sort((a, b) => b.price - a.price).slice(0, count);
+    }
+  }
+
+  private findDuplicateOrders(orders: Order[]): Order[] {
+    const duplicates: Order[] = [];
+    for (let i = 0; i < orders.length; i++) {
+      for (let j = i + 1; j < orders.length; j++) {
+        const diff = Math.abs(orders[i].price - orders[j].price);
+        const margin = this.delta * ERROR_MARGIN_PERCENTAGE;
+        if (diff < margin) {
+          duplicates.push(orders[j]);
+        }
+      }
+    }
+
+    return duplicates;
+  }
+
+  async removeDuplicatedOrders(accountName: string, openOrders: Order[]) {
+    try {
+      if (this.removalRearmCounter > 0) {
+        this.removalRearmCounter--;
+        if (this.removalRearmCounter === 0) {
+          this.logger.log(
+            `| System rearmed | Account: ${accountName} | Ready to remove duplicates again.`,
+          );
+        }
+      }
+
+      const duplicatedOrders = this.findDuplicateOrders(openOrders);
+
+      if (this.removalRearmCounter === 0 && duplicatedOrders.length > 0) {
+        for (const order of duplicatedOrders) {
+          this.logger.log(
+            `| Removing duplicated order | Account: ${accountName} | Order ID: ${order.id}`,
+          );
+          await this.exchangeService.closeOrder(
+            accountName,
+            order.id,
+            gridConfiguration.symbol,
+          );
+          this.grid.delete(order.id);
+        }
+        this.logger.debug(
+          `| Duplicated orders removed | Account: ${accountName} | Starting rearm period.`,
+        );
+        this.removalRearmCounter = 3;
+      } else if (duplicatedOrders.length === 0) {
+        this.logger.debug(`| No duplicated orders | Account: ${accountName}`);
+      } else {
+        this.logger.debug(
+          `| Duplicated orders found but system in rearm period | Account: ${accountName} | Rearm counter: ${this.removalRearmCounter}`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `| Error removing duplicated orders | Account: ${accountName}`,
+        error.stack,
+      );
+    }
+  }
+
+  async verifyOrderNearTicker(accountName: string, openOrders: Order[]) {
+    try {
+      const buyOrders = openOrders
+        .filter((order) => order.side === 'buy')
+        .sort((a, b) => b.price - a.price);
+      const sellOrders = openOrders
+        .filter((order) => order.side === 'sell')
+        .sort((a, b) => a.price - b.price);
+      if (buyOrders.length > 0 && sellOrders.length > 0) {
+        const maxBuy = buyOrders[0];
+        const minSell = sellOrders[0];
+        const diff = minSell.price - maxBuy.price;
+        const margin = this.delta * ERROR_MARGIN_PERCENTAGE;
+        const price = this.tickerService.getTicker(
+          accountName,
+          gridConfiguration.symbol,
+        );
+
+        if (diff > 2 * this.delta + margin) {
+          this.missingOrderLoopCounter++;
+
+          if (this.missingOrderLoopCounter > 2 && price) {
+            this.logger.log(
+              `| Potentially missing order detected near ticker price | Account: ${accountName}`,
+            );
+
+            let orderPrice: number;
+            let orderType: string;
+
+            if (minSell.price - price > price - maxBuy.price) {
+              orderPrice = minSell.price - this.delta;
+              orderType = 'sell';
+            } else {
+              orderPrice = maxBuy.price + this.delta;
+              orderType = 'buy';
+            }
+
+            if (orderType === 'buy') {
+              await this.setBuyGridLevel(accountName, orderPrice);
+            } else {
+              await this.setSellGridLevel(accountName, orderPrice);
+            }
+
+            this.missingOrderLoopCounter = 0;
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error(
+        `| Error verifying orders near ticker | Account: ${accountName}`,
+        error.stack,
+      );
+    }
+  }
+
+  private async fillGapsInOrders(accountName: string, openOrders: Order[]) {
+    this.logger.debug(`| Checking gaps in orders | Account: ${accountName}`);
+
+    if (this.rearmFillGapsCounter > 0) {
+      this.rearmFillGapsCounter--;
+      if (this.rearmFillGapsCounter === 0) {
+        this.logger.debug(
+          `| Gap check rearm activated | Account: ${accountName} | Ready to fill gaps if needed.`,
+        );
+      } else {
+        this.logger.debug(
+          `| Exiting gap check due to rearm | Account: ${accountName} | Rearm counter: ${this.rearmFillGapsCounter}`,
+        );
+        return;
+      }
+    }
+
+    try {
+      const buyOrders = openOrders
+        .filter((order) => order.side === 'buy')
+        .sort((a, b) => a.price - b.price);
+      const sellOrders = openOrders
+        .filter((order) => order.side === 'sell')
+        .sort((a, b) => a.price - b.price);
+
+      if (buyOrders.length === 0 || sellOrders.length === 0) {
+        this.logger.debug(
+          `| No buy or sell orders present. Exiting gap check. | Account: ${accountName}`,
+        );
+        return;
+      }
+
+      const highestBuyPrice = buyOrders[buyOrders.length - 1].price;
+      const lowestSellPrice = sellOrders[0].price;
+
+      this.logger.debug(
+        `| Highest buy price | Account: ${accountName} | Price: ${highestBuyPrice}`,
+      );
+      this.logger.debug(
+        `| Lowest sell price | Account: ${accountName} | Price: ${lowestSellPrice}`,
+      );
+      this.logger.debug(
+        `| Checking orders | Account: ${accountName} | Orders: ${openOrders.map(
+          (o) => o.price,
+        )}`,
+      );
+
+      for (let index = 1; index < gridConfiguration.levels; index++) {
+        const targetBuyPrice = highestBuyPrice - index * this.delta;
+        const targetSellPrice = lowestSellPrice + index * this.delta;
+
+        if (!this.isOrderPresentNearPrice(buyOrders, targetBuyPrice)) {
+          this.logger.log(
+            `| Buy order missing | Account: ${accountName} | Price: ${targetBuyPrice}`,
+          );
+          await this.setBuyGridLevel(accountName, targetBuyPrice);
+        }
+
+        if (!this.isOrderPresentNearPrice(sellOrders, targetSellPrice)) {
+          this.logger.log(
+            `| Sell order missing | Account: ${accountName} | Price: ${targetSellPrice}`,
+          );
+          await this.setSellGridLevel(accountName, targetSellPrice);
+        }
+      }
+
+      this.rearmFillGapsCounter = 5;
+    } catch (error) {
+      this.logger.error(
+        `| Error filling gaps in orders | Account: ${accountName}`,
+        error.stack,
+      );
+    }
+  }
+
+  private isOrderPresentNearPrice(
+    orders: Order[],
+    targetPrice: number,
+  ): boolean {
+    const margin = this.delta * 0.9;
+    const isOrderNearPrice = orders.some(
+      (order) => Math.abs(order.price - targetPrice) <= margin,
+    );
+
+    if (isOrderNearPrice) {
+      this.logger.debug(`| Order found near the target price: ${targetPrice}`);
+    } else {
+      this.logger.debug(
+        `| No order present near the target price: ${targetPrice}`,
+      );
+    }
+
+    return isOrderNearPrice;
   }
 
   // --------------- Order Management Methods ---------------
 
   private async setBuyGridLevel(accountName: string, price: number) {
     this.logger.debug(
-      `[${accountName}] Setting buy grid level at price: ${price}`,
+      `| Setting buy grid level | Account: ${accountName} | Price: ${price}`,
     );
     try {
       const buyOrder = await this.exchangeService.openLimitLongOrder(
@@ -300,7 +670,7 @@ export class GridService implements OnModuleInit {
       this.grid.set(buyOrder.id, price);
     } catch (error) {
       this.logger.error(
-        `Error setting buy grid level for account: ${accountName}`,
+        `| Error setting buy grid level | Account: ${accountName}`,
         error.stack,
       );
     }
@@ -308,7 +678,7 @@ export class GridService implements OnModuleInit {
 
   private async setSellGridLevel(accountName: string, price: number) {
     this.logger.debug(
-      `[${accountName}] Setting sell grid level at price: ${price}`,
+      `| Setting sell grid level | Account: ${accountName} | Price: ${price}`,
     );
     try {
       const sellOrder = await this.exchangeService.openLimitShortOrder(
@@ -320,7 +690,7 @@ export class GridService implements OnModuleInit {
       this.grid.set(sellOrder.id, price);
     } catch (error) {
       this.logger.error(
-        `Error setting sell grid level for account: ${accountName}`,
+        `| Error setting sell grid level | Account: ${accountName}`,
         error.stack,
       );
     }

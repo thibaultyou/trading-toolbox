@@ -20,11 +20,15 @@ export class OrderService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    this.updateOrders();
+    await this.updateOrders();
   }
 
-  async getOrders(accountName: string): Promise<Order[]> {
-    return this.orders.get(accountName);
+  async getOrders(accountName: string, symbol?: string): Promise<Order[]> {
+    const orders = this.orders.get(accountName);
+    if (symbol && orders) {
+      return orders.filter((order) => order.info.symbol === symbol);
+    }
+    return orders || [];
   }
 
   private async updateOrders() {

@@ -9,7 +9,7 @@ import { GridService } from '../grid.service';
 export class OrderExecutedHandler {
   private readonly logger = new Logger(OrderExecutedHandler.name);
 
-  constructor(private readonly gridService: GridService) { }
+  constructor(private readonly gridService: GridService) {}
 
   @OnEvent(Events.ORDER_EXECUTED)
   async handle(event: OrderExecutedEvent) {
@@ -18,14 +18,14 @@ export class OrderExecutedHandler {
       for (const orderData of data) {
         await this.gridService.updateGrid(accountName, orderData);
         this.logger.log(
-          `[${Events.ORDER_EXECUTED}] [${accountName}] | ` +
-          `Order ID: ${orderData.orderId} | ` +
-          `Type: ${orderData.orderType} | ` +
-          `Side: ${orderData.side} | ` +
-          `Quantity: ${orderData.orderQty} | ` +
-          `Symbol: ${orderData.symbol} | ` +
-          `Price: ${orderData.orderPrice}$ | ` +
-          `Fee: ${orderData.execFee}$`,
+          `Executed order | ` +
+            `Account: ${accountName} | ` +
+            `Ticker: ${orderData.symbol} | ` +
+            `Type: ${orderData.orderType} | ` +
+            `Side: ${orderData.side} | ` +
+            `Qty: ${orderData.orderQty} | ` +
+            `Price: ${orderData.orderPrice}$ | ` +
+            `Fee: ${orderData.execFee}$`,
         );
       }
     } catch (error) {
