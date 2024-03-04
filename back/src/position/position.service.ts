@@ -20,17 +20,22 @@ export class PositionService implements OnModuleInit {
     private eventEmitter: EventEmitter2,
     private exchangeService: ExchangeService,
     private accountService: AccountService,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     try {
       await this.updatePositions();
-      setInterval(async () => {
-        await this.updatePositions();
-      }, Timers.POSITION_UPDATE_COOLDOWN);
     } catch (error) {
-      this.logger.error('Error during module initialization', error.stack);
+      this.logger.error('Error during initial position update', error.stack);
     }
+
+    setInterval(async () => {
+      try {
+        await this.updatePositions();
+      } catch (error) {
+        this.logger.error('Error during position update in interval', error.stack);
+      }
+    }, Timers.POSITION_UPDATE_COOLDOWN);
   }
 
   async getPositions(accountName: string): Promise<Position[]> {
@@ -59,7 +64,7 @@ export class PositionService implements OnModuleInit {
       }
     } catch (error) {
       this.logger.error('Error during updating positions', error.stack);
-      throw new PositionUpdateException(error);
+      // throw new PositionUpdateException(error);
     }
   }
 

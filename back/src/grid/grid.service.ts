@@ -25,11 +25,11 @@ interface Grid {
 const gridConfiguration: Grid = {
   symbol: 'XRPUSDT',
   side: 'long',
-  firstBuyAmount: 25,
+  firstBuyAmount: 5,
   buyAmount: 1,
   sellAmount: 1,
   deltaPercentage: 0.1,
-  levels: 10,
+  levels: 4,
 };
 
 const BUY = 'Buy';
@@ -54,7 +54,7 @@ export class GridService implements OnModuleInit {
     private readonly accountService: AccountService,
     private readonly positionService: PositionService,
     private readonly orderService: OrderService,
-  ) {}
+  ) { }
 
   onModuleInit() {
     this.logger.log(' | Initializing trade loop...');
@@ -248,7 +248,7 @@ export class GridService implements OnModuleInit {
         side === BUY
           ? matchingGridOrderPrice + (gridConfiguration.levels + 1) * this.delta
           : matchingGridOrderPrice -
-            (gridConfiguration.levels + 1) * this.delta;
+          (gridConfiguration.levels + 1) * this.delta;
       const errorMargin = this.delta * ERROR_MARGIN_PERCENTAGE;
       const orderIdToRemove = this.grid.getKeyByValueInRange(
         priceToRemove,

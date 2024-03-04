@@ -17,7 +17,7 @@ export class OrderService implements OnModuleInit {
     private eventEmitter: EventEmitter2,
     private exchangeService: ExchangeService,
     private accountService: AccountService,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     await this.updateOrders();
