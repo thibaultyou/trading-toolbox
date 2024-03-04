@@ -6,6 +6,10 @@ services:
     volumes:
       - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
     ports: [ "0.0.0.0:1234:80" ]
+    depends_on:
+      - server
+      - client
+      - adminer
   server:
     build: ./back
     command: npm run start
@@ -21,13 +25,14 @@ services:
       - DATABASE_NAME=${DATABASE_NAME}
     depends_on:
       - db
-      - adminer
-  # client:
-  #   build: ./front
-  #   command: npm start
-  #   volumes:
-  #     - ./front:/app
-  #   ports: [ "0.0.0.0:3000:3000" ]
+  client:
+    build: ./front
+    command: npm start
+    volumes:
+      - ./front:/app
+    ports: [ "0.0.0.0:3000:3000" ]
+    depends_on:
+      - server
   db:
     image: postgres:latest
     environment:

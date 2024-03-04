@@ -7,7 +7,6 @@ import { env } from '../config';
 
 import { AccountModule } from './account/account.module';
 import { ExchangeModule } from './exchange/exchange.module';
-import { GridModule } from './grid/grid.module';
 
 @Module({
   imports: [
@@ -33,7 +32,7 @@ import { GridModule } from './grid/grid.module';
     // AlertModule,
     // TickerModule,
     // CoreModule,
-    GridModule,
+    // GridModule,
   ],
   controllers: [],
   providers: [],
