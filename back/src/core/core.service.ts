@@ -155,7 +155,7 @@ export class CoreService implements OnModuleInit {
     const actionValue = action.value;
 
     if (actionValue.includes('%')) {
-      const balance = await this.balanceService.getBalance(setup.account);
+      const balance = await this.balanceService.getAccountBalance(setup.account);
       return (
         ((balance / 100) * Number(actionValue.replace('%', ''))) / tickerPrice
       );

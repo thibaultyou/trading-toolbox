@@ -19,6 +19,7 @@ import { ExchangeFactory } from './services/exchange-service.factory';
 
 @Injectable()
 export class ExchangeService {
+  // FIXME replace name mapping with id
   private exchangeMap: Map<string, IExchangeService> = new Map();
   private logger: Logger = new Logger(ExchangeService.name);
 

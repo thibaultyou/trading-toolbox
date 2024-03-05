@@ -4,6 +4,7 @@ import { AccountsProvider } from './AccountsContext';
 import { TickersProvider } from './TickersContext';
 import { SetupsProvider } from './SetupsContext';
 import { ActionsProvider } from './ActionsContext';
+import { BalancesProvider } from './BalancesContext';
 
 interface DataProviderProps {
   children: ReactNode;
@@ -13,11 +14,13 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   return (
     <AccountsProvider>
       <TickersProvider>
-        <SetupsProvider>
-          <ActionsProvider>
-            <SetupFormProvider>{children}</SetupFormProvider>
-          </ActionsProvider>
-        </SetupsProvider>
+        <BalancesProvider>
+          <SetupsProvider>
+            <ActionsProvider>
+              <SetupFormProvider>{children}</SetupFormProvider>
+            </ActionsProvider>
+          </SetupsProvider>
+        </BalancesProvider>
       </TickersProvider>
     </AccountsProvider>
   );

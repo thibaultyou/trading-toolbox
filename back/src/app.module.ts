@@ -3,20 +3,22 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { env } from '../config';
+import { databaseConfig } from './config';
 
 import { AccountModule } from './account/account.module';
+import { BalanceModule } from './balance/balance.module';
 import { ExchangeModule } from './exchange/exchange.module';
+import { TickerModule } from './ticker/ticker.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: env.DATABASE_HOST,
-      port: +env.DATABASE_PORT,
-      username: env.DATABASE_USER,
-      password: env.DATABASE_PASSWORD,
-      database: env.DATABASE_NAME,
+      host: databaseConfig.DATABASE_HOST,
+      port: +databaseConfig.DATABASE_PORT,
+      username: databaseConfig.DATABASE_USER,
+      password: databaseConfig.DATABASE_PASSWORD,
+      database: databaseConfig.DATABASE_NAME,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
@@ -24,13 +26,13 @@ import { ExchangeModule } from './exchange/exchange.module';
     EventEmitterModule.forRoot(),
     AccountModule,
     ExchangeModule,
-    // BalanceModule,
+    BalanceModule,
     // OrderModule,
     // PositionModule,
     // SetupModule,
     // ActionModule,
     // AlertModule,
-    // TickerModule,
+    TickerModule,
     // CoreModule,
     // GridModule,
   ],

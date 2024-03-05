@@ -15,7 +15,7 @@ services:
     command: npm run start:dev
     volumes:
       - ./back:/app
-      - server-node-modules:/app/node_modules
+      # - server-node-modules:/app/node_modules
     ports: [ "0.0.0.0:4000:4000" ]
     environment:
       - NODE_ENV=${NODE_ENV}
@@ -31,7 +31,7 @@ services:
     command: npm start
     volumes:
       - ./front:/app
-      - client-node-modules:/app/node_modules
+      # - client-node-modules:/app/node_modules
     ports: [ "0.0.0.0:3000:3000", "0.0.0.0:35729:35729" ]
     depends_on:
       - server
@@ -40,6 +40,7 @@ services:
     ports: [ "0.0.0.0:5432:5432" ]
     volumes:
       - db-data:/var/lib/postgresql/data
+      # - ./.docker/db-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
@@ -51,5 +52,5 @@ services:
 
 volumes:
   db-data:
-  server-node-modules:
-  client-node-modules: 
+#   server-node-modules:
+#   client-node-modules: 
