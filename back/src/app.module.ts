@@ -8,6 +8,7 @@ import { databaseConfig } from './config';
 import { AccountModule } from './account/account.module';
 import { BalanceModule } from './balance/balance.module';
 import { ExchangeModule } from './exchange/exchange.module';
+import { PositionModule } from './position/position.module';
 import { TickerModule } from './ticker/ticker.module';
 
 @Module({
@@ -25,10 +26,10 @@ import { TickerModule } from './ticker/ticker.module';
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     AccountModule,
-    ExchangeModule,
+    ExchangeModule, // Global
     BalanceModule,
     // OrderModule,
-    // PositionModule,
+    PositionModule,
     // SetupModule,
     // ActionModule,
     // AlertModule,

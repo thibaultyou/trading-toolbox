@@ -10,17 +10,21 @@ import {
 import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 
 import { BaseController } from '../common/base.controller';
-import { maskString } from '../utils/string.utils';
 
 import { AccountService } from './account.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { Account } from './entities/account.entity';
+import { ExchangeService } from '../exchange/exchange.service';
+import { MarketListResponse } from './account.types';
 
 @ApiTags('accounts')
 @Controller('accounts')
 export class AccountController extends BaseController {
-  constructor(private readonly accountService: AccountService) {
+  constructor(
+    private readonly accountService: AccountService,
+    private readonly exchangeService: ExchangeService,
+  ) {
     super('Accounts');
   }
 
@@ -28,14 +32,16 @@ export class AccountController extends BaseController {
   @ApiOperation({ summary: 'Fetch all accounts' })
   async findAll(): Promise<Account[]> {
     const accounts = await this.accountService.findAll();
-    return accounts.map(this.hideSensitiveData);
+    return accounts.map((account) =>
+      this.accountService.hideSensitiveData(account),
+    );
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Fetch an account by ID' })
   async findOne(@Param('id') id: string): Promise<Account> {
     const account = await this.accountService.findOne(id);
-    return this.hideSensitiveData(account);
+    return this.accountService.hideSensitiveData(account);
   }
 
   @Post()
@@ -44,7 +50,7 @@ export class AccountController extends BaseController {
   async create(@Body() createAccountDto: CreateAccountDto): Promise<Account> {
     const newAccount = Account.fromDto(createAccountDto);
     const account = await this.accountService.create(newAccount);
-    return this.hideSensitiveData(account);
+    return this.accountService.hideSensitiveData(account);
   }
 
   @Put(':id')
@@ -56,7 +62,7 @@ export class AccountController extends BaseController {
   ): Promise<Account> {
     const updatedAccount = Account.fromDto(updateAccountDto);
     const account = await this.accountService.update(id, updatedAccount);
-    return this.hideSensitiveData(account);
+    return this.accountService.hideSensitiveData(account);
   }
 
   @Delete(':id')
@@ -65,9 +71,25 @@ export class AccountController extends BaseController {
     await this.accountService.delete(id);
   }
 
-  private hideSensitiveData(account: Account): Account {
-    account.key = maskString(account.key);
-    account.secret = maskString(account.secret);
-    return account;
+  @Get('/:accountName/available-markets')
+  @ApiOperation({ summary: 'List all available markets per account' })
+  async listAvailableMarkets(
+    @Param('accountName') accountName: string,
+  ): Promise<MarketListResponse> {
+    try {
+      const account = await this.accountService.findOneByName(accountName);
+      if (!account) {
+        throw new Error(`Account with name ${accountName} not found.`);
+      }
+      const markets = await this.exchangeService.getMarkets(account.name);
+      return {
+        accountName: account.name,
+        markets,
+      };
+    } catch (error) {
+      throw new Error(
+        `Error fetching available markets for account ${accountName}: ${error}`,
+      );
+    }
   }
 }

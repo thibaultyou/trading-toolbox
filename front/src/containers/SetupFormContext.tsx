@@ -49,6 +49,7 @@ export const SetupFormProvider: React.FC<SetupProviderProps> = ({
     e.preventDefault();
     try {
       const response = await axios.post(`${API_URL}${API_SETUPS_PATH}`, setup);
+      // FIXME handle response
       setSetup({
         ticker: '',
         account: '',

@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { Events } from '../../app.constants';
 import { OrderExecutedEvent } from '../../exchange/events/order-executed.event';
 import { GridService } from '../grid.service';
+import { Events } from '../../config';
 
 @Injectable()
 export class OrderExecutedHandler {

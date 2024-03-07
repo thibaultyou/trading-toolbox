@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import { AccountModule } from '../account/account.module';
@@ -9,6 +9,7 @@ import { BybitExchangeService } from './services/bybit-exchange.service';
 import { ExchangeFactory } from './services/exchange-service.factory';
 import { MexcExchangeService } from './services/mexc-exchange.service';
 
+@Global()
 @Module({
   imports: [EventEmitterModule, AccountModule],
   providers: [

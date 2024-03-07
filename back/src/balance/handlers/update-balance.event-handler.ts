@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { Events } from '../../app.constants';
+import { Events } from '../../config';
 import { UpdateBalanceEvent } from '../../exchange/events/update-balance.event';
 import { BalanceService } from '../balance.service';
 
@@ -17,7 +17,7 @@ export class BalanceUpdateHandler {
       const accountName = event.accountName;
       const balance = parseFloat(event.data[0].coin[0].equity);
 
-      this.balanceService.updateBalance(accountName, balance);
+      this.balanceService.updateBalanceFromWebSocket(accountName, balance);
 
       this.logger.debug(
         `[${Events.UPDATE_BALANCE}] [${accountName}] ${JSON.stringify(

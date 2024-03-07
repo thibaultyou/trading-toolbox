@@ -4,7 +4,6 @@ import { websocketConfig } from '../config';
 
 @WebSocketGateway(websocketConfig)
 export class BalanceGateway {
-
   @WebSocketServer()
   server: Server;
 

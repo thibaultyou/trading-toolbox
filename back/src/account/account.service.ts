@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Events } from '../app.constants';
+import { Events } from '../config';
 
 import { Account } from './entities/account.entity';
 import { AccountCreatedEvent } from './events/account-created.event';
@@ -13,6 +13,7 @@ import {
   AccountNotFoundException,
   AccountAlreadyExistsException,
 } from './exceptions/account.exceptions';
+import { maskString } from '../utils/string.utils';
 
 @Injectable()
 export class AccountService {
@@ -35,6 +36,15 @@ export class AccountService {
     const account = await this.accountRepository.findOne({ where: { id } });
     if (!account) {
       throw new AccountNotFoundException(id);
+    }
+    return account;
+  }
+
+  async findOneByName(name: string): Promise<Account> {
+    this.logger.log(`Fetching account with name: ${name}`);
+    const account = await this.accountRepository.findOne({ where: { name } });
+    if (!account) {
+      throw new AccountNotFoundException(name, true);
     }
     return account;
   }
@@ -82,5 +92,11 @@ export class AccountService {
       new AccountDeletedEvent(account),
     );
     this.logger.log(`Account deleted with id: ${id}`);
+  }
+
+  hideSensitiveData(account: Account): Account {
+    account.key = maskString(account.key);
+    account.secret = maskString(account.secret);
+    return account;
   }
 }

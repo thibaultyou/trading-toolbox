@@ -9,6 +9,24 @@ export class FetchAllTickersException extends HttpException {
   }
 }
 
+export class GetTickerPriceException extends HttpException {
+  constructor(accountName: string, symbol: string, error: any) {
+    super(
+      `Error fetching ticker price for ${symbol} in account ${accountName}: ${error.toString()}`,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
+}
+
+export class FetchTickersByAccountException extends HttpException {
+  constructor(accountName: string, error: string) {
+    super(
+      `Error fetching tickers for account ${accountName}: ${error}`,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
+}
+
 export class FetchTickerHistoryException extends HttpException {
   constructor(symbol: string, newOnly: boolean, error: string) {
     super(

@@ -5,7 +5,7 @@ import { Balances, Exchange, Order } from 'ccxt';
 
 import { AccountService } from '../../account/account.service';
 import { Account } from '../../account/entities/account.entity';
-import { Events } from '../../app.constants';
+import { Events } from '../../config';
 import { OrderExecutedEvent } from '../events/order-executed.event';
 import { UpdateTickerEvent } from '../events/update-ticker.event';
 import {

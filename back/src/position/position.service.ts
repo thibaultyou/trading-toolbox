@@ -2,15 +2,13 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { AccountService } from '../account/account.service';
-import { Events, Timers } from '../app.constants';
 import { ExchangeService } from '../exchange/exchange.service';
 
 import { PositionUpdatedEvent } from './events/position-updated.event';
-import {
-  PositionComparisonException,
-  PositionUpdateException,
-} from './exceptions/position.exceptions';
+import { PositionComparisonException } from './exceptions/position.exceptions';
 import { Position } from './position.types';
+import { Events, Timers } from '../config';
+
 @Injectable()
 export class PositionService implements OnModuleInit {
   private logger = new Logger(PositionService.name);
@@ -20,7 +18,7 @@ export class PositionService implements OnModuleInit {
     private eventEmitter: EventEmitter2,
     private exchangeService: ExchangeService,
     private accountService: AccountService,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     try {
@@ -33,7 +31,10 @@ export class PositionService implements OnModuleInit {
       try {
         await this.updatePositions();
       } catch (error) {
-        this.logger.error('Error during position update in interval', error.stack);
+        this.logger.error(
+          'Error during position update in interval',
+          error.stack,
+        );
       }
     }, Timers.POSITION_UPDATE_COOLDOWN);
   }

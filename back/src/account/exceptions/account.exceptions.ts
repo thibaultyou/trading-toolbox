@@ -1,8 +1,11 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 export class AccountNotFoundException extends HttpException {
-  constructor(id: string) {
-    super(`Account with id: ${id} not found`, HttpStatus.NOT_FOUND);
+  constructor(identifier: string, isName: boolean = false) {
+    super(
+      `Account with ${isName ? 'name' : 'id'}: ${identifier} not found`,
+      HttpStatus.NOT_FOUND,
+    );
   }
 }
 

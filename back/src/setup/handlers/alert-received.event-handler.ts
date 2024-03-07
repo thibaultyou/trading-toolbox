@@ -2,9 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
 import { AlertReceivedEvent } from '../../alert/events/alert-received.event';
-import { Events } from '../../app.constants';
 import { SetupCreateFromAlertException } from '../exceptions/setup.exceptions';
 import { SetupService } from '../setup.service';
+import { Events } from '../../config';
 
 @Injectable()
 export class AlertReceivedHandler {

@@ -3,7 +3,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ActionService } from '../action/action.service';
 import { ActionType } from '../action/action.types';
 import { Action } from '../action/entities/action.entity';
-import { Timers } from '../app.constants';
+import { Timers } from '../config';
 import { BalanceService } from '../balance/balance.service';
 import { StatusType, TriggerType } from '../common/common.types';
 import { ExchangeService } from '../exchange/exchange.service';
@@ -155,7 +155,9 @@ export class CoreService implements OnModuleInit {
     const actionValue = action.value;
 
     if (actionValue.includes('%')) {
-      const balance = await this.balanceService.getAccountBalance(setup.account);
+      const balance = await this.balanceService.getOrRefreshAccountBalance(
+        setup.account,
+      );
       return (
         ((balance / 100) * Number(actionValue.replace('%', ''))) / tickerPrice
       );

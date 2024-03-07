@@ -4,7 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { ActionService } from '../action/action.service';
-import { Events } from '../app.constants';
 
 import { Setup } from './entities/setup.entity';
 import { SetupCreatedEvent } from './events/setup-created.event';
@@ -17,6 +16,7 @@ import {
   SetupDeleteException,
   SetupFetchAllException,
 } from './exceptions/setup.exceptions';
+import { Events } from '../config';
 
 @Injectable()
 export class SetupService {

@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Order } from 'ccxt';
 
 import { AccountService } from '../account/account.service';
-import { Events, Timers } from '../app.constants';
+import { Events, Timers } from '../config';
 import { ExchangeService } from '../exchange/exchange.service';
 
 import { OrderUpdatedEvent } from './events/order-updated.event';
@@ -17,7 +17,7 @@ export class OrderService implements OnModuleInit {
     private eventEmitter: EventEmitter2,
     private exchangeService: ExchangeService,
     private accountService: AccountService,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     await this.updateOrders();

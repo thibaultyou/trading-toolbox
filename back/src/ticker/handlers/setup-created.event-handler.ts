@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { Events } from '../../app.constants';
 import { SetupCreatedEvent } from '../../setup/events/setup-created.event';
 import { TickerService } from '../ticker.service';
+import { Events } from '../../config';
 
 @Injectable()
 export class SetupCreatedHandler {

@@ -1,13 +1,12 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
-
-import { AccountService } from '../account/account.service'; // Assuming you have AccountService
 import { BaseController } from '../common/base.controller';
-import { ExchangeService } from '../exchange/exchange.service';
 
 import {
-  FetchAllTickersException,
   FetchTickerHistoryException,
+  GetTickerPriceException,
+  SubscribeTickerException,
+  UnsubscribeTickerException,
 } from './exceptions/ticker.exceptions';
 import { TickerService } from './ticker.service';
 import { Candle } from './ticker.types';
@@ -15,27 +14,56 @@ import { Candle } from './ticker.types';
 @Controller('tickers')
 @ApiTags('tickers')
 export class TickerController extends BaseController {
-  constructor(
-    private readonly exchangeService: ExchangeService,
-    private readonly tickerService: TickerService,
-    private readonly accountService: AccountService, // Inject AccountService
-  ) {
+  constructor(private readonly tickerService: TickerService) {
     super('TickerController');
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Get all tickers' })
-  async findAll(): Promise<string[]> {
+  @Get('/:accountName/:symbol/price')
+  @ApiOperation({ summary: 'Get subscribed ticker price' })
+  async getTickerPrice(
+    @Param('accountName') accountName: string,
+    @Param('symbol') symbol: string,
+  ): Promise<number> {
     try {
-      const accounts = await this.accountService.findAll();
-      const tickersPromises = accounts.map((account) =>
-        this.exchangeService.getTickers(account.name),
-      );
-      const tickers = await Promise.all(tickersPromises);
-
-      return tickers.flat();
+      const price = this.tickerService.getTicker(accountName, symbol);
+      if (price === undefined) {
+        throw new GetTickerPriceException(
+          accountName,
+          symbol,
+          'Ticker not found',
+        );
+      }
+      return price;
     } catch (error) {
-      throw new FetchAllTickersException(error);
+      throw new GetTickerPriceException(accountName, symbol, error);
+    }
+  }
+
+  @Post('/:accountName/:symbol/subscribe')
+  @ApiOperation({ summary: 'Subscribe to a ticker' })
+  async subscribeTicker(
+    @Param('accountName') accountName: string,
+    @Param('symbol') symbol: string,
+  ): Promise<string> {
+    try {
+      this.tickerService.subscribeTicker(accountName, symbol);
+      return `Subscribed to ticker ${symbol} for account ${accountName}`;
+    } catch (error) {
+      throw new SubscribeTickerException(symbol, error);
+    }
+  }
+
+  @Delete('/:accountName/:symbol/unsubscribe')
+  @ApiOperation({ summary: 'Unsubscribe from a ticker' })
+  async unsubscribeTicker(
+    @Param('accountName') accountName: string,
+    @Param('symbol') symbol: string,
+  ): Promise<string> {
+    try {
+      this.tickerService.unsubscribeTicker(accountName, symbol);
+      return `Unsubscribed from ticker ${symbol} for account ${accountName}`;
+    } catch (error) {
+      throw new UnsubscribeTickerException(symbol, error);
     }
   }
 

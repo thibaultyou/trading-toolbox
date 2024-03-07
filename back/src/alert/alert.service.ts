@@ -3,7 +3,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
-import { Events } from '../app.constants';
+import { Events } from '../config';
 import { Setup } from '../setup/entities/setup.entity';
 
 import { ReceiveAlertDto } from './dto/receive-alert.dto';

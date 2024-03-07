@@ -3,14 +3,14 @@ import { Interval } from '@nestjs/schedule';
 import { Order } from 'ccxt';
 
 import { AccountService } from '../account/account.service';
-import { Timers } from '../app.constants';
 import { ExchangeService } from '../exchange/exchange.service';
 import { OrderExecutionData } from '../exchange/exchange.types';
 import { OrderService } from '../order/order.service';
 import { PositionService } from '../position/position.service';
 import { Position } from '../position/position.types';
 import { TickerService } from '../ticker/ticker.service';
-import { SortedMap } from '../utils/sorted-map';
+import { SortedMap } from '../utils/sorted-map.utils';
+import { Timers } from '../config';
 
 interface Grid {
   symbol: string;
@@ -54,7 +54,7 @@ export class GridService implements OnModuleInit {
     private readonly accountService: AccountService,
     private readonly positionService: PositionService,
     private readonly orderService: OrderService,
-  ) { }
+  ) {}
 
   onModuleInit() {
     this.logger.log(' | Initializing trade loop...');
@@ -248,7 +248,7 @@ export class GridService implements OnModuleInit {
         side === BUY
           ? matchingGridOrderPrice + (gridConfiguration.levels + 1) * this.delta
           : matchingGridOrderPrice -
-          (gridConfiguration.levels + 1) * this.delta;
+            (gridConfiguration.levels + 1) * this.delta;
       const errorMargin = this.delta * ERROR_MARGIN_PERCENTAGE;
       const orderIdToRemove = this.grid.getKeyByValueInRange(
         priceToRemove,
