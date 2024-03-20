@@ -2,9 +2,13 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
-import { AccountExceptionsFilter } from './account/exceptions/account-exceptions.filter';
 import { AppModule } from './app.module';
-import { TickerExceptionsFilter } from './ticker/exceptions/ticker-exceptions.filter';
+import { Urls } from './config';
+import { AccountExceptionsFilter } from './features/account/exceptions/account.exceptions.filter';
+import { BalanceExceptionsFilter } from './features/balance/exceptions/balance.exceptions.filter';
+import { MarketExceptionsFilter } from './features/market/exceptions/market-exceptions.filter';
+import { PositionExceptionsFilter } from './features/position/exceptions/position-exceptions.filter';
+import { TickerExceptionsFilter } from './features/ticker/exceptions/ticker-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -17,10 +21,13 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup(Urls.SWAGGER_DOCS, app, document);
 
   app.useGlobalFilters(
     new AccountExceptionsFilter(),
+    new BalanceExceptionsFilter(),
+    new MarketExceptionsFilter(),
+    new PositionExceptionsFilter(),
     new TickerExceptionsFilter(),
   );
 

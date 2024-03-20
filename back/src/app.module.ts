@@ -4,12 +4,14 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { databaseConfig } from './config';
-
-import { AccountModule } from './account/account.module';
-import { BalanceModule } from './balance/balance.module';
-import { ExchangeModule } from './exchange/exchange.module';
-import { PositionModule } from './position/position.module';
-import { TickerModule } from './ticker/ticker.module';
+import { AccountModule } from './features/account/account.module';
+import { BalanceModule } from './features/balance/balance.module';
+import { ExchangeModule } from './features/exchange/exchange.module';
+import { HealthModule } from './features/health/health.module';
+import { MarketModule } from './features/market/market.module';
+import { OrderModule } from './features/order/order.module';
+import { PositionModule } from './features/position/position.module';
+import { TickerModule } from './features/ticker/ticker.module';
 
 @Module({
   imports: [
@@ -28,7 +30,8 @@ import { TickerModule } from './ticker/ticker.module';
     AccountModule,
     ExchangeModule, // Global
     BalanceModule,
-    // OrderModule,
+    MarketModule,
+    OrderModule,
     PositionModule,
     // SetupModule,
     // ActionModule,
@@ -36,8 +39,7 @@ import { TickerModule } from './ticker/ticker.module';
     TickerModule,
     // CoreModule,
     // GridModule,
+    HealthModule,
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}

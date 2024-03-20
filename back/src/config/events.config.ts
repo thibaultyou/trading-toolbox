@@ -9,6 +9,6 @@ export const Events = {
   SETUP_DELETED: 'setup.deleted',
   UPDATE_BALANCE: 'update.balance',
   UPDATE_TICKER: 'update.ticker',
-  ORDER_UPDATED: 'order.updated',
+  ORDERS_UPDATED: 'orders.updated',
   ORDER_EXECUTED: 'order.executed',
 };
