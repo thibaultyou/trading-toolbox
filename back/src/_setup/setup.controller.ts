@@ -16,8 +16,8 @@ import { UpdateSetupDto } from './dto/update-setup.dto';
 import { Setup } from './entities/setup.entity';
 import { SetupService } from './setup.service';
 
+@ApiTags('Setups')
 @Controller('setups')
-@ApiTags('setups')
 export class SetupController extends BaseController {
   constructor(private readonly setupService: SetupService) {
     super('SetupController');

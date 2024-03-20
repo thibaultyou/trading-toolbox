@@ -5,7 +5,7 @@ import { BaseController } from '../../common/base/base.controller';
 
 import { BalanceService } from './balance.service';
 
-@ApiTags('balances')
+@ApiTags('Balances')
 @Controller('balances')
 export class BalanceController extends BaseController {
   constructor(private readonly balanceService: BalanceService) {

@@ -9,7 +9,7 @@ import { MarketListResponseDto } from './dto/market-list.response.dto';
 import { MarketResponseDto } from './dto/market.response.dto';
 import { MarketNotFoundException } from './exceptions/market.exceptions';
 
-@ApiTags('markets')
+@ApiTags('Markets')
 @Controller('markets')
 export class MarketController extends BaseController {
   constructor(

@@ -3,6 +3,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { SetupModule } from './_setup/setup.module';
 import { databaseConfig } from './config';
 import { AccountModule } from './features/account/account.module';
 import { BalanceModule } from './features/balance/balance.module';
@@ -33,7 +34,7 @@ import { TickerModule } from './features/ticker/ticker.module';
     MarketModule,
     OrderModule,
     PositionModule,
-    // SetupModule,
+    SetupModule,
     // ActionModule,
     // AlertModule,
     TickerModule,

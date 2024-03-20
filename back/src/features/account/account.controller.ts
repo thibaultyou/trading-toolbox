@@ -20,7 +20,7 @@ import { AccountResponseDto } from './dto/account.response.dto';
 import { Account } from './entities/account.entity';
 import { AccountNotFoundException } from './exceptions/account.exceptions';
 
-@ApiTags('accounts')
+@ApiTags('Accounts')
 @Controller('accounts')
 export class AccountController extends BaseController {
   constructor(private readonly accountService: AccountService) {

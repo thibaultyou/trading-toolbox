@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
 
-import { BybitHealthIndicator } from './bybit.health.indicator';
 import { HealthController } from './health.controller';
+import { BybitHealthIndicator } from './indicators/bybit.health.indicator';
 
 @Module({
   imports: [TerminusModule],

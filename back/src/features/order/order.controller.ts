@@ -6,7 +6,7 @@ import { BaseController } from '../../common/base/base.controller';
 
 import { OrderService } from './order.service';
 
-@ApiTags('orders')
+@ApiTags('Orders')
 @Controller('orders')
 export class OrderController extends BaseController {
   constructor(private readonly orderService: OrderService) {

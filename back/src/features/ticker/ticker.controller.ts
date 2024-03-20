@@ -13,8 +13,8 @@ import {
 import { TickerService } from './ticker.service';
 import { Candle } from './ticker.types';
 
+@ApiTags('Tickers')
 @Controller('tickers')
-@ApiTags('tickers')
 export class TickerController extends BaseController {
   constructor(private readonly tickerService: TickerService) {
     super('TickerController');
