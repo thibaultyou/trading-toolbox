@@ -1,7 +1,7 @@
 FROM node:21.7.1-alpine3.19
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 COPY . .
-RUN npm run build
-CMD [ "node", "dist/main" ]
+EXPOSE 3000 35729
+CMD ["npm", "run", "start"]
