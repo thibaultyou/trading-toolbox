@@ -1,7 +1,17 @@
 {
-  "name": "front",
-  "version": "0.1.0",
+  "name": "trading-toolbox-frontend",
+  "version": "0.0.1",
+  "description": "A frontend application for automated cryptocurrency trading on exchanges like Bybit and MEXC, leveraging CCXT and other APIs for trade monitoring, execution, and strategy implementation.",
+  "author": "Thibault YOU",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE.md",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "format": "prettier --write ."
+  },
   "dependencies": {
     "@dnd-kit/core": "^6.0.8",
     "@dnd-kit/sortable": "^7.0.2",
@@ -31,13 +41,6 @@
     "tradingview-api": "^1.0.2",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "format": "prettier --write ."
   },
   "eslintConfig": {
     "extends": [

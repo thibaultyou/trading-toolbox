@@ -1,10 +1,10 @@
 {
-  "name": "v2",
+  "name": "trading-toolbox-backend",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "A backend application for automated cryptocurrency trading on exchanges like Bybit and MEXC, leveraging CCXT and other APIs for trade monitoring, execution, and strategy implementation.",
+  "author": "Thibault YOU",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN LICENSE.md",
   "scripts": {
     "build": "nest build",
     "start": "nest start",

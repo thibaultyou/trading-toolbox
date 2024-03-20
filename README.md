@@ -1,73 +1,74 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Trading Toolbox
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Trading Toolbox is a comprehensive application designed for executing trading operations on exchanges. It leverages modern technologies to monitor trades, execute actions based on conditions, and implement trading strategies.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Getting Started
 
-## Description
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Prerequisites
 
-## Installation
+Before you begin, ensure you have Docker and Docker Compose installed on your machine. You'll also need a basic understanding of Docker concepts.
 
-```bash
-$ pnpm install
+### Setting Up Environment Variables
+
+1. A sample environment file `.env.example` is provided at the root of the application. Copy this file and rename it to `.env`:
+
+```sh
+cp .env.example .env
 ```
 
-## Running the app
+2. Open the `.env` file in a text editor. Adjust the environment variables to match your setup, if necessary. The default values should work for a development environment:
 
-```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+```plaintext
+NODE_ENV=development
+DATABASE_HOST=db
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=app
 ```
 
-## Test
+### Running with Docker Compose
 
-```bash
-# unit tests
-$ pnpm run test
+To run the application using Docker Compose:
 
-# e2e tests
-$ pnpm run test:e2e
+1. Navigate to the root of the application directory.
+2. Run the following command to start all services defined in the `docker-compose.yml` file:
 
-# test coverage
-$ pnpm run test:cov
+```sh
+docker-compose up -d
 ```
 
-## Support
+### Running Locally for Development
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+If you wish to run the application locally for development:
 
-## Stay in touch
+1. Use the `docker-compose.dev.yml` file by running:
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```sh
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+This command starts the development environment, ensuring that your application is running with live reload and other development features.
+
+### Accessing the Application
+
+Once the application is running, you can access its different components using the following URLs:
+
+- **Client Application**: `http://localhost:1234`
+- **API Server**: `http://localhost:1234/api`
+- **Adminer (Database Management)**: `http://localhost:8080/adminer`
+- **Swagger Documentation**: Access the Swagger documentation for the API by navigating to `http://localhost:1234/api/docs`
+
+### Stopping the Application
+
+To stop and remove all running containers, use the following Docker Compose command:
+
+```sh
+docker-compose down
+```
 
 ## License
 
-Nest is [MIT licensed](LICENSE).
+This project is licensed under the CC BY-NC-ND 4.0 License - see the [LICENSE.md](LICENSE.md) file for details.
