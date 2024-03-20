@@ -29,8 +29,8 @@ export interface IExchangeService {
     amount: number,
     takeProfitPrice: number,
   ): Promise<Order>;
-  closeOrder(orderId: string, symbol: string): Promise<Order>;
-  closeOrdersWithSymbol(symbol: string): Promise<Order>;
+  closeOrder(orderId: string, symbol: string): Promise<boolean>;
+  closeOrdersWithSymbol(symbol: string): Promise<boolean>;
   fetchOpenOrders(): Promise<Order[]>;
   cleanResources(): void;
   performWsAction(

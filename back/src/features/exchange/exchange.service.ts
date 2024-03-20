@@ -378,7 +378,7 @@ export class ExchangeService {
     accountName: string,
     orderId: string,
     symbol: string,
-  ): Promise<Order> {
+  ): Promise<boolean> {
     const exchange = this.getExchange(accountName);
     try {
       return await exchange.closeOrder(orderId, symbol);
@@ -394,7 +394,7 @@ export class ExchangeService {
   async closeOrdersWithSymbol(
     accountName: string,
     symbol: string,
-  ): Promise<Order> {
+  ): Promise<boolean> {
     const exchange = this.getExchange(accountName);
     try {
       return await exchange.closeOrdersWithSymbol(symbol);

@@ -332,27 +332,25 @@ export abstract class AbstractExchangeService implements IExchangeService {
     }
   }
 
-  async closeOrdersWithSymbol(symbol: string): Promise<Order> {
+  async closeOrdersWithSymbol(symbol: string): Promise<boolean> {
     this.ensureExchangeInitialized();
     try {
-      return await this.exchange.cancelAllOrders(symbol);
+      await this.exchange.cancelAllOrders(symbol);
+      return true;
     } catch (error) {
-      throw new ExchangeOperationFailedException(
-        `closing all ${symbol} orders`,
-        error.message,
-      );
+      this.logger.error(`Failed to close all ${symbol} orders: ${error.message}`);
+      return false;
     }
   }
 
-  async closeOrder(orderId: string, symbol: string): Promise<Order> {
+  async closeOrder(orderId: string, symbol: string): Promise<boolean> {
     this.ensureExchangeInitialized();
     try {
-      return await this.exchange.cancelOrder(orderId, symbol);
+      await this.exchange.cancelOrder(orderId, symbol);
+      return true;
     } catch (error) {
-      throw new ExchangeOperationFailedException(
-        'closing order',
-        error.message,
-      );
+      this.logger.error(`Failed to close order ${orderId} for symbol ${symbol}: ${error.message}`);
+      return false;
     }
   }
 
