@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
-import { AccountService } from '../../account/account.service';
 import { Account } from '../../account/entities/account.entity';
+import { UnsupportedExchangeException } from '../exceptions/exchange.exceptions';
 import { IExchangeService } from '../exchange.interfaces';
 import { ExchangeType } from '../exchange.types';
 
@@ -11,33 +11,23 @@ import { MexcExchangeService } from './mexc-exchange.service';
 
 @Injectable()
 export class ExchangeFactory {
-  constructor(
-    private accountService: AccountService,
-    private eventEmitter: EventEmitter2,
-  ) {}
+  constructor(private eventEmitter: EventEmitter2) {}
 
-  public createExchange(account: Account): IExchangeService {
+  public async createExchange(account: Account): Promise<IExchangeService> {
     let exchange: IExchangeService;
 
     switch (account.exchange) {
       case ExchangeType.Bybit:
-        exchange = new BybitExchangeService(
-          this.accountService,
-          this.eventEmitter,
-          account,
-        );
+        exchange = new BybitExchangeService(this.eventEmitter, account);
         break;
       case ExchangeType.MEXC:
-        exchange = new MexcExchangeService(
-          this.accountService,
-          this.eventEmitter,
-          account,
-        );
+        exchange = new MexcExchangeService(this.eventEmitter, account);
         break;
       default:
-        throw new Error('Unsupported exchange type');
+        throw new UnsupportedExchangeException(account.exchange);
     }
 
+    await exchange.initialize();
     return exchange;
   }
 }

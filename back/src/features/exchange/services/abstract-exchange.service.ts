@@ -4,7 +4,6 @@ import { WebsocketClient, WSClientConfigurableOptions } from 'bybit-api';
 import ccxt, { Balances, Exchange, Market, Order } from 'ccxt';
 
 import { Events, Timers } from '../../../config';
-import { AccountService } from '../../account/account.service';
 import { Account } from '../../account/entities/account.entity';
 import { OrderExecutedEvent } from '../events/order-executed.event';
 import { UpdateTickerEvent } from '../events/update-ticker.event';
@@ -25,7 +24,6 @@ export abstract class AbstractExchangeService implements IExchangeService {
   protected lastMarketFetchTime: number | null = null;
 
   constructor(
-    protected accountService: AccountService,
     protected eventEmitter: EventEmitter2,
     account: Account,
   ) {
@@ -338,7 +336,9 @@ export abstract class AbstractExchangeService implements IExchangeService {
       await this.exchange.cancelAllOrders(symbol);
       return true;
     } catch (error) {
-      this.logger.error(`Failed to close all ${symbol} orders: ${error.message}`);
+      this.logger.error(
+        `Failed to close all ${symbol} orders: ${error.message}`,
+      );
       return false;
     }
   }
@@ -349,7 +349,9 @@ export abstract class AbstractExchangeService implements IExchangeService {
       await this.exchange.cancelOrder(orderId, symbol);
       return true;
     } catch (error) {
-      this.logger.error(`Failed to close order ${orderId} for symbol ${symbol}: ${error.message}`);
+      this.logger.error(
+        `Failed to close order ${orderId} for symbol ${symbol}: ${error.message}`,
+      );
       return false;
     }
   }

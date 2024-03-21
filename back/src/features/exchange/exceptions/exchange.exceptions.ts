@@ -59,3 +59,10 @@ export class WebSocketSubscriptionException extends Error {
     this.name = this.constructor.name;
   }
 }
+
+export class UnsupportedExchangeException extends Error {
+  constructor(exchangeType: string) {
+    super(`Unsupported exchange type: ${exchangeType}`);
+    this.name = this.constructor.name;
+  }
+}

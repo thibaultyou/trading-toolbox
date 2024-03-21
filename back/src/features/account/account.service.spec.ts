@@ -4,7 +4,12 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Events } from '../../config';
+import {
+  InvalidCredentialsException,
+  UnsupportedExchangeException,
+} from '../exchange/exceptions/exchange.exceptions';
 import { ExchangeType } from '../exchange/exchange.types';
+import { ExchangeFactory } from '../exchange/services/exchange-service.factory';
 
 import { AccountService } from './account.service';
 import { Account } from './entities/account.entity';
@@ -17,6 +22,7 @@ describe('AccountService', () => {
   let service: AccountService;
   let repository: Repository<Account>;
   let eventEmitter: EventEmitter2;
+  let exchangeFactory: ExchangeFactory;
 
   const accountArray = [
     new Account('Test Account 1', 'key1', 'secret1', ExchangeType.Bybit),
@@ -49,12 +55,27 @@ describe('AccountService', () => {
             emit: jest.fn(),
           },
         },
+        {
+          provide: ExchangeFactory,
+          useValue: {
+            createExchange: jest.fn().mockImplementation((account) => {
+              if (account.exchange === ExchangeType.Bybit) {
+                return Promise.resolve();
+              } else if (account.exchange === 'Invalid') {
+                throw new UnsupportedExchangeException(account.exchange);
+              } else if (account.key === 'invalidKey') {
+                throw new InvalidCredentialsException(account.name);
+              }
+            }),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<AccountService>(AccountService);
     repository = module.get<Repository<Account>>(getRepositoryToken(Account));
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
+    exchangeFactory = module.get<ExchangeFactory>(ExchangeFactory);
   });
 
   it('should be defined', () => {
@@ -98,6 +119,13 @@ describe('AccountService', () => {
   });
 
   describe('create', () => {
+    const newAccount = new Account(
+      'New Account',
+      'newKey',
+      'newSecret',
+      ExchangeType.Bybit,
+    );
+
     it('should successfully create an account', async () => {
       jest.spyOn(repository, 'findOne').mockResolvedValueOnce(null);
       await expect(service.create(account)).resolves.toEqual(account);
@@ -111,6 +139,46 @@ describe('AccountService', () => {
       await expect(service.create(account)).rejects.toThrow(
         AccountAlreadyExistsException,
       );
+    });
+
+    it('should throw an AccountAlreadyExistsException if account with same name exists', async () => {
+      const duplicateNameAccount = new Account(
+        'existingName',
+        'uniqueKey',
+        'secret',
+        ExchangeType.Bybit,
+      );
+      await expect(service.create(duplicateNameAccount)).rejects.toThrow(
+        AccountAlreadyExistsException,
+      );
+    });
+
+    it('should throw an AccountAlreadyExistsException if account with same key exists', async () => {
+      const duplicateKeyAccount = new Account(
+        'uniqueName',
+        'existingKey',
+        'secret',
+        ExchangeType.Bybit,
+      );
+      await expect(service.create(duplicateKeyAccount)).rejects.toThrow(
+        AccountAlreadyExistsException,
+      );
+    });
+
+    it('should validate account with ExchangeFactory before saving', async () => {
+      jest.spyOn(repository, 'findOne').mockResolvedValueOnce(null);
+      await service.create(newAccount);
+      expect(exchangeFactory.createExchange).toHaveBeenCalledWith(newAccount);
+    });
+
+    it('should throw an error if ExchangeFactory validation fails', async () => {
+      const invalidExchangeAccount = new Account(
+        'invalidExchange',
+        'key',
+        'secret',
+        ExchangeType.Bybit,
+      );
+      await expect(service.create(invalidExchangeAccount)).rejects.toThrow();
     });
   });
 

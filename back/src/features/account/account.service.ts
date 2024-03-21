@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 
 import { Events } from '../../config';
 import { maskString } from '../../utils/string.util';
+import { ExchangeFactory } from '../exchange/services/exchange-service.factory';
 
 import { Account } from './entities/account.entity';
 import { AccountCreatedEvent } from './events/account-created.event';
@@ -23,6 +24,7 @@ export class AccountService {
     @InjectRepository(Account)
     private accountRepository: Repository<Account>,
     private eventEmitter: EventEmitter2,
+    private exchangeFactory: ExchangeFactory,
   ) {}
 
   async findAll(): Promise<Account[]> {
@@ -54,16 +56,32 @@ export class AccountService {
   async create(account: Account): Promise<Account> {
     this.logger.log(`Account creation initiated - Name: ${account.name}`);
     const existingAccount = await this.accountRepository.findOne({
-      where: { name: account.name },
+      where: [{ name: account.name }, { key: account.key }],
     });
+
     if (existingAccount) {
-      this.logger.error(
-        `Account creation failed, already exists - Name: ${
-          account.name
-        }, Key: ${maskString(account.key)}`,
-      );
+      if (existingAccount.name === account.name) {
+        this.logger.error(
+          `Account creation failed, already exists - Name: ${account.name}`,
+        );
+      }
+      if (existingAccount.key === account.key) {
+        this.logger.error(
+          `Account creation failed, already exists - Key: ${maskString(account.key)}`,
+        );
+      }
       throw new AccountAlreadyExistsException(account.name, account.key);
     }
+
+    try {
+      await this.exchangeFactory.createExchange(account);
+    } catch (error) {
+      this.logger.error(
+        `Account creation failed for initialization on exchange - Account: ${account.name}, Error: ${error.message}`,
+      );
+      throw error;
+    }
+
     const savedAccount = await this.accountRepository.save(account);
     this.eventEmitter.emit(
       Events.ACCOUNT_CREATED,

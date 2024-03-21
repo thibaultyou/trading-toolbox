@@ -50,9 +50,8 @@ describe('BybitHealthIndicator', () => {
     bybitMock.fetchTicker.mockResolvedValueOnce(mockTicker);
 
     const key = 'bybit';
-    const result: HealthIndicatorResult = await bybitHealthIndicator.isHealthy(
-      key,
-    );
+    const result: HealthIndicatorResult =
+      await bybitHealthIndicator.isHealthy(key);
     expect(result).toEqual({ [key]: { status: 'up' } });
     expect(bybitMock.fetchTicker).toHaveBeenCalledWith('BTCUSDT');
   });

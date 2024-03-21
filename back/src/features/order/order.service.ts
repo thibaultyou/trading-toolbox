@@ -38,9 +38,8 @@ export class OrderService implements OnModuleInit {
       this.exchangeService.getInitializedAccountNames();
     for (const accountName of initializedAccountNames) {
       try {
-        const newOrders = await this.exchangeService.fetchOpenOrders(
-          accountName,
-        );
+        const newOrders =
+          await this.exchangeService.fetchOpenOrders(accountName);
         if (this.haveOrdersChanged(accountName, newOrders)) {
           this.orders.set(accountName, newOrders);
           this.logger.debug(

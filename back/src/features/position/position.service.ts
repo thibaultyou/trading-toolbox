@@ -35,9 +35,8 @@ export class PositionService implements OnModuleInit {
       this.exchangeService.getInitializedAccountNames();
     try {
       for (const accountName of initializedAccountNames) {
-        const newPositions = await this.exchangeService.getOpenPositions(
-          accountName,
-        );
+        const newPositions =
+          await this.exchangeService.getOpenPositions(accountName);
         if (this.hasPositionsChanged(accountName, newPositions)) {
           this.positions[accountName] = newPositions;
           this.logger.debug(

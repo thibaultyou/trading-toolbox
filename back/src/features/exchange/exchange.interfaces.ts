@@ -2,6 +2,7 @@ import { Market, Order } from 'ccxt';
 
 export interface IExchangeService {
   initialize(): Promise<void>;
+  testCredentials(): Promise<void>;
   getBalance(): Promise<number>;
   getUsdtMarkets(): Promise<Market[]>;
   getOpenPositions(): Promise<any>;

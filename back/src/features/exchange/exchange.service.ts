@@ -48,8 +48,7 @@ export class ExchangeService {
     }
 
     try {
-      const exchange = this.exchangeFactory.createExchange(account);
-      await exchange.initialize();
+      const exchange = await this.exchangeFactory.createExchange(account);
       this.exchangeMap.set(account.name, exchange);
       this.logger.log(
         `${account.exchange} exchange for account ${account.name} initialized successfully.`,
