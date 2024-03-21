@@ -1,24 +1,38 @@
 # Trading Toolbox
 
-Trading Toolbox is a comprehensive application designed for executing trading operations on exchanges. It leverages modern technologies to monitor trades, execute actions based on conditions, and implement trading strategies.
+Trading Toolbox is a comprehensive application designed for executing trading operations on exchanges. It leverages state-of-the-art technologies to monitor trades, execute actions based on predefined conditions, and apply sophisticated trading strategies.
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+These instructions will guide you through setting up the project on your local machine for both development and production purposes.
 
 ### Prerequisites
 
-Before you begin, ensure you have Docker and Docker Compose installed on your machine. You'll also need a basic understanding of Docker concepts.
+Before starting, ensure Docker and Docker Compose are installed on your machine. You should also have a basic understanding of Docker concepts.
+
+### Cloning the Repository
+
+First, you need to clone the GitHub repository to get a copy of the project on your local machine. Use the following command:
+
+```sh
+git clone https://github.com/thibaultyou/tradingtoolbox.git
+```
+
+After cloning, navigate into the project directory:
+
+```sh
+cd tradingtoolbox
+```
 
 ### Setting Up Environment Variables
 
-1. A sample environment file `.env.example` is provided at the root of the application. Copy this file and rename it to `.env`:
+1. Inside the project's root directory, you will find a sample environment file named `.env.example`. Copy this file and rename it to `.env`:
 
 ```sh
 cp .env.example .env
 ```
 
-2. Open the `.env` file in a text editor. Adjust the environment variables to match your setup, if necessary. The default values should work for a development environment:
+2. Open the `.env` file with a text editor and adjust the environment variables according to your setup as needed. The default values are intended for a development environment:
 
 ```plaintext
 NODE_ENV=development
@@ -29,41 +43,45 @@ DATABASE_PASSWORD=postgres
 DATABASE_NAME=app
 ```
 
-### Running with Docker Compose
+### Running with Docker Compose for Production
 
-To run the application using Docker Compose:
+To deploy the application in a production environment using Docker Compose:
 
-1. Navigate to the root of the application directory.
-2. Run the following command to start all services defined in the `docker-compose.yml` file:
+1. Ensure you are in the root directory of the cloned repository.
+2. Execute the following command to start all services defined in the `docker-compose.yml` file:
 
 ```sh
 docker-compose up -d
 ```
 
+This initiates the application in production mode, with settings optimized for performance and security.
+
 ### Running Locally for Development
 
-If you wish to run the application locally for development:
+For development purposes, where features like live reloading are beneficial:
 
-1. Use the `docker-compose.dev.yml` file by running:
+1. Use the development-specific `docker-compose.dev.yml` file by executing:
 
 ```sh
 docker-compose -f docker-compose.dev.yml up -d
 ```
 
-This command starts the development environment, ensuring that your application is running with live reload and other development features.
+This command launches the application in a development environment, enabling developer-friendly features.
 
-### Accessing the Application
+### Accessing the Application Locally
 
-Once the application is running, you can access its different components using the following URLs:
+After the application is running, you can access its various components locally using the URLs below:
 
-- **Client Application**: `http://localhost:1234`
-- **API Server**: `http://localhost:1234/api`
-- **Adminer (Database Management)**: `http://localhost:8080/adminer`
-- **Swagger Documentation**: Access the Swagger documentation for the API by navigating to `http://localhost:1234/api/docs`
+- **Client Application**: Accessible at `http://localhost:1234`
+- **API Server**: Available at `http://localhost:1234/api`
+- **Adminer (Database Management)**: Visit `http://localhost:8080/adminer`
+- **Swagger Documentation**: API documentation can be found by navigating to `http://localhost:1234/api/docs`
+
+Note: Accessing the application in a production setting may vary depending on the deployment configuration, which is not covered in this guide.
 
 ### Stopping the Application
 
-To stop and remove all running containers, use the following Docker Compose command:
+To halt and remove all containers associated with the application, utilize the Docker Compose command:
 
 ```sh
 docker-compose down
@@ -71,4 +89,4 @@ docker-compose down
 
 ## License
 
-This project is licensed under the CC BY-NC-ND 4.0 License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the CC BY-NC-ND 4.0 License. For detailed information, refer to the [LICENSE.md](LICENSE.md) file.
