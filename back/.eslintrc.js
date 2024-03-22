@@ -5,7 +5,7 @@ module.exports = {
     tsconfigRootDir: __dirname,
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint/eslint-plugin', 'import'],
+  plugins: ['@typescript-eslint/eslint-plugin', 'import', 'simple-import-sort', 'unused-imports'],
   extends: [
     'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended',
@@ -21,22 +21,22 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-unused-vars': [
+    '@typescript-eslint/no-unused-vars': 'off', // Turn off in favor of unused-imports/no-unused-vars
+    'unused-imports/no-unused-imports': 'warn',
+    'unused-imports/no-unused-vars': [
       'warn',
-      {
-        'argsIgnorePattern': '^_'
-      }
+      { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_' }
     ],
-    'import/order': [
-      'error',
-      {
-        'newlines-between': 'always',
-        'groups': ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-        'alphabetize': {
-          'order': 'asc',
-          'caseInsensitive': true
-        },
-      },
+    'simple-import-sort/imports': 'warn',
+    'simple-import-sort/exports': 'warn',
+    'import/order': 'off', // Turn off in favor of simple-import-sort/imports
+    'padding-line-between-statements': [
+      'warn',
+      { blankLine: 'always', prev: '*', next: 'return' },
+      { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
+      { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
+      { blankLine: 'always', prev: '*', next: ['if', 'try', 'class', 'function', 'export'] },
+      { blankLine: 'always', prev: ['if', 'try', 'class', 'function', 'export'], next: '*' }
     ],
   },
 };
