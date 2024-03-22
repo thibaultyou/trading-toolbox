@@ -1,9 +1,10 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Balances } from 'ccxt';
 
 import { BaseController } from '../../common/base/base.controller';
-
 import { BalanceService } from './balance.service';
+import { USDTBalance } from './balance.types';
 
 @ApiTags('Balances')
 @Controller('balances')
@@ -12,17 +13,15 @@ export class BalanceController extends BaseController {
     super('Balances');
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Fetch all balances' })
-  findAll(): Record<string, number> {
-    return this.balanceService.getBalances();
+  @Get('/:accountId')
+  @ApiOperation({ summary: 'Fetch balances for a specific account' })
+  findOne(@Param('accountId') accountId: string): Balances {
+    return this.balanceService.findOne(accountId);
   }
 
-  @Get('/:accountName')
-  @ApiOperation({ summary: 'Fetch balance for a specific account' })
-  async findAccountBalance(
-    @Param('accountName') accountName: string,
-  ): Promise<number> {
-    return await this.balanceService.getOrRefreshAccountBalance(accountName);
+  @Get('/:accountId/usdt')
+  @ApiOperation({ summary: 'Fetch USDT balance for a specific account' })
+  findUSDTBalance(@Param('accountId') accountId: string): USDTBalance {
+    return this.balanceService.findUSDTBalance(accountId);
   }
 }

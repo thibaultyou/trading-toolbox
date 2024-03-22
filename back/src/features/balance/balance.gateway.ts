@@ -1,4 +1,5 @@
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { Balances } from 'ccxt';
 import { Server } from 'socket.io';
 
 import { websocketConfig } from '../../config';
@@ -8,7 +9,7 @@ export class BalanceGateway {
   @WebSocketServer()
   server: Server;
 
-  sendBalanceUpdate(accountName: string, balance: number) {
-    this.server.emit('balanceUpdate', { accountName, balance });
+  sendBalancesUpdate(accountId: string, balances: Balances) {
+    this.server.emit('balancesUpdate', { accountId, balances });
   }
 }

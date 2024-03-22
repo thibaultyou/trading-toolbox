@@ -1,14 +1,17 @@
 import {
+  ArgumentsHost,
   Catch,
   ExceptionFilter,
-  ArgumentsHost,
   HttpException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-import { FetchAccountBalanceException } from './balance.exceptions';
+import {
+  BalancesUpdateAggregatedException,
+  USDTBalanceNotFoundException,
+} from './balance.exceptions';
 
-@Catch(FetchAccountBalanceException)
+@Catch(USDTBalanceNotFoundException, BalancesUpdateAggregatedException)
 export class BalanceExceptionsFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();

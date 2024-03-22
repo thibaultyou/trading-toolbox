@@ -1,16 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Balances } from 'ccxt';
+import { Balance } from 'ccxt/js/src/base/types';
 
 import { Timers } from '../../config';
-import { delay } from '../../utils/delay.util';
+import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
 import { ExchangeService } from '../exchange/exchange.service';
-
 import { BalanceGateway } from './balance.gateway';
-import { FetchAccountBalanceException } from './exceptions/balance.exceptions';
+import { USDTBalance } from './balance.types';
+import {
+  BalancesUpdateAggregatedException,
+  USDTBalanceNotFoundException,
+} from './exceptions/balance.exceptions';
+import { extractUSDTEquity } from './utils/usdt-equity.util';
 
 @Injectable()
 export class BalanceService {
   private logger = new Logger(BalanceService.name);
-  private balances: Map<string, number> = new Map();
+  private balances: Map<string, Balances> = new Map();
 
   constructor(
     private exchangeService: ExchangeService,
@@ -18,75 +24,95 @@ export class BalanceService {
   ) {}
 
   async onModuleInit() {
-    this.refreshAllAccountBalances();
+    this.refreshAccountBalances();
     setInterval(() => {
-      this.refreshAllAccountBalances();
-    }, Timers.BALANCE_UPDATE_COOLDOWN);
+      this.refreshAccountBalances();
+    }, Timers.BALANCES_CACHE_COOLDOWN);
   }
 
-  getBalances(): Record<string, number> {
+  findAll(): Record<string, Balances> {
+    this.logger.log(`Fetching all balances`);
+
     return Object.fromEntries(this.balances);
   }
 
-  async getOrRefreshAccountBalance(accountName: string): Promise<number> {
-    let balance = this.balances.get(accountName);
-    if (balance === undefined) {
-      balance = await this.fetchBalanceAndUpdateCache(accountName);
+  findOne(accountId: string): Balances {
+    this.logger.log(`Balances fetch initiated - AccountID: ${accountId}`);
+
+    if (!this.balances.has(accountId)) {
+      this.logger.error(`Account not found - AccountID: ${accountId}`);
+      throw new AccountNotFoundException(accountId);
     }
-    return balance;
+
+    return this.balances.get(accountId);
+  }
+
+  findUSDTBalance(accountId: string): USDTBalance {
+    this.logger.log(`Balance (USDT) fetch initiated - AccountID: ${accountId}`);
+
+    const balances = this.findOne(accountId);
+
+    if (!balances || !balances.USDT) {
+      this.logger.error(`Balance (USDT) not found - AccountID: ${accountId}`);
+      throw new USDTBalanceNotFoundException(accountId);
+    }
+
+    const usdtEquity = extractUSDTEquity(balances, this.logger);
+    const usdtBalance: Balance = balances.USDT;
+
+    return {
+      equity: usdtEquity,
+      balance: usdtBalance,
+    };
   }
 
   // from WebSocket
-  updateBalanceFromWebSocket(accountName: string, balance: number): void {
-    this.balances.set(accountName, balance);
-    this.balanceGateway.sendBalanceUpdate(accountName, balance);
-    this.logger.log(
-      `Balance updated from WebSocket for ${accountName}: ${balance}$`,
-    );
-  }
+  // FIXME add me back
+  // updateBalanceFromWebSocket(accountId: string, balances: Balances) {
+  //   this.balances.set(accountId, balances);
+  //   this.balanceGateway.sendBalancesUpdate(accountId, balances);
+  //   this.logger.log(`Balances updated from WebSocket - AccountID: ${accountId}, Balances: ${JSON.stringify(balances)}`);
+  // }
 
   // from REST
-  private async refreshAllAccountBalances() {
-    const initializedAccountNames =
-      this.exchangeService.getInitializedAccountNames();
-    try {
-      for (const accountName of initializedAccountNames) {
-        try {
-          await this.fetchBalanceAndUpdateCache(accountName);
-        } catch (error) {
-          this.logger.error(
-            `Failed to update balance for account ${accountName}: ${error.message}`,
-            error.stack,
-          );
-        }
-        await delay(Timers.BALANCE_UPDATE_COOLDOWN);
-      }
-    } catch (error) {
-      this.logger.error(
-        `Failed to fetch accounts for balance update: ${error.message}`,
-        error.stack,
-      );
-    }
-  }
+  private async refreshAccountBalances() {
+    const initializedAccountIds =
+      this.exchangeService.getInitializedAccountIds();
+    const errors: Array<{ accountId: string; error: Error }> = [];
 
-  private async fetchBalanceAndUpdateCache(
-    accountName: string,
-  ): Promise<number> {
+    const balancesPromises = initializedAccountIds.map(async (accountId) => {
+      try {
+        const balances = await this.exchangeService.getBalances(accountId);
+
+        this.balances.set(accountId, balances);
+        this.balanceGateway.sendBalancesUpdate(accountId, balances);
+        this.logger.debug(
+          `Balances updated - AccountID: ${accountId}, Balances: ${JSON.stringify(balances)}`,
+        );
+        this.logger.log(
+          `Balances updated - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(balances, this.logger)}$`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Balances update failed - AccountID: ${accountId}, Error: ${error.message}`,
+          error.stack,
+        );
+        errors.push({ accountId, error });
+      }
+    });
+
     try {
-      const balance = await this.exchangeService.getBalance(accountName);
-      const parsedBalance = parseFloat(balance.toFixed(2));
-      this.balances.set(accountName, parsedBalance);
-      this.balanceGateway.sendBalanceUpdate(accountName, parsedBalance);
-      this.logger.log(
-        `Updated balance for ${accountName} account: ${parsedBalance}$`,
-      );
-      return parsedBalance;
-    } catch (error) {
+      await Promise.all(balancesPromises);
+
+      if (errors.length > 0) {
+        throw new BalancesUpdateAggregatedException(errors);
+      }
+    } catch (aggregatedError) {
       this.logger.error(
-        `Error updating balance for ${accountName}: ${error.message}`,
-        error.stack,
+        `Balances update failed - Error: ${aggregatedError.message}`,
+        aggregatedError.stack,
       );
-      throw new FetchAccountBalanceException(accountName, error);
+      throw aggregatedError;
     }
   }
 }
