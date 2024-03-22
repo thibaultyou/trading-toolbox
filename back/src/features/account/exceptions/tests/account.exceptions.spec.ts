@@ -2,8 +2,8 @@ import { HttpStatus } from '@nestjs/common';
 
 import { maskString } from '../../../../utils/string.util';
 import {
-  AccountNotFoundException,
   AccountAlreadyExistsException,
+  AccountNotFoundException,
 } from '../account.exceptions';
 
 describe('Account Exceptions', () => {

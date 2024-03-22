@@ -10,12 +10,11 @@ import {
 } from '../exchange/exceptions/exchange.exceptions';
 import { ExchangeType } from '../exchange/exchange.types';
 import { ExchangeFactory } from '../exchange/services/exchange-service.factory';
-
 import { AccountService } from './account.service';
 import { Account } from './entities/account.entity';
 import {
-  AccountNotFoundException,
   AccountAlreadyExistsException,
+  AccountNotFoundException,
 } from './exceptions/account.exceptions';
 
 describe('AccountService', () => {
@@ -34,6 +33,7 @@ describe('AccountService', () => {
     'secret',
     ExchangeType.Bybit,
   );
+
   account.id = '1';
 
   beforeEach(async () => {
@@ -148,6 +148,7 @@ describe('AccountService', () => {
         'secret',
         ExchangeType.Bybit,
       );
+
       await expect(service.create(duplicateNameAccount)).rejects.toThrow(
         AccountAlreadyExistsException,
       );
@@ -160,6 +161,7 @@ describe('AccountService', () => {
         'secret',
         ExchangeType.Bybit,
       );
+
       await expect(service.create(duplicateKeyAccount)).rejects.toThrow(
         AccountAlreadyExistsException,
       );
@@ -178,6 +180,7 @@ describe('AccountService', () => {
         'secret',
         ExchangeType.Bybit,
       );
+
       await expect(service.create(invalidExchangeAccount)).rejects.toThrow();
     });
   });
@@ -189,6 +192,7 @@ describe('AccountService', () => {
       'updatedSecret',
       ExchangeType.MEXC,
     );
+
     updatedAccountData.id = '1';
 
     it('should successfully update an existing account', async () => {

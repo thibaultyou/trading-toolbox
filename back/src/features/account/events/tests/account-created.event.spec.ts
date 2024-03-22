@@ -10,6 +10,7 @@ describe('AccountCreatedEvent', () => {
       'SampleSecret',
       ExchangeType.Bybit,
     );
+
     sampleAccount.id = 'sample-id';
 
     const event = new AccountCreatedEvent(sampleAccount);

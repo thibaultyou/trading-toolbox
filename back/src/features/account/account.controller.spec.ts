@@ -2,12 +2,11 @@ import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { ExchangeType } from '../exchange/exchange.types';
-
 import { AccountController } from './account.controller';
 import { AccountService } from './account.service';
+import { AccountResponseDto } from './dto/account.response.dto';
 import { AccountCreateRequestDto } from './dto/account-create.request.dto';
 import { AccountUpdateRequestDto } from './dto/account-update.request.dto';
-import { AccountResponseDto } from './dto/account.response.dto';
 import { Account } from './entities/account.entity';
 import { AccountNotFoundException } from './exceptions/account.exceptions';
 
@@ -22,6 +21,7 @@ describe('AccountController', () => {
       'existingSecret',
       ExchangeType.Bybit,
     );
+
     existingAccount.id = 'existing-id';
 
     const updatedAccount = new Account(
@@ -30,6 +30,7 @@ describe('AccountController', () => {
       'updatedSecret',
       ExchangeType.MEXC,
     );
+
     updatedAccount.id = 'existing-id';
 
     const module: TestingModule = await Test.createTestingModule({
@@ -68,6 +69,7 @@ describe('AccountController', () => {
   describe('findAll', () => {
     it('should return an empty array of accounts when no accounts exist', async () => {
       const result: AccountResponseDto[] = [];
+
       jest.spyOn(service, 'findAll').mockResolvedValue(result);
       expect(await controller.findAll()).toEqual(result);
     });
@@ -77,6 +79,7 @@ describe('AccountController', () => {
         new Account('Account 1', 'key1', 'secret1', ExchangeType.Bybit),
         new Account('Account 2', 'key2', 'secret2', ExchangeType.MEXC),
       ];
+
       accountEntities[0].id = 'uuid-1';
       accountEntities[1].id = 'uuid-2';
 
@@ -86,6 +89,7 @@ describe('AccountController', () => {
 
       jest.spyOn(service, 'findAll').mockResolvedValue(accountEntities);
       const response = await controller.findAll();
+
       expect(response).toStrictEqual(accountDtos);
     });
   });
@@ -98,6 +102,7 @@ describe('AccountController', () => {
         'existingSecret',
         ExchangeType.Bybit,
       );
+
       account.id = 'existing-id';
       jest.spyOn(service, 'findOne').mockResolvedValue(account);
       expect(await controller.findOne('existing-id')).toEqual(
@@ -127,6 +132,7 @@ describe('AccountController', () => {
       dto.secret,
       dto.exchange,
     );
+
     createdAccount.id = 'uuid-random-1';
 
     it('should create a new account', async () => {
@@ -153,6 +159,7 @@ describe('AccountController', () => {
         'updatedSecret',
         ExchangeType.MEXC,
       );
+
       account.id = 'existing-id';
       const dto: AccountUpdateRequestDto = {
         name: 'Updated Account',
@@ -160,6 +167,7 @@ describe('AccountController', () => {
         secret: 'updatedSecret',
         exchange: ExchangeType.MEXC,
       };
+
       jest.spyOn(service, 'update').mockResolvedValue(account);
       expect(await controller.update('existing-id', dto)).toEqual(
         new AccountResponseDto(account),

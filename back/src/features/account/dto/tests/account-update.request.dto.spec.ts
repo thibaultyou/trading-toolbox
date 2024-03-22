@@ -14,6 +14,7 @@ describe('AccountUpdateRequestDto', () => {
     });
 
     const errors = await validate(dto);
+
     expect(errors.length).toBe(0);
   });
 
@@ -21,6 +22,7 @@ describe('AccountUpdateRequestDto', () => {
     const dto = plainToInstance(AccountUpdateRequestDto, {});
 
     const errors = await validate(dto);
+
     expect(errors.length).toBe(0);
   });
 
@@ -31,6 +33,7 @@ describe('AccountUpdateRequestDto', () => {
     });
 
     const errors = await validate(dto);
+
     expect(errors.length).toBe(0);
   });
 
@@ -40,6 +43,7 @@ describe('AccountUpdateRequestDto', () => {
     });
 
     const errors = await validate(dto);
+
     expect(errors.length).toBe(1);
     expect(errors[0].property).toEqual('exchange');
   });

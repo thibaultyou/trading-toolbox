@@ -10,6 +10,7 @@ describe('AccountDeletedEvent', () => {
       'testSecret',
       ExchangeType.Bybit,
     );
+
     sampleAccount.id = 'test-id';
 
     const event = new AccountDeletedEvent(sampleAccount);

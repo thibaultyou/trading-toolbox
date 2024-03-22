@@ -10,6 +10,7 @@ describe('AccountUpdatedEvent', () => {
       'updatedSecret',
       ExchangeType.MEXC,
     );
+
     sampleAccount.id = 'updated-id';
 
     const event = new AccountUpdatedEvent(sampleAccount);

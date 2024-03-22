@@ -1,14 +1,14 @@
 import {
-  ExceptionFilter,
-  Catch,
   ArgumentsHost,
+  Catch,
+  ExceptionFilter,
   HttpException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import {
-  AccountNotFoundException,
   AccountAlreadyExistsException,
+  AccountNotFoundException,
 } from './account.exceptions';
 
 @Catch(AccountNotFoundException, AccountAlreadyExistsException)

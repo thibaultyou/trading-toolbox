@@ -6,14 +6,13 @@ import { Repository } from 'typeorm';
 import { Events } from '../../config';
 import { maskString } from '../../utils/string.util';
 import { ExchangeFactory } from '../exchange/services/exchange-service.factory';
-
 import { Account } from './entities/account.entity';
 import { AccountCreatedEvent } from './events/account-created.event';
 import { AccountDeletedEvent } from './events/account-deleted.event';
 import { AccountUpdatedEvent } from './events/account-updated.event';
 import {
-  AccountNotFoundException,
   AccountAlreadyExistsException,
+  AccountNotFoundException,
 } from './exceptions/account.exceptions';
 
 @Injectable()
@@ -28,28 +27,33 @@ export class AccountService {
   ) {}
 
   async findAll(): Promise<Account[]> {
-    this.logger.debug('Accounts fetch initiated');
+    this.logger.log(`Fetching all accounts`);
     const accounts = await this.accountRepository.find();
+
     return accounts;
   }
 
   async findOne(id: string): Promise<Account> {
-    this.logger.log(`Account fetch initiated - ID: ${id}`);
+    this.logger.log(`Account fetch initiated - AccountID: ${id}`);
     const account = await this.accountRepository.findOne({ where: { id } });
+
     if (!account) {
-      this.logger.error(`Account not found - ID: ${id}`);
+      this.logger.error(`Account not found - AccountID: ${id}`);
       throw new AccountNotFoundException(id);
     }
+
     return account;
   }
 
   async findOneByName(name: string): Promise<Account> {
-    this.logger.log(`Account fetch initiated - Account: ${name}`);
+    this.logger.log(`Account fetch initiated - Name: ${name}`);
     const account = await this.accountRepository.findOne({ where: { name } });
+
     if (!account) {
       this.logger.error(`Account not found - Name: ${name}`);
       throw new AccountNotFoundException(name, true);
     }
+
     return account;
   }
 
@@ -65,11 +69,13 @@ export class AccountService {
           `Account creation failed, already exists - Name: ${account.name}`,
         );
       }
+
       if (existingAccount.key === account.key) {
         this.logger.error(
           `Account creation failed, already exists - Key: ${maskString(account.key)}`,
         );
       }
+
       throw new AccountAlreadyExistsException(account.name, account.key);
     }
 
@@ -83,47 +89,63 @@ export class AccountService {
     }
 
     const savedAccount = await this.accountRepository.save(account);
+
     this.eventEmitter.emit(
       Events.ACCOUNT_CREATED,
       new AccountCreatedEvent(savedAccount),
     );
-    this.logger.log(`Account created successfully - ID: ${savedAccount.id}`);
+    this.logger.log(
+      `Account created successfully - AccountID: ${savedAccount.id}`,
+    );
+
     return savedAccount;
   }
 
-  async update(id: string, updatedAccount: Account): Promise<Account> {
-    this.logger.log(`Account update initiated - ID: ${id}`);
+  async partialUpdate(
+    id: string,
+    updateFields: Partial<Account>,
+  ): Promise<Account> {
+    this.logger.log(`Account update initiated - AccountID: ${id}`);
     const account = await this.findOne(id);
+
     if (!account) {
-      this.logger.error(`Account update failed, not found - ID: ${id}`);
+      this.logger.error(`Account update failed, not found - AccountID: ${id}`);
       throw new AccountNotFoundException(id);
     }
 
-    account.name = updatedAccount.name;
-    account.key = updatedAccount.key;
-    account.secret = updatedAccount.secret;
+    Object.assign(account, updateFields);
+
     const savedAccount = await this.accountRepository.save(account);
+
     this.eventEmitter.emit(
       Events.ACCOUNT_UPDATED,
       new AccountUpdatedEvent(savedAccount),
     );
-    this.logger.log(`Account updated successfully - ID: ${savedAccount.id}`);
+    this.logger.log(
+      `Account updated successfully - AccountID: ${savedAccount.id}`,
+    );
+
     return savedAccount;
   }
 
   async delete(id: string): Promise<boolean> {
-    this.logger.log(`Account deletion initiated - ID: ${id}`);
+    this.logger.log(`Account deletion initiated - AccountID: ${id}`);
     const account = await this.findOne(id);
+
     if (!account) {
-      this.logger.error(`Account deletion failed, not found - ID: ${id}`);
+      this.logger.error(
+        `Account deletion failed, not found - AccountID: ${id}`,
+      );
       throw new AccountNotFoundException(id);
     }
+
     await this.accountRepository.delete(id);
     this.eventEmitter.emit(
       Events.ACCOUNT_DELETED,
       new AccountDeletedEvent(account),
     );
-    this.logger.log(`Account deleted successfully - ID: ${id}`);
+    this.logger.log(`Account deleted successfully - AccountID: ${id}`);
+
     return true;
   }
 }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 import { ExchangeType } from '../../exchange/exchange.types';
 import { AccountCreateRequestDto } from '../dto/account-create.request.dto';
@@ -40,7 +40,7 @@ export class Account {
   }
 
   static fromDto(
-    data: AccountCreateRequestDto | AccountUpdateRequestDto,
+    data: AccountCreateRequestDto | Partial<AccountUpdateRequestDto>,
   ): Account {
     return new Account(data.name, data.key, data.secret, data.exchange);
   }

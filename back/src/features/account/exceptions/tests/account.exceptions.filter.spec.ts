@@ -39,6 +39,7 @@ describe('AccountExceptionsFilter', () => {
 
   it('should format the response correctly for an AccountNotFoundException', () => {
     const exception = new AccountNotFoundException('123');
+
     executeFilterCatch(exception, '/test-url');
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.NOT_FOUND);
@@ -54,6 +55,7 @@ describe('AccountExceptionsFilter', () => {
     const accountName = 'duplicateAccount';
     const key = 'duplicateKey';
     const exception = new AccountAlreadyExistsException(accountName, key);
+
     executeFilterCatch(exception, '/accounts');
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.CONFLICT);
