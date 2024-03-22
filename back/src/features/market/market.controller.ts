@@ -1,50 +1,60 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Param, Query } from '@nestjs/common';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Market } from 'ccxt';
 
 import { BaseController } from '../../common/base/base.controller';
-import { AccountService } from '../account/account.service';
-import { ExchangeService } from '../exchange/exchange.service';
-
-import { MarketListResponseDto } from './dto/market-list.response.dto';
-import { MarketResponseDto } from './dto/market.response.dto';
-import { MarketNotFoundException } from './exceptions/market.exceptions';
+import { MarketService } from './market.service';
 
 @ApiTags('Markets')
 @Controller('markets')
 export class MarketController extends BaseController {
-  constructor(
-    private readonly accountService: AccountService,
-    private readonly exchangeService: ExchangeService,
-  ) {
+  constructor(private readonly marketService: MarketService) {
     super('Markets');
   }
 
-  @Get('/:accountName/available-usdt-markets')
-  @ApiOperation({ summary: 'List all available USDT markets per account' })
-  async listAvailableUsdtMarkets(
-    @Param('accountName') accountName: string,
-  ): Promise<MarketListResponseDto> {
-    const account = await this.accountService.findOneByName(accountName);
-    const markets = await this.exchangeService.getUsdtMarkets(account.name);
-    const marketDtos = markets.map((market) => new MarketResponseDto(market));
-    return new MarketListResponseDto(account.name, marketDtos);
+  @Get('/:accountId/all')
+  @ApiOperation({ summary: 'Fetch all market IDs for a specific account' })
+  async fetchAllMarketIds(@Param('accountId') accountId: string): Promise<string[]> {
+    return await this.marketService.fetchAllMarketIds(accountId);
   }
 
-  @Get('/:accountName/available-usdt-markets/:baseCurrency')
+  @Get('/:accountId/spot')
   @ApiOperation({
-    summary: 'Get a specific USDT market by account and baseCurrency',
+    summary:
+      'Fetch all spot market IDs for a specific account, optionally filtered by quote currency',
   })
-  async getSpecificUsdtMarket(
-    @Param('accountName') accountName: string,
-    @Param('baseCurrency') baseCurrency: string,
-  ): Promise<MarketResponseDto> {
-    const market = await this.exchangeService.getSpecificUsdtMarket(
-      accountName,
-      baseCurrency,
+  @ApiQuery({ name: 'quoteCurrency', required: false, example: 'USDT' })
+  async fetchSpotMarketIds(
+    @Param('accountId') accountId: string,
+    @Query('quoteCurrency') quoteCurrency: string = 'USDT',
+  ): Promise<string[]> {
+    return await this.marketService.fetchSpotMarketIds(accountId, quoteCurrency);
+  }
+
+  @Get('/:accountId/contract')
+  @ApiOperation({
+    summary:
+      'Fetch all contract market IDs for a specific account, optionally filtered by quote currency',
+  })
+  @ApiQuery({ name: 'quoteCurrency', required: false, example: 'USDT' })
+  async fetchContractMarketIds(
+    @Param('accountId') accountId: string,
+    @Query('quoteCurrency') quoteCurrency: string = 'USDT',
+  ): Promise<string[]> {
+    return await this.marketService.fetchContractMarketIds(
+      accountId,
+      quoteCurrency,
     );
-    if (!market) {
-      throw new MarketNotFoundException(accountName, baseCurrency);
-    }
-    return new MarketResponseDto(market);
+  }
+
+  @Get('/:accountId/market/:marketId')
+  @ApiOperation({
+    summary: 'Fetch a specific market by market ID for an account',
+  })
+  async findMarketById(
+    @Param('accountId') accountId: string,
+    @Param('marketId') marketId: string,
+  ): Promise<Market> {
+    return await this.marketService.findMarketById(accountId, marketId);
   }
 }

@@ -1,14 +1,17 @@
 import {
-  ExceptionFilter,
-  Catch,
   ArgumentsHost,
+  Catch,
+  ExceptionFilter,
   HttpException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-import { MarketNotFoundException } from './market.exceptions';
+import {
+  MarketNotFoundException,
+  MarketsUpdateAggregatedException,
+} from './market.exceptions';
 
-@Catch(MarketNotFoundException)
+@Catch(MarketNotFoundException, MarketsUpdateAggregatedException)
 export class MarketExceptionsFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
