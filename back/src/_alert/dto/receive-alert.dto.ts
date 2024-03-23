@@ -1,27 +1,27 @@
-import { ApiProperty } from '@nestjs/swagger';
+// import { ApiProperty } from '@nestjs/swagger';
 
-import { Action } from '../../_action/entities/action.entity';
-import { TriggerType, StatusType } from '../../common/types/common.types';
+// import { Action } from '../../_action/entities/action.entity';
+// import { StatusType, TriggerType } from '../../common/types/common.types';
 
-export class ReceiveAlertDto {
-  @ApiProperty()
-  market: string;
+// export class ReceiveAlertDto {
+//   @ApiProperty()
+//   market: string;
 
-  @ApiProperty()
-  size: string;
+//   @ApiProperty()
+//   size: string;
 
-  @ApiProperty()
-  account: string;
+//   @ApiProperty()
+//   account: string;
 
-  @ApiProperty()
-  trigger: TriggerType;
+//   @ApiProperty()
+//   trigger: TriggerType;
 
-  @ApiProperty()
-  value: number;
+//   @ApiProperty()
+//   value: number;
 
-  @ApiProperty()
-  status: StatusType;
+//   @ApiProperty()
+//   status: StatusType;
 
-  @ApiProperty({ type: [Action] })
-  actions: Action[];
-}
+//   @ApiProperty({ type: [Action] })
+//   actions: Action[];
+// }
