@@ -18,8 +18,7 @@ import { extractUSDTEquity } from './utils/usdt-equity.util';
 @Injectable()
 export class BalanceService {
   private logger = new Logger(BalanceService.name);
-  private balances: Map<string, Balances> = new Map(); // accountId -> Balances
-  private accounts: Set<string> = new Set();
+  private balances: Map<string, Balances> = new Map();
 
   constructor(
     private eventEmitter: EventEmitter2,
@@ -28,43 +27,74 @@ export class BalanceService {
   ) {}
 
   async onModuleInit() {
-    this.refreshAllBalances();
+    this.refreshAllAccountBalances();
     setInterval(() => {
-      this.refreshAllBalances();
+      this.refreshAllAccountBalances();
     }, Timers.BALANCES_CACHE_COOLDOWN);
   }
 
   addAccount(accountId: string) {
-    this.accounts.add(accountId);
-    this.refreshAccountBalance(accountId);
+    if (!this.balances.has(accountId)) {
+      this.refreshAccountBalance(accountId);
+      this.logger.log(
+        `Balance - Account Tracking Initiated - Account ID: ${accountId}`,
+      );
+    } else {
+      this.logger.warn(
+        `Balance - Account Tracking Skipped - Account ID: ${accountId}, Reason: Already tracked`,
+      );
+    }
+  }
+
+  removeAccount(accountId: string) {
+    if (this.balances.delete(accountId)) {
+      this.logger.log(`Balance - Account Removed - Account ID: ${accountId}`);
+    } else {
+      this.logger.warn(
+        `Balance - Account Removal Attempt Failed - Account ID: ${accountId}, Reason: Not tracked`,
+      );
+    }
   }
 
   findAll(): Record<string, Balances> {
-    this.logger.log(`Fetching all balances`);
+    this.logger.log(`Balance - Fetching All Tracked Account Balances`);
 
     return Object.fromEntries(this.balances);
   }
 
   findOne(accountId: string): Balances {
-    this.logger.log(`Balances fetch initiated - AccountID: ${accountId}`);
+    this.logger.debug(
+      `Balance - Account Balances Fetch Initiated - Account ID: ${accountId}`,
+    );
 
     if (!this.balances.has(accountId)) {
       this.logger.error(
-        `Balances fetch failed - AccountID: ${accountId}, Reason: Account not found`,
+        `Balance - Account Balances Fetch Failed - Account ID: ${accountId}, Reason: Account not found`,
       );
+
       throw new AccountNotFoundException(accountId);
     }
 
-    return this.balances.get(accountId);
+    const balances = this.balances.get(accountId);
+
+    this.logger.log(
+      `Balance - Fetched Account Balances Successfully - Account ID: ${accountId}`,
+    );
+
+    return balances;
   }
 
   findUSDTBalance(accountId: string): USDTBalance {
-    this.logger.log(`Balance (USDT) fetch initiated - AccountID: ${accountId}`);
+    this.logger.debug(
+      `Balance - USDT Balance Fetch Initiated - Account ID: ${accountId}`,
+    );
 
     const balances = this.findOne(accountId);
 
     if (!balances || !balances.USDT) {
-      this.logger.error(`Balance (USDT) not found - AccountID: ${accountId}`);
+      this.logger.error(
+        `Balance - USDT Balance Not Found - Account ID: ${accountId}`,
+      );
       throw new USDTBalanceNotFoundException(accountId);
     }
 
@@ -79,7 +109,11 @@ export class BalanceService {
 
   // TODO add updates from websocket ?
 
-  private async refreshAccountBalance(accountId: string): Promise<void> {
+  private async refreshAccountBalance(accountId: string) {
+    this.logger.debug(
+      `Balance - Account Balances Refresh Initiated - Account ID: ${accountId}`,
+    );
+
     try {
       const balances = await this.exchangeService.getBalances(accountId);
 
@@ -90,22 +124,24 @@ export class BalanceService {
         new BalancesUpdatedEvent(accountId, balances),
       );
       this.logger.debug(
-        `Balances updated - AccountID: ${accountId}, Balances: ${JSON.stringify(balances)}`,
+        `Balance - Refreshed Account Balances Successfully - Account ID: ${accountId}, Balances: ${JSON.stringify(balances)}`,
       );
       this.logger.log(
-        `Balances updated - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(balances, this.logger).toFixed(2)} $`,
+        `Balance - Refreshed Account USDT Equity - Account ID: ${accountId}, Balance (USDT): ${extractUSDTEquity(balances, this.logger).toFixed(2)} $`,
       );
     } catch (error) {
       this.logger.error(
-        `Balances update failed - AccountID: ${accountId}, Error: ${error.message}`,
+        `Balance - Account Balances Refresh Failed - Account ID: ${accountId}, Error: ${error.message}`,
         error.stack,
       );
       throw error;
     }
   }
 
-  private async refreshAllBalances() {
-    const balancePromises = Array.from(this.accounts).map((accountId) =>
+  private async refreshAllAccountBalances() {
+    this.logger.debug(`Balance - All Account Balances Refresh Initiated`);
+
+    const balancePromises = Array.from(this.balances.keys()).map((accountId) =>
       this.refreshAccountBalance(accountId),
     );
 
@@ -114,8 +150,11 @@ export class BalanceService {
 
     results.forEach((result, index) => {
       if (result.status === 'rejected') {
-        const accountId = Array.from(this.accounts)[index];
+        const accountId = Array.from(this.balances.keys())[index];
 
+        this.logger.error(
+          `Balance - All Account Balances Refresh Failed - Account ID: ${accountId}, Error: ${result.reason}`,
+        );
         errors.push({ accountId, error: result.reason });
       }
     });
@@ -124,10 +163,12 @@ export class BalanceService {
       const aggregatedError = new BalancesUpdateAggregatedException(errors);
 
       this.logger.error(
-        `Some balances updates failed - Error: ${aggregatedError.message}`,
+        `Balance - All Account Balances Refresh Failures - Error: ${aggregatedError.message}`,
         aggregatedError.stack,
       );
       throw aggregatedError;
+    } else {
+      this.logger.log(`Balance - All Account Balances Refreshed Successfully`);
     }
   }
 }

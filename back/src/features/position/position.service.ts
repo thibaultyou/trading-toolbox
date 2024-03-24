@@ -1,12 +1,12 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Position } from 'ccxt';
 
 import { Events, Timers } from '../../config';
 import { ExchangeService } from '../../features/exchange/exchange.service';
 import { delay } from '../../utils/delay.util';
 import { PositionsUpdatedEvent } from './events/positions-updated.event';
 import { PositionComparisonException } from './exceptions/position.exceptions';
-import { Position } from './position.types';
 
 @Injectable()
 export class PositionService implements OnModuleInit {

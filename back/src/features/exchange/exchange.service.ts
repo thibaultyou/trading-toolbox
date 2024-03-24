@@ -1,10 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Balances, Market, Order } from 'ccxt';
+import { Balances, Market, Order, Position } from 'ccxt';
 import { Events } from 'src/config';
 
 import { Account } from '../account/entities/account.entity';
-import { Position } from '../position/position.types';
 import { ExchangeInitializedEvent } from './events/exchange-initialized.event';
 import {
   ClosePositionException,
@@ -28,7 +27,7 @@ export class ExchangeService {
   async initializeExchange(account: Account): Promise<void> {
     if (!account) {
       this.logger.error(
-        `Exchange initialization skipped - Exchange: ${account.exchange}, Account: ${account.name}, Reason: Missing account`,
+        `Exchange - Initialization skipped - Exchange: ${account.exchange}, Account: ${account.name}, Reason: Missing account`,
       );
 
       return;
@@ -36,7 +35,7 @@ export class ExchangeService {
 
     if (this.exchanges.has(account.id)) {
       this.logger.error(
-        `Exchange initialization skipped - Exchange: ${account.exchange}, AccountID: ${account.id}, Reason: Already initialized`,
+        `Exchange - Initialization skipped - Exchange: ${account.exchange}, Account ID: ${account.id}, Reason: Already initialized`,
       );
 
       return;
@@ -48,19 +47,20 @@ export class ExchangeService {
       this.exchanges.set(account.id, exchange);
       this.eventEmitter.emit(
         Events.EXCHANGE_INITIALIZED,
-        new ExchangeInitializedEvent(account.id, account.exchange),
+        new ExchangeInitializedEvent(account.id),
       );
       this.logger.log(
-        `Exchange initialized - Exchange: ${account.exchange}, AccountID: ${account.id}`,
+        `Exchange - Initialized Successfully - Exchange: ${account.exchange}, Account ID: ${account.id}`,
       );
     } catch (error) {
       this.logger.error(
-        `Exchange initialization failed - Exchange: ${account.exchange}, AccountID: ${account.id}, Error: ${error.message}`,
+        `Exchange - Initialization Failed - Exchange: ${account.exchange}, Account ID: ${account.id}, Error: ${error.message}`,
         error.stack,
       );
     }
   }
 
+  // FIXME delete, replace with events in other modules
   getInitializedAccountIds(): string[] {
     return Array.from(this.exchanges.keys());
   }
@@ -69,15 +69,21 @@ export class ExchangeService {
     const exchange = this.getExchange(accountId);
 
     try {
-      this.logger.log(`Starting resource cleanup for account ${accountId}.`);
+      this.logger.log(
+        `Exchange - Resource Cleanup Started - Account ID: ${accountId}`,
+      );
       exchange.clean();
       this.exchanges.delete(accountId);
+      this.eventEmitter.emit(
+        Events.EXCHANGE_TERMINATED,
+        new ExchangeInitializedEvent(accountId),
+      );
       this.logger.log(
-        `Resources cleaned up successfully for account ${accountId}.`,
+        `Exchange - Resource Cleanup Completed - Account ID: ${accountId}`,
       );
     } catch (error) {
       this.logger.error(
-        `Resource cleanup error for account ${accountId}. Error: ${error.message}`,
+        `Exchange - Cleanup Error - Account ID: ${accountId}, Error: ${error.message}`,
         error.stack,
       );
       throw new ExchangeOperationFailedException('cleanResources', error);
@@ -85,9 +91,15 @@ export class ExchangeService {
   }
 
   private getExchange(accountId: string): IExchangeService {
+    this.logger.debug(
+      `Exchange - Balances Fetch Initiated - Account ID: ${accountId}`,
+    );
     const exchange = this.exchanges.get(accountId);
 
     if (!exchange) {
+      this.logger.error(
+        `Exchange - Not Found - Account ID: ${accountId}, Reason: Exchange service for account not initialized`,
+      );
       throw new ExchangeNotFoundException(accountId);
     }
 
@@ -95,19 +107,22 @@ export class ExchangeService {
   }
 
   async getBalances(accountId: string): Promise<Balances> {
+    this.logger.debug(
+      `Exchange - Balances Fetch Initiated - Account ID: ${accountId}`,
+    );
     const exchange = this.getExchange(accountId);
 
     try {
       const balances = await exchange.getBalances();
 
       this.logger.debug(
-        `Balances fetched - AccountID: '${accountId}', Balances: ${JSON.stringify(balances)}`,
+        `Exchange - Balances Fetched - Account ID: ${accountId}, Balances: ${JSON.stringify(balances)}`,
       );
 
       return balances;
     } catch (error) {
       this.logger.error(
-        `Balances fetching failed - AccountID: '${accountId}', Error: ${error.message}`,
+        `Exchange - Balances Fetch Failed - Account ID: ${accountId}, Error: ${error.message}`,
         error.stack,
       );
       throw new ExchangeOperationFailedException('getBalances', error);
@@ -115,19 +130,23 @@ export class ExchangeService {
   }
 
   async getMarkets(accountId: string): Promise<Market[]> {
+    this.logger.debug(
+      `Exchange - Markets Fetch Initiated - Account ID: ${accountId}`,
+    );
+
     const exchange = this.getExchange(accountId);
 
     try {
       const markets = await exchange.getMarkets();
 
-      this.logger.debug(
-        `Markets fetched - AccountID: '${accountId}', Markets count: ${markets.length}`,
+      this.logger.log(
+        `Exchange - Markets Fetched - Account ID: '${accountId}', Count: ${markets.length}`,
       );
 
       return markets;
     } catch (error) {
       this.logger.error(
-        `Markets fetching failed - AccountID: '${accountId}', Error: ${error.message}`,
+        `Exchange - Markets Fetch Failed - Account ID: '${accountId}', Error: ${error.message}`,
         error.stack,
       );
       throw new ExchangeOperationFailedException('getMarkets', error);
@@ -135,40 +154,45 @@ export class ExchangeService {
   }
 
   async getOpenOrders(accountId: string): Promise<Order[]> {
+    this.logger.debug(
+      `Exchange - Open Orders Fetch Initiated - Account ID: ${accountId}`,
+    );
     const exchange = this.getExchange(accountId);
 
     try {
       const orders = await exchange.getOpenOrders();
 
-      this.logger.debug(
-        `Fetched ${orders.length} open orders: Account ${accountId}.`,
+      this.logger.log(
+        `Exchange - Open Orders Fetched - Account ID: ${accountId}, Count: ${orders.length}`,
       );
 
       return orders;
     } catch (error) {
       this.logger.error(
-        `Error fetching open orders for ${accountId} account`,
+        `Exchange - Open Orders Fetch Failed - Account ID: ${accountId}, Error: ${error.message}`,
         error.stack,
       );
       throw new ExchangeOperationFailedException('fetchOpenOrders', error);
     }
   }
 
-  async getOpenPositions(accountId: string): Promise<any> {
+  async getOpenPositions(accountId: string): Promise<Position[]> {
+    this.logger.debug(
+      `Exchange - Open Positions Fetch Initiated - Account ID: ${accountId}`,
+    );
     const exchange = this.getExchange(accountId);
 
     try {
-      this.logger.log(`Fetching open positions for account ${accountId}.`);
       const positions = await exchange.getOpenPositions();
 
-      this.logger.debug(
-        `Fetched ${positions.length} open positions for account ${accountId}.`,
+      this.logger.log(
+        `Exchange - Open Positions Fetched - Account ID: ${accountId}, Count: ${positions.length}`,
       );
 
       return positions;
     } catch (error) {
       this.logger.error(
-        `Error getting open positions for ${accountId} account`,
+        `Exchange - Open Positions Fetch Failed - Account ID: ${accountId}, Error: ${error.message}`,
         error.stack,
       );
       throw new ExchangeOperationFailedException('getOpenPositions', error);
@@ -180,6 +204,10 @@ export class ExchangeService {
     currentPosition: Position,
   ): Promise<Order> {
     const positionDetails = `${currentPosition.contracts} ${currentPosition.symbol} ${currentPosition.side}`;
+
+    this.logger.debug(
+      `Exchange - Position Close Initiated - Account ID: ${accountId}, Position Details: ${positionDetails}`,
+    );
 
     try {
       let order: Order;
@@ -197,20 +225,20 @@ export class ExchangeService {
           currentPosition.contracts,
         );
       } else {
-        const errorMessage = `Unrecognized side "${currentPosition.side}" for ${accountId} account. Position not closed. Details: ${positionDetails}`;
+        const errorMessage = `Exchange - Close Position Failed - Account ID: ${accountId}, Reason: Unrecognized side '${currentPosition.side}', Position Details: ${positionDetails}`;
 
         this.logger.error(errorMessage);
         throw new UnrecognizedSideException(accountId, currentPosition.side);
       }
 
       this.logger.log(
-        `Position closed: Account ${accountId}, Details: ${positionDetails}`,
+        `Exchange - Position Closed - Account ID: ${accountId}, Position Details: ${positionDetails}`,
       );
 
       return order;
     } catch (error) {
       this.logger.error(
-        `Error closing position for ${accountId} account. Details: ${positionDetails}`,
+        `Exchange - Position Close Failed - Account ID: ${accountId}, Position Details: ${positionDetails}, Error: ${error.message}`,
         error.stack,
       );
       throw new ClosePositionException(accountId, error);
@@ -223,13 +251,17 @@ export class ExchangeService {
     size: number,
     price: number,
   ): Promise<Order> {
+    this.logger.log(
+      `Exchange - Limit Long Order Open Initiated - Account ID: ${accountId}, Symbol: ${symbol}, Size: ${size}, Price: ${price}`,
+    );
     const exchange = this.getExchange(accountId);
 
     try {
+      // TODO add logs
       return await exchange.openLimitLongOrder(symbol, size, price);
     } catch (error) {
       this.logger.error(
-        `Error opening limit long order for ${accountId} account`,
+        `Exchange - Limit Long Order Open Failed - Account ID: ${accountId}, Error: ${error.message}`,
         error.stack,
       );
       throw new ExchangeOperationFailedException('openLimitLongOrder', error);
@@ -242,13 +274,17 @@ export class ExchangeService {
     size: number,
     price: number,
   ): Promise<Order> {
+    this.logger.log(
+      `Exchange - Limit Short Order Open Initiated - Account ID: ${accountId}, Symbol: ${symbol}, Size: ${size}, Price: ${price}`,
+    );
     const exchange = this.getExchange(accountId);
 
     try {
+      // TODO add logs
       return await exchange.openLimitShortOrder(symbol, size, price);
     } catch (error) {
       this.logger.error(
-        `Error opening limit short order for ${accountId} account`,
+        `Exchange - Limit Short Order Open Failed - Account ID: ${accountId}, Error: ${error.message}`,
         error.stack,
       );
       throw new ExchangeOperationFailedException('openLimitShortOrder', error);
@@ -260,13 +296,17 @@ export class ExchangeService {
     symbol: string,
     size: number,
   ): Promise<Order> {
+    this.logger.log(
+      `Exchange - Market Long Order Open Initiated - Account ID: ${accountId}, Symbol: ${symbol}, Size: ${size}`,
+    );
     const exchange = this.getExchange(accountId);
 
     try {
+      // TODO add logs
       return await exchange.openMarketLongOrder(symbol, size);
     } catch (error) {
       this.logger.error(
-        `Error opening market long order for ${accountId} account`,
+        `Exchange - Market Long Order Open Failed - Account ID: ${accountId}, Error: ${error.message}`,
         error.stack,
       );
       throw new ExchangeOperationFailedException('openMarketLongOrder', error);
@@ -278,13 +318,17 @@ export class ExchangeService {
     symbol: string,
     size: number,
   ): Promise<Order> {
+    this.logger.log(
+      `Exchange - Market Short Order Open Initiated - Account ID: ${accountId}, Symbol: ${symbol}, Size: ${size}`,
+    );
     const exchange = this.getExchange(accountId);
 
     try {
+      // TODO add logs
       return await exchange.openMarketShortOrder(symbol, size);
     } catch (error) {
       this.logger.error(
-        `Error opening market short order for ${accountId} account`,
+        `Exchange - Market Short Order Open Failed - Account ID: ${accountId}, Error: ${error.message}`,
         error.stack,
       );
       throw new ExchangeOperationFailedException('openMarketShortOrder', error);
@@ -298,9 +342,13 @@ export class ExchangeService {
     amount: number,
     stopLossPrice: number,
   ): Promise<Order> {
+    this.logger.log(
+      `Exchange - Stop Loss Update Initiated - Account ID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`,
+    );
     const exchange = this.getExchange(accountId);
 
     try {
+      // TODO add logs
       return await exchange.updateStopLoss(
         orderId,
         symbol,
@@ -309,7 +357,7 @@ export class ExchangeService {
       );
     } catch (error) {
       this.logger.error(
-        `Error updating stop loss for ${accountId} account`,
+        `Exchange - Stop Loss Update Failed - Account ID: ${accountId}, Error: ${error.message}`,
         error.stack,
       );
       throw new ExchangeOperationFailedException('updateStopLoss', error);
@@ -323,9 +371,13 @@ export class ExchangeService {
     amount: number,
     takeProfitPrice: number,
   ): Promise<Order> {
+    this.logger.log(
+      `Exchange - Take Profit Update Initiated - Account ID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`,
+    );
     const exchange = this.getExchange(accountId);
 
     try {
+      // TODO add logs
       return await exchange.updateTakeProfit(
         orderId,
         symbol,
@@ -334,7 +386,7 @@ export class ExchangeService {
       );
     } catch (error) {
       this.logger.error(
-        `Error updating take profit for ${accountId} account`,
+        `Exchange - Take Profit Update Failed - Account ID: ${accountId}, Error: ${error.message}`,
         error.stack,
       );
       throw new ExchangeOperationFailedException('updateTakeProfit', error);
@@ -346,13 +398,17 @@ export class ExchangeService {
     orderId: string,
     symbol: string,
   ): Promise<boolean> {
+    this.logger.log(
+      `Exchange - Order Close Initiated - Account ID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}`,
+    );
     const exchange = this.getExchange(accountId);
 
     try {
+      // TODO add logs
       return await exchange.closeOrder(orderId, symbol);
     } catch (error) {
       this.logger.error(
-        `Error closing order for ${accountId} account`,
+        `Exchange - Order Close Failed - Account ID: ${accountId}, Error: ${error.message}`,
         error.stack,
       );
       throw new ExchangeOperationFailedException('closeOrder', error);
@@ -363,13 +419,17 @@ export class ExchangeService {
     accountId: string,
     symbol: string,
   ): Promise<boolean> {
+    this.logger.log(
+      `Exchange - Orders Close With Symbol Initiated - Account ID: ${accountId}, Symbol: ${symbol}`,
+    );
     const exchange = this.getExchange(accountId);
 
     try {
+      // TODO add logs
       return await exchange.closeOrdersWithSymbol(symbol);
     } catch (error) {
       this.logger.error(
-        `Error closing ${symbol} orders for ${accountId} account`,
+        `Exchange - Orders Close With Symbol Failed - Account ID: ${accountId}, Symbol: ${symbol}, Error: ${error.message}`,
         error.stack,
       );
       throw new ExchangeOperationFailedException(

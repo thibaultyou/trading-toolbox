@@ -41,10 +41,6 @@ export abstract class AbstractExchangeService implements IExchangeService {
     }
   }
 
-  // protected emitEvent(eventName: string, payload: any): void {
-  //   this.eventEmitter.emit(eventName, payload);
-  // }
-
   async getBalances(): Promise<Balances> {
     try {
       const balances = await this.exchange.fetchBalance();
@@ -347,10 +343,6 @@ export abstract class AbstractExchangeService implements IExchangeService {
   async clean() {
     try {
       await this.exchange.close();
-      // this.eventEmitter.emit(
-      //   Events.EXCHANGE_TERMINATED,
-      //   new ExchangeTerminatedEvent(this.account.id, this.account.exchange),
-      // );
       this.logger.log(
         `Exchange - Termination Successful - Account ID: ${this.account.id}`,
       );
