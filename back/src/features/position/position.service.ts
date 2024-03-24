@@ -4,8 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Events, Timers } from '../../config';
 import { ExchangeService } from '../../features/exchange/exchange.service';
 import { delay } from '../../utils/delay.util';
-
-import { PositionUpdatedEvent } from './events/position-updated.event';
+import { PositionsUpdatedEvent } from './events/positions-updated.event';
 import { PositionComparisonException } from './exceptions/position.exceptions';
 import { Position } from './position.types';
 
@@ -31,25 +30,28 @@ export class PositionService implements OnModuleInit {
   }
 
   private async updatePositions() {
-    const initializedAccountNames =
-      this.exchangeService.getInitializedAccountNames();
+    const initializedAccountIds =
+      this.exchangeService.getInitializedAccountIds();
+
     try {
-      for (const accountName of initializedAccountNames) {
+      for (const accountId of initializedAccountIds) {
         const newPositions =
-          await this.exchangeService.getOpenPositions(accountName);
-        if (this.hasPositionsChanged(accountName, newPositions)) {
-          this.positions[accountName] = newPositions;
+          await this.exchangeService.getOpenPositions(accountId);
+
+        if (this.hasPositionsChanged(accountId, newPositions)) {
+          this.positions[accountId] = newPositions;
           this.logger.debug(
-            `Updating positions for ${accountName} account: ${JSON.stringify(
+            `Updating positions for ${accountId} account: ${JSON.stringify(
               newPositions,
             )}`,
           );
           this.eventEmitter.emit(
             Events.POSITION_UPDATED,
-            new PositionUpdatedEvent(accountName, newPositions),
+            new PositionsUpdatedEvent(accountId, newPositions),
           );
         }
-        this.logger.log(`Fetching positions for ${accountName} account`);
+
+        this.logger.log(`Fetching positions for ${accountId} account`);
         await delay(Timers.POSITION_UPDATE_COOLDOWN);
       }
     } catch (error) {
@@ -61,10 +63,11 @@ export class PositionService implements OnModuleInit {
   }
 
   private hasPositionsChanged(
-    accountName: string,
+    accountId: string,
     newPositions: Position[],
   ): boolean {
-    const currentPositions = this.positions[accountName] || [];
+    const currentPositions = this.positions[accountId] || [];
+
     try {
       return JSON.stringify(newPositions) !== JSON.stringify(currentPositions);
     } catch (error) {

@@ -4,4 +4,4 @@ import { Timers } from './timers.config';
 import { Urls } from './urls.config';
 import { websocketConfig } from './websocket.config';
 
-export { databaseConfig, websocketConfig, Events, Timers, Urls };
+export { databaseConfig, Events, Timers, Urls, websocketConfig };

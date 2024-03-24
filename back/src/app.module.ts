@@ -3,16 +3,13 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { SetupModule } from './_setup/setup.module';
 import { databaseConfig } from './config';
 import { AccountModule } from './features/account/account.module';
 import { BalanceModule } from './features/balance/balance.module';
+import { CoreModule } from './features/core/core.module';
 import { ExchangeModule } from './features/exchange/exchange.module';
 import { HealthModule } from './features/health/health.module';
 import { MarketModule } from './features/market/market.module';
-import { OrderModule } from './features/order/order.module';
-import { PositionModule } from './features/position/position.module';
-import { TickerModule } from './features/ticker/ticker.module';
 
 @Module({
   imports: [
@@ -29,16 +26,16 @@ import { TickerModule } from './features/ticker/ticker.module';
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     AccountModule,
-    ExchangeModule, // Global
     BalanceModule,
+    ExchangeModule, // Global
     MarketModule,
-    OrderModule,
-    PositionModule,
-    SetupModule,
+    // OrderModule,
+    // PositionModule,
+    // SetupModule,
     // ActionModule,
     // AlertModule,
-    TickerModule,
-    // CoreModule,
+    // TickerModule,
+    CoreModule,
     // GridModule,
     HealthModule,
   ],

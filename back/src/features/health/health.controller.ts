@@ -33,6 +33,7 @@ export class HealthController {
         result.status === 'error'
           ? HttpStatus.SERVICE_UNAVAILABLE
           : HttpStatus.OK;
+
       response.status(statusCode).json(result);
     } catch (error) {
       response

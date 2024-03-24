@@ -5,12 +5,14 @@ class SortedMap {
   set(key: string, value: number) {
     if (!this.map.has(key)) {
       const idx = this.values.findIndex((v) => v > value);
+
       if (idx === -1) {
         this.values.push(value);
       } else {
         this.values.splice(idx, 0, value);
       }
     }
+
     this.map.set(key, value);
   }
 
@@ -22,6 +24,7 @@ class SortedMap {
     for (const [key, val] of this.map.entries()) {
       if (val === value) return key;
     }
+
     return undefined;
   }
 
@@ -32,6 +35,7 @@ class SortedMap {
     for (const [key, value] of this.map.entries()) {
       if (value >= lowerBound && value <= upperBound) return key;
     }
+
     return undefined;
   }
 
@@ -41,14 +45,18 @@ class SortedMap {
 
   delete(key: string): boolean {
     const value = this.map.get(key);
+
     if (value !== undefined) {
       const idx = this.values.indexOf(value);
+
       if (idx !== -1) {
         this.values.splice(idx, 1);
         this.map.delete(key);
+
         return true;
       }
     }
+
     return false;
   }
 
@@ -77,19 +85,25 @@ class SortedMap {
 
   firstEntry(): [string, number] | undefined {
     if (this.values.length === 0) return undefined;
+
     const firstValue = this.values[0];
     const entry = [...this.map.entries()].find(([_, v]) => v === firstValue);
     const firstKey = entry ? entry[0] : undefined;
+
     if (!firstKey) return undefined;
+
     return [firstKey, firstValue];
   }
 
   lastEntry(): [string, number] | undefined {
     if (this.values.length === 0) return undefined;
+
     const lastValue = this.values[this.values.length - 1];
     const entry = [...this.map.entries()].find(([_, v]) => v === lastValue);
     const lastKey = entry ? entry[0] : undefined;
+
     if (!lastKey) return undefined;
+
     return [lastKey, lastValue];
   }
 }

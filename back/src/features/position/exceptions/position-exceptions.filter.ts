@@ -1,15 +1,15 @@
 import {
+  ArgumentsHost,
   Catch,
   ExceptionFilter,
-  ArgumentsHost,
   HttpException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import {
+  PositionComparisonException,
   PositionNotFoundException,
   PositionUpdateException,
-  PositionComparisonException,
 } from './position.exceptions';
 
 @Catch(

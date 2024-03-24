@@ -28,7 +28,9 @@ export class MarketService {
     this.logger.log(`Market fetch initiated - AccountID: ${accountId}`);
 
     if (!this.markets.has(accountId)) {
-      this.logger.error(`Market fetch failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.error(
+        `Market fetch failed - AccountID: ${accountId}, Reason: Account not found`,
+      );
       throw new AccountNotFoundException(accountId);
     }
 
@@ -46,7 +48,9 @@ export class MarketService {
     accountId: string,
     quoteCurrency: string = 'USDT',
   ): Promise<string[]> {
-    this.logger.log(`Market spot IDs fetch initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`);
+    this.logger.log(
+      `Market spot IDs fetch initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`,
+    );
     const allMarkets = await this.fetchAllMarkets(accountId);
 
     return allMarkets
@@ -61,7 +65,9 @@ export class MarketService {
     accountId: string,
     quoteCurrency: string = 'USDT',
   ): Promise<string[]> {
-    this.logger.log(`Market contract IDs fetch initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`);
+    this.logger.log(
+      `Market contract IDs fetch initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`,
+    );
 
     const allMarkets = await this.fetchAllMarkets(accountId);
 
@@ -76,18 +82,24 @@ export class MarketService {
   // TODO add other market types ? future, option, index ...
 
   async findMarketById(accountId: string, marketId: string): Promise<Market> {
-    this.logger.log(`Market fetch initiated - AccountID: ${accountId}, MarketID: ${marketId}`);
+    this.logger.log(
+      `Market fetch initiated - AccountID: ${accountId}, MarketID: ${marketId}`,
+    );
     const allMarkets = this.markets.get(accountId);
 
     if (!allMarkets) {
-        this.logger.error(`Market fetch failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.error(
+        `Market fetch failed - AccountID: ${accountId}, Reason: Account not found`,
+      );
       throw new AccountNotFoundException(accountId);
     }
 
     const specificMarket = allMarkets.find((market) => market.id === marketId);
 
     if (!specificMarket) {
-        this.logger.error(`Market fetch failed - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Market not found`);
+      this.logger.error(
+        `Market fetch failed - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Market not found`,
+      );
       throw new MarketNotFoundException(accountId, marketId);
     }
 

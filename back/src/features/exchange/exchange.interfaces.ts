@@ -1,11 +1,12 @@
-import { Market, Order } from 'ccxt';
+import { Balances, Market, Order, Position } from 'ccxt';
 
 export interface IExchangeService {
-  initialize(): Promise<void>;
+  initialize(): Promise<boolean>;
   testCredentials(): Promise<void>;
-  getBalance(): Promise<number>;
-  getUsdtMarkets(): Promise<Market[]>;
-  getOpenPositions(): Promise<any>;
+  getBalances(): Promise<Balances>;
+  getMarkets(): Promise<Market[]>;
+  getOpenOrders(): Promise<Order[]>;
+  getOpenPositions(): Promise<Position[]>;
   openMarketLongOrder(symbol: string, size: number): Promise<Order>;
   openMarketShortOrder(symbol: string, size: number): Promise<Order>;
   openLimitLongOrder(
@@ -32,11 +33,5 @@ export interface IExchangeService {
   ): Promise<Order>;
   closeOrder(orderId: string, symbol: string): Promise<boolean>;
   closeOrdersWithSymbol(symbol: string): Promise<boolean>;
-  fetchOpenOrders(): Promise<Order[]>;
-  cleanResources(): void;
-  performWsAction(
-    action: string,
-    topic: string,
-    actionDescription: string,
-  ): void;
+  clean(): Promise<void>;
 }

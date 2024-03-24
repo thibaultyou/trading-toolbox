@@ -1,4 +1,4 @@
-import { cleanEnv, str, port } from 'envalid';
+import { cleanEnv, port, str } from 'envalid';
 
 export const databaseConfig = cleanEnv(process.env, {
   DATABASE_HOST: str({ default: 'localhost' }),

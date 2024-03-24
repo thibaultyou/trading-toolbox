@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import { BalanceController } from './balance.controller';
 import { BalanceGateway } from './balance.gateway';
 import { BalanceService } from './balance.service';
-import { BalanceUpdateHandler } from './handlers/update-balances.event-handler';
+import { BalanceExchangeInitializedEventHandler } from './handlers/exchange-initiated.balance.event-handler';
 
 @Module({
-  imports: [EventEmitterModule],
-  providers: [BalanceService, BalanceGateway, BalanceUpdateHandler],
+  providers: [
+    BalanceService,
+    BalanceGateway,
+    BalanceExchangeInitializedEventHandler,
+  ],
   controllers: [BalanceController],
   exports: [BalanceService],
 })

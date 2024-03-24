@@ -5,7 +5,6 @@ import { Order } from 'ccxt';
 import { Events, Timers } from '../../config';
 import { delay } from '../../utils/delay.util';
 import { ExchangeService } from '../exchange/exchange.service';
-
 import { OrdersUpdatedEvent } from './events/orders-updated.event';
 
 @Injectable()
@@ -25,51 +24,55 @@ export class OrderService implements OnModuleInit {
     }, Timers.ORDER_UPDATE_COOLDOWN);
   }
 
-  getOrders(accountName: string, symbol?: string): Order[] {
-    const orders = this.orders.get(accountName);
+  getOrders(accountId: string, symbol?: string): Order[] {
+    const orders = this.orders.get(accountId);
+
     if (symbol && orders) {
       return orders.filter((order) => order.info.symbol === symbol);
     }
+
     return orders || [];
   }
 
   private async updateOrders() {
-    const initializedAccountNames =
-      this.exchangeService.getInitializedAccountNames();
-    for (const accountName of initializedAccountNames) {
+    const initializedAccountIds =
+      this.exchangeService.getInitializedAccountIds();
+
+    for (const accountId of initializedAccountIds) {
       try {
-        const newOrders =
-          await this.exchangeService.fetchOpenOrders(accountName);
-        if (this.haveOrdersChanged(accountName, newOrders)) {
-          this.orders.set(accountName, newOrders);
+        const newOrders = await this.exchangeService.getOpenOrders(accountId);
+
+        if (this.haveOrdersChanged(accountId, newOrders)) {
+          this.orders.set(accountId, newOrders);
           this.logger.debug(
-            `Updating orders for ${accountName} account`,
+            `Updating orders for ${accountId} account`,
             newOrders,
           );
           this.eventEmitter.emit(
             Events.ORDERS_UPDATED,
-            new OrdersUpdatedEvent(accountName, newOrders),
+            new OrdersUpdatedEvent(accountId, newOrders),
           );
         }
-        this.logger.log(`Fetching orders for ${accountName} account`);
+
+        this.logger.log(`Fetching orders for ${accountId} account`);
         await delay(Timers.ORDER_UPDATE_COOLDOWN);
       } catch (error) {
         this.logger.error(
-          `Error during orders update for ${accountName} account`,
+          `Error during orders update for ${accountId} account`,
           error.stack,
         );
       }
     }
   }
 
-  private haveOrdersChanged(accountName: string, newOrders: Order[]): boolean {
+  private haveOrdersChanged(accountId: string, newOrders: Order[]): boolean {
     try {
       return (
-        JSON.stringify(newOrders) !==
-        JSON.stringify(this.orders.get(accountName))
+        JSON.stringify(newOrders) !== JSON.stringify(this.orders.get(accountId))
       );
     } catch (error) {
       this.logger.error('Error during orders comparison', error.stack);
+
       return false;
     }
   }

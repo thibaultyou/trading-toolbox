@@ -2,13 +2,13 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class OrdersUpdatedEvent {
   @ApiProperty()
-  public readonly accountName: string;
+  public readonly accountId: string;
 
   @ApiProperty({ type: () => [Object] })
   public readonly orders: any[];
 
-  constructor(accountName: string, orders: any[]) {
-    this.accountName = accountName;
+  constructor(accountId: string, orders: any[]) {
+    this.accountId = accountId;
     this.orders = orders;
   }
 }

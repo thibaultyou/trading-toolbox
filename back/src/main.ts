@@ -1,6 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
 import { Urls } from './config';
@@ -16,11 +16,12 @@ async function bootstrap() {
   });
 
   const options = new DocumentBuilder()
-    .setTitle('Trading app')
+    .setTitle('Trading toolbox')
     .setVersion('1.0')
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
+
   SwaggerModule.setup(Urls.SWAGGER_DOCS, app, document);
 
   app.useGlobalFilters(
@@ -35,4 +36,5 @@ async function bootstrap() {
   app.enableCors();
   await app.listen(4000);
 }
+
 bootstrap();

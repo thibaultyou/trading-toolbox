@@ -2,7 +2,7 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Balances } from 'ccxt';
 
-import { BaseController } from '../../common/base/base.controller';
+import { BaseController } from '../common/base/base.controller';
 import { BalanceService } from './balance.service';
 import { USDTBalance } from './balance.types';
 

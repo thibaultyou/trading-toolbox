@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Market } from 'ccxt';
 
-import { BaseController } from '../../common/base/base.controller';
+import { BaseController } from '../common/base/base.controller';
 import { MarketService } from './market.service';
 
 @ApiTags('Markets')
@@ -14,7 +14,9 @@ export class MarketController extends BaseController {
 
   @Get('/:accountId/all')
   @ApiOperation({ summary: 'Fetch all market IDs for a specific account' })
-  async fetchAllMarketIds(@Param('accountId') accountId: string): Promise<string[]> {
+  async fetchAllMarketIds(
+    @Param('accountId') accountId: string,
+  ): Promise<string[]> {
     return await this.marketService.fetchAllMarketIds(accountId);
   }
 
@@ -28,7 +30,10 @@ export class MarketController extends BaseController {
     @Param('accountId') accountId: string,
     @Query('quoteCurrency') quoteCurrency: string = 'USDT',
   ): Promise<string[]> {
-    return await this.marketService.fetchSpotMarketIds(accountId, quoteCurrency);
+    return await this.marketService.fetchSpotMarketIds(
+      accountId,
+      quoteCurrency,
+    );
   }
 
   @Get('/:accountId/contract')

@@ -38,7 +38,9 @@ export class AccountService {
     const account = await this.accountRepository.findOne({ where: { id } });
 
     if (!account) {
-      this.logger.error(`Account not found - AccountID: ${id}`);
+      this.logger.error(
+        `Account fetch failed - AccountID: ${id}, Reason: Account not found`,
+      );
       throw new AccountNotFoundException(id);
     }
 
@@ -50,7 +52,9 @@ export class AccountService {
     const account = await this.accountRepository.findOne({ where: { name } });
 
     if (!account) {
-      this.logger.error(`Account not found - Name: ${name}`);
+      this.logger.error(
+        `Account fetch failed - Name: ${name}, Reason: Account not found`,
+      );
       throw new AccountNotFoundException(name, true);
     }
 
@@ -66,13 +70,13 @@ export class AccountService {
     if (existingAccount) {
       if (existingAccount.name === account.name) {
         this.logger.error(
-          `Account creation failed, already exists - Name: ${account.name}`,
+          `Account creation failed - Name: ${account.name}, Reason: Account with this name already exists`,
         );
       }
 
       if (existingAccount.key === account.key) {
         this.logger.error(
-          `Account creation failed, already exists - Key: ${maskString(account.key)}`,
+          `Account creation failed - Key: ${maskString(account.key)}, Reason: Account with this key already exists`,
         );
       }
 
@@ -83,7 +87,7 @@ export class AccountService {
       await this.exchangeFactory.createExchange(account);
     } catch (error) {
       this.logger.error(
-        `Account creation failed for initialization on exchange - Account: ${account.name}, Error: ${error.message}`,
+        `Account creation failed - Account: ${account.name}, Error: ${error.message}`,
       );
       throw error;
     }
@@ -109,7 +113,9 @@ export class AccountService {
     const account = await this.findOne(id);
 
     if (!account) {
-      this.logger.error(`Account update failed, not found - AccountID: ${id}`);
+      this.logger.error(
+        `Account update failed - AccountID: ${id}, Reason: Account not found`,
+      );
       throw new AccountNotFoundException(id);
     }
 
@@ -134,7 +140,7 @@ export class AccountService {
 
     if (!account) {
       this.logger.error(
-        `Account deletion failed, not found - AccountID: ${id}`,
+        `Account deletion failed - AccountID: ${id}, Reason: Account not found`,
       );
       throw new AccountNotFoundException(id);
     }

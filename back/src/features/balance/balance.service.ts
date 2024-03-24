@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Balances } from 'ccxt';
 import { Balance } from 'ccxt/js/src/base/types';
 
-import { Timers } from '../../config';
+import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
 import { ExchangeService } from '../exchange/exchange.service';
 import { BalanceGateway } from './balance.gateway';
 import { USDTBalance } from './balance.types';
+import { BalancesUpdatedEvent } from './events/balances-updated.event';
 import {
   BalancesUpdateAggregatedException,
   USDTBalanceNotFoundException,
@@ -16,18 +18,25 @@ import { extractUSDTEquity } from './utils/usdt-equity.util';
 @Injectable()
 export class BalanceService {
   private logger = new Logger(BalanceService.name);
-  private balances: Map<string, Balances> = new Map();
+  private balances: Map<string, Balances> = new Map(); // accountId -> Balances
+  private accounts: Set<string> = new Set();
 
   constructor(
+    private eventEmitter: EventEmitter2,
     private exchangeService: ExchangeService,
     private balanceGateway: BalanceGateway,
   ) {}
 
   async onModuleInit() {
-    this.refreshAccountBalances();
+    this.refreshAllBalances();
     setInterval(() => {
-      this.refreshAccountBalances();
+      this.refreshAllBalances();
     }, Timers.BALANCES_CACHE_COOLDOWN);
+  }
+
+  addAccount(accountId: string) {
+    this.accounts.add(accountId);
+    this.refreshAccountBalance(accountId);
   }
 
   findAll(): Record<string, Balances> {
@@ -40,7 +49,9 @@ export class BalanceService {
     this.logger.log(`Balances fetch initiated - AccountID: ${accountId}`);
 
     if (!this.balances.has(accountId)) {
-      this.logger.error(`Account not found - AccountID: ${accountId}`);
+      this.logger.error(
+        `Balances fetch failed - AccountID: ${accountId}, Reason: Account not found`,
+      );
       throw new AccountNotFoundException(accountId);
     }
 
@@ -66,50 +77,54 @@ export class BalanceService {
     };
   }
 
-  // from WebSocket
-  // FIXME add me back
-  // updateBalanceFromWebSocket(accountId: string, balances: Balances) {
-  //   this.balances.set(accountId, balances);
-  //   this.balanceGateway.sendBalancesUpdate(accountId, balances);
-  //   this.logger.log(`Balances updated from WebSocket - AccountID: ${accountId}, Balances: ${JSON.stringify(balances)}`);
-  // }
+  // TODO add updates from websocket ?
 
-  // from REST
-  private async refreshAccountBalances() {
-    const initializedAccountIds =
-      this.exchangeService.getInitializedAccountIds();
+  private async refreshAccountBalance(accountId: string): Promise<void> {
+    try {
+      const balances = await this.exchangeService.getBalances(accountId);
+
+      this.balances.set(accountId, balances);
+      this.balanceGateway.sendBalancesUpdate(accountId, balances);
+      this.eventEmitter.emit(
+        Events.BALANCES_UPDATED,
+        new BalancesUpdatedEvent(accountId, balances),
+      );
+      this.logger.debug(
+        `Balances updated - AccountID: ${accountId}, Balances: ${JSON.stringify(balances)}`,
+      );
+      this.logger.log(
+        `Balances updated - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(balances, this.logger).toFixed(2)} $`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Balances update failed - AccountID: ${accountId}, Error: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  private async refreshAllBalances() {
+    const balancePromises = Array.from(this.accounts).map((accountId) =>
+      this.refreshAccountBalance(accountId),
+    );
+
+    const results = await Promise.allSettled(balancePromises);
     const errors: Array<{ accountId: string; error: Error }> = [];
 
-    const balancesPromises = initializedAccountIds.map(async (accountId) => {
-      try {
-        const balances = await this.exchangeService.getBalances(accountId);
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const accountId = Array.from(this.accounts)[index];
 
-        this.balances.set(accountId, balances);
-        this.balanceGateway.sendBalancesUpdate(accountId, balances);
-        this.logger.debug(
-          `Balances updated - AccountID: ${accountId}, Balances: ${JSON.stringify(balances)}`,
-        );
-        this.logger.log(
-          `Balances updated - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(balances, this.logger)}$`,
-        );
-      } catch (error) {
-        this.logger.error(
-          `Balances update failed - AccountID: ${accountId}, Error: ${error.message}`,
-          error.stack,
-        );
-        errors.push({ accountId, error });
+        errors.push({ accountId, error: result.reason });
       }
     });
 
-    try {
-      await Promise.all(balancesPromises);
+    if (errors.length > 0) {
+      const aggregatedError = new BalancesUpdateAggregatedException(errors);
 
-      if (errors.length > 0) {
-        throw new BalancesUpdateAggregatedException(errors);
-      }
-    } catch (aggregatedError) {
       this.logger.error(
-        `Balances update failed - Error: ${aggregatedError.message}`,
+        `Some balances updates failed - Error: ${aggregatedError.message}`,
         aggregatedError.stack,
       );
       throw aggregatedError;

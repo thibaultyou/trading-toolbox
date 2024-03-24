@@ -1,4 +1,4 @@
-import { HealthIndicatorResult, HealthCheckError } from '@nestjs/terminus';
+import { HealthCheckError, HealthIndicatorResult } from '@nestjs/terminus';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as ccxt from 'ccxt';
 
@@ -9,6 +9,7 @@ jest.mock('ccxt', () => {
   const bybitMock = {
     fetchTicker: jest.fn(),
   };
+
   return {
     __esModule: true,
     ...originalModule,
@@ -47,17 +48,20 @@ describe('BybitHealthIndicator', () => {
       bid: 9500,
       ask: 9600,
     };
+
     bybitMock.fetchTicker.mockResolvedValueOnce(mockTicker);
 
     const key = 'bybit';
     const result: HealthIndicatorResult =
       await bybitHealthIndicator.isHealthy(key);
+
     expect(result).toEqual({ [key]: { status: 'up' } });
     expect(bybitMock.fetchTicker).toHaveBeenCalledWith('BTCUSDT');
   });
 
   it('should throw a HealthCheckError on failure', async () => {
     const key = 'bybit';
+
     bybitMock.fetchTicker.mockRejectedValueOnce(new Error('Network error'));
     await expect(bybitHealthIndicator.isHealthy(key)).rejects.toThrow(
       HealthCheckError,
