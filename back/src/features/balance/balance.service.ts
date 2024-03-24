@@ -27,73 +27,62 @@ export class BalanceService {
   ) {}
 
   async onModuleInit() {
-    this.refreshAllAccountBalances();
     setInterval(() => {
-      this.refreshAllAccountBalances();
+      this.refreshAllBalances();
     }, Timers.BALANCES_CACHE_COOLDOWN);
   }
 
   addAccount(accountId: string) {
     if (!this.balances.has(accountId)) {
-      this.refreshAccountBalance(accountId);
-      this.logger.log(
-        `Balance - Account Tracking Initiated - Account ID: ${accountId}`,
-      );
+      this.refreshAccountBalances(accountId);
+      this.logger.log(`Balance - Tracking Initiated - AccountID: ${accountId}`);
     } else {
       this.logger.warn(
-        `Balance - Account Tracking Skipped - Account ID: ${accountId}, Reason: Already tracked`,
+        `Balance - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`,
       );
     }
   }
 
   removeAccount(accountId: string) {
     if (this.balances.delete(accountId)) {
-      this.logger.log(`Balance - Account Removed - Account ID: ${accountId}`);
+      this.logger.log(`Balance - Tracking Stopped - AccountID: ${accountId}`);
     } else {
       this.logger.warn(
-        `Balance - Account Removal Attempt Failed - Account ID: ${accountId}, Reason: Not tracked`,
+        `Balance - Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`,
       );
     }
   }
 
   findAll(): Record<string, Balances> {
-    this.logger.log(`Balance - Fetching All Tracked Account Balances`);
+    this.logger.log(`Balances - Fetch Initiated`);
 
     return Object.fromEntries(this.balances);
   }
 
   findOne(accountId: string): Balances {
-    this.logger.debug(
-      `Balance - Account Balances Fetch Initiated - Account ID: ${accountId}`,
-    );
+    this.logger.log(`Balance - Fetch Initiated - AccountID: ${accountId}`);
 
     if (!this.balances.has(accountId)) {
       this.logger.error(
-        `Balance - Account Balances Fetch Failed - Account ID: ${accountId}, Reason: Account not found`,
+        `Balance - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`,
       );
 
       throw new AccountNotFoundException(accountId);
     }
 
-    const balances = this.balances.get(accountId);
-
-    this.logger.log(
-      `Balance - Fetched Account Balances Successfully - Account ID: ${accountId}`,
-    );
-
-    return balances;
+    return this.balances.get(accountId);
   }
 
   findUSDTBalance(accountId: string): USDTBalance {
-    this.logger.debug(
-      `Balance - USDT Balance Fetch Initiated - Account ID: ${accountId}`,
+    this.logger.log(
+      `Balance (USDT) - Fetch Initiated - AccountID: ${accountId}`,
     );
 
     const balances = this.findOne(accountId);
 
     if (!balances || !balances.USDT) {
       this.logger.error(
-        `Balance - USDT Balance Not Found - Account ID: ${accountId}`,
+        `Balance (USDT) - Fetch Failed - AccountID: ${accountId}, Reason: USDT Field Not Found`,
       );
       throw new USDTBalanceNotFoundException(accountId);
     }
@@ -109,10 +98,8 @@ export class BalanceService {
 
   // TODO add updates from websocket ?
 
-  private async refreshAccountBalance(accountId: string) {
-    this.logger.debug(
-      `Balance - Account Balances Refresh Initiated - Account ID: ${accountId}`,
-    );
+  private async refreshAccountBalances(accountId: string) {
+    this.logger.log(`Balance - Refresh Initiated - AccountID: ${accountId}`);
 
     try {
       const balances = await this.exchangeService.getBalances(accountId);
@@ -124,51 +111,41 @@ export class BalanceService {
         new BalancesUpdatedEvent(accountId, balances),
       );
       this.logger.debug(
-        `Balance - Refreshed Account Balances Successfully - Account ID: ${accountId}, Balances: ${JSON.stringify(balances)}`,
+        `Balance - Updated Successfully - AccountID: ${accountId}, Balances: ${JSON.stringify(balances)}`,
       );
       this.logger.log(
-        `Balance - Refreshed Account USDT Equity - Account ID: ${accountId}, Balance (USDT): ${extractUSDTEquity(balances, this.logger).toFixed(2)} $`,
+        `Balance - USDT Equity - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(balances, this.logger).toFixed(2)} $`,
       );
     } catch (error) {
       this.logger.error(
-        `Balance - Account Balances Refresh Failed - Account ID: ${accountId}, Error: ${error.message}`,
+        `Balance - Update Failed - AccountID: ${accountId}, Error: ${error.message}`,
         error.stack,
       );
       throw error;
     }
   }
 
-  private async refreshAllAccountBalances() {
-    this.logger.debug(`Balance - All Account Balances Refresh Initiated`);
-
-    const balancePromises = Array.from(this.balances.keys()).map((accountId) =>
-      this.refreshAccountBalance(accountId),
-    );
-
-    const results = await Promise.allSettled(balancePromises);
+  private async refreshAllBalances() {
+    this.logger.log(`Balances - Refresh Initiated`);
+    const accountIds = Array.from(this.balances.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
 
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        const accountId = Array.from(this.balances.keys())[index];
+    const balancePromises = accountIds.map((accountId) =>
+      this.refreshAccountBalances(accountId).catch((error) => {
+        errors.push({ accountId, error });
+      }),
+    );
 
-        this.logger.error(
-          `Balance - All Account Balances Refresh Failed - Account ID: ${accountId}, Error: ${result.reason}`,
-        );
-        errors.push({ accountId, error: result.reason });
-      }
-    });
+    await Promise.all(balancePromises);
 
     if (errors.length > 0) {
       const aggregatedError = new BalancesUpdateAggregatedException(errors);
 
       this.logger.error(
-        `Balance - All Account Balances Refresh Failures - Error: ${aggregatedError.message}`,
+        `Balances - Multiple Updates Failed - Error: ${aggregatedError.message}`,
         aggregatedError.stack,
       );
       throw aggregatedError;
-    } else {
-      this.logger.log(`Balance - All Account Balances Refreshed Successfully`);
     }
   }
 }

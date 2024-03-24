@@ -244,7 +244,7 @@
 //     try {
 //       if (symbol !== gridConfiguration.symbol) {
 //         this.logger.debug(
-//           `| Unsupported symbol | Account: ${accountName} | Symbol: ${symbol} | Order ID: ${orderId}`,
+//           `| Unsupported symbol | Account: ${accountName} | Symbol: ${symbol} | OrderID: ${orderId}`,
 //         );
 
 //         return;
@@ -252,14 +252,14 @@
 
 //       if (orderType !== 'Limit') {
 //         this.logger.debug(
-//           `| Unsupported order type | Account: ${accountName} | Type: ${orderType} | Order ID: ${orderId}`,
+//           `| Unsupported order type | Account: ${accountName} | Type: ${orderType} | OrderID: ${orderId}`,
 //         );
 
 //         return;
 //       }
 
 //       this.logger.debug(
-//         `| Updating grid for executed order | Account: ${accountName} | Order ID: ${orderId}`,
+//         `| Updating grid for executed order | Account: ${accountName} | OrderID: ${orderId}`,
 //       );
 //       const executedOrderPrice = parseFloat(orderPrice);
 //       const matchingGridOrderPrice = this.grid.get(orderId);
@@ -450,7 +450,7 @@
 
 //       for (const order of ordersToRemove) {
 //         this.logger.log(
-//           `| Removing excess order | Account: ${accountName} | Order ID: ${order.id}`,
+//           `| Removing excess order | Account: ${accountName} | OrderID: ${order.id}`,
 //         );
 //         await this.exchangeService.closeOrder(
 //           accountName,
@@ -509,7 +509,7 @@
 //       if (this.removalRearmCounter === 0 && duplicatedOrders.length > 0) {
 //         for (const order of duplicatedOrders) {
 //           this.logger.log(
-//             `| Removing duplicated order | Account: ${accountName} | Order ID: ${order.id}`,
+//             `| Removing duplicated order | Account: ${accountName} | OrderID: ${order.id}`,
 //           );
 //           await this.exchangeService.closeOrder(
 //             accountName,

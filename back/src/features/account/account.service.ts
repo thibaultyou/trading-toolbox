@@ -27,19 +27,19 @@ export class AccountService {
   ) {}
 
   async findAll(): Promise<Account[]> {
-    this.logger.log(`Fetching all accounts`);
+    this.logger.log(`Accounts - Fetch Initiated`);
     const accounts = await this.accountRepository.find();
 
     return accounts;
   }
 
   async findOne(id: string): Promise<Account> {
-    this.logger.log(`Account fetch initiated - AccountID: ${id}`);
+    this.logger.log(`Account - Fetch Initiated - AccountID: ${id}`);
     const account = await this.accountRepository.findOne({ where: { id } });
 
     if (!account) {
       this.logger.error(
-        `Account fetch failed - AccountID: ${id}, Reason: Account not found`,
+        `Account - Fetch Failed - AccountID: ${id}, Reason: Account not found`,
       );
       throw new AccountNotFoundException(id);
     }
@@ -48,12 +48,12 @@ export class AccountService {
   }
 
   async findOneByName(name: string): Promise<Account> {
-    this.logger.log(`Account fetch initiated - Name: ${name}`);
+    this.logger.log(`Account - Fetch Initiated - Name: ${name}`);
     const account = await this.accountRepository.findOne({ where: { name } });
 
     if (!account) {
       this.logger.error(
-        `Account fetch failed - Name: ${name}, Reason: Account not found`,
+        `Account - Fetch Failed - Name: ${name}, Reason: Account not found`,
       );
       throw new AccountNotFoundException(name, true);
     }
@@ -62,7 +62,7 @@ export class AccountService {
   }
 
   async create(account: Account): Promise<Account> {
-    this.logger.log(`Account creation initiated - Name: ${account.name}`);
+    this.logger.log(`Account - Create Initiated - Name: ${account.name}`);
     const existingAccount = await this.accountRepository.findOne({
       where: [{ name: account.name }, { key: account.key }],
     });
@@ -70,13 +70,13 @@ export class AccountService {
     if (existingAccount) {
       if (existingAccount.name === account.name) {
         this.logger.error(
-          `Account creation failed - Name: ${account.name}, Reason: Account with this name already exists`,
+          `Account - Create Failed - Name: ${account.name}, Reason: Account with this name already exists`,
         );
       }
 
       if (existingAccount.key === account.key) {
         this.logger.error(
-          `Account creation failed - Key: ${maskString(account.key)}, Reason: Account with this key already exists`,
+          `Account - Create Failed - Key: ${maskString(account.key)}, Reason: Account with this key already exists`,
         );
       }
 
@@ -87,7 +87,7 @@ export class AccountService {
       await this.exchangeFactory.createExchange(account);
     } catch (error) {
       this.logger.error(
-        `Account creation failed - Account: ${account.name}, Error: ${error.message}`,
+        `Account - Create Failed - Account: ${account.name}, Error: ${error.message}`,
       );
       throw error;
     }
@@ -99,7 +99,7 @@ export class AccountService {
       new AccountCreatedEvent(savedAccount),
     );
     this.logger.log(
-      `Account created successfully - AccountID: ${savedAccount.id}`,
+      `Account - Creation Success - AccountID: ${savedAccount.id}`,
     );
 
     return savedAccount;
@@ -109,12 +109,12 @@ export class AccountService {
     id: string,
     updateFields: Partial<Account>,
   ): Promise<Account> {
-    this.logger.log(`Account update initiated - AccountID: ${id}`);
+    this.logger.log(`Account - Update Initiated - AccountID: ${id}`);
     const account = await this.findOne(id);
 
     if (!account) {
       this.logger.error(
-        `Account update failed - AccountID: ${id}, Reason: Account not found`,
+        `Account - Update Failed - AccountID: ${id}, Reason: Account not found`,
       );
       throw new AccountNotFoundException(id);
     }
@@ -128,19 +128,19 @@ export class AccountService {
       new AccountUpdatedEvent(savedAccount),
     );
     this.logger.log(
-      `Account updated successfully - AccountID: ${savedAccount.id}`,
+      `Account - Update Success - AccountID: ${savedAccount.id}`,
     );
 
     return savedAccount;
   }
 
   async delete(id: string): Promise<boolean> {
-    this.logger.log(`Account deletion initiated - AccountID: ${id}`);
+    this.logger.log(`Account - Deletion Initiated - AccountID: ${id}`);
     const account = await this.findOne(id);
 
     if (!account) {
       this.logger.error(
-        `Account deletion failed - AccountID: ${id}, Reason: Account not found`,
+        `Account - Deletion Failed - AccountID: ${id}, Reason: Account not found`,
       );
       throw new AccountNotFoundException(id);
     }
@@ -150,7 +150,7 @@ export class AccountService {
       Events.ACCOUNT_DELETED,
       new AccountDeletedEvent(account),
     );
-    this.logger.log(`Account deleted successfully - AccountID: ${id}`);
+    this.logger.log(`Account - Deleted Successfully - AccountID: ${id}`);
 
     return true;
   }

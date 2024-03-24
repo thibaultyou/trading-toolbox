@@ -1,0 +1,30 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
+
+import { Events } from '../../../config';
+import { ExchangeTerminatedEvent } from '../../exchange/events/exchange-terminated.event';
+import { MarketService } from '../market.service';
+
+@Injectable()
+export class MarketExchangeTerminatedEventHandler {
+  private logger = new Logger(MarketExchangeTerminatedEventHandler.name);
+
+  constructor(private marketService: MarketService) {}
+
+  @OnEvent(Events.EXCHANGE_TERMINATED)
+  async handle(event: ExchangeTerminatedEvent) {
+    const actionContext = `Market Module - Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
+
+    try {
+      this.marketService.removeAccount(event.accountId);
+      this.logger.log(
+        `${actionContext} - Successfully removed market from watch list`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `${actionContext} - Failed to remove market from watch list - Error: ${error.message}`,
+        error.stack,
+      );
+    }
+  }
+}

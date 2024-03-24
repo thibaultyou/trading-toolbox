@@ -46,13 +46,13 @@ export abstract class AbstractExchangeService implements IExchangeService {
       const balances = await this.exchange.fetchBalance();
 
       this.logger.log(
-        `Exchange - Fetched Balances Successfully - Account ID: ${this.account.id}`,
+        `Exchange - Fetched Balances Successfully - AccountID: ${this.account.id}`,
       );
 
       return balances;
     } catch (error) {
       this.logger.error(
-        `Exchange - Failed to Fetch Balances - Account ID: ${this.account.id}, Error: ${error.message}`,
+        `Exchange - Failed to Fetch Balances - AccountID: ${this.account.id}, Error: ${error.message}`,
       );
       throw new ExchangeOperationFailedException(
         'fetching balances',
@@ -66,13 +66,13 @@ export abstract class AbstractExchangeService implements IExchangeService {
       const markets = await this.exchange.fetchMarkets();
 
       this.logger.log(
-        `Exchange - Fetched Markets Successfully - Account ID: ${this.account.id}`,
+        `Exchange - Fetched Markets Successfully - AccountID: ${this.account.id}`,
       );
 
       return markets;
     } catch (error) {
       this.logger.error(
-        `Exchange - Failed to Fetch Markets - Account ID: ${this.account.id}, Error: ${error.message}`,
+        `Exchange - Failed to Fetch Markets - AccountID: ${this.account.id}, Error: ${error.message}`,
       );
       throw new ExchangeOperationFailedException(
         'fetching markets',
@@ -86,13 +86,13 @@ export abstract class AbstractExchangeService implements IExchangeService {
       const orders = await this.exchange.fetchOpenOrders();
 
       this.logger.log(
-        `Exchange - Fetched Open Orders Successfully - Account ID: ${this.account.id}`,
+        `Exchange - Fetched Open Orders Successfully - AccountID: ${this.account.id}`,
       );
 
       return orders;
     } catch (error) {
       this.logger.error(
-        `Exchange - Failed to Fetch Open Orders - Account ID: ${this.account.id}, Error: ${error.message}`,
+        `Exchange - Failed to Fetch Open Orders - AccountID: ${this.account.id}, Error: ${error.message}`,
       );
       throw new ExchangeOperationFailedException(
         'fetching open orders',
@@ -106,13 +106,13 @@ export abstract class AbstractExchangeService implements IExchangeService {
       const positions = await this.exchange.fetchPositions();
 
       this.logger.log(
-        `Exchange - Fetched Open Positions Successfully - Account ID: ${this.account.id}`,
+        `Exchange - Fetched Open Positions Successfully - AccountID: ${this.account.id}`,
       );
 
       return positions;
     } catch (error) {
       this.logger.error(
-        `Exchange - Failed to Fetch Open Positions - Account ID: ${this.account.id}, Error: ${error.message}`,
+        `Exchange - Failed to Fetch Open Positions - AccountID: ${this.account.id}, Error: ${error.message}`,
       );
       throw new ExchangeOperationFailedException(
         'fetching open positions',
@@ -126,13 +126,13 @@ export abstract class AbstractExchangeService implements IExchangeService {
       const order = await this.exchange.createMarketBuyOrder(symbol, size);
 
       this.logger.log(
-        `Exchange - Opened Market Long Order Successfully - Account ID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}`,
+        `Exchange - Opened Market Long Order Successfully - AccountID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}`,
       );
 
       return order;
     } catch (error) {
       this.logger.error(
-        `Exchange - Failed to Open Market Long Order - Account ID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}, Error: ${error.message}`,
+        `Exchange - Failed to Open Market Long Order - AccountID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}, Error: ${error.message}`,
       );
       throw new ExchangeOperationFailedException(
         'opening market long order',
@@ -146,13 +146,13 @@ export abstract class AbstractExchangeService implements IExchangeService {
       const order = await this.exchange.createMarketSellOrder(symbol, size);
 
       this.logger.log(
-        `Exchange - Opened Market Short Order Successfully - Account ID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}`,
+        `Exchange - Opened Market Short Order Successfully - AccountID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}`,
       );
 
       return order;
     } catch (error) {
       this.logger.error(
-        `Exchange - Failed to Open Market Short Order - Account ID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}, Error: ${error.message}`,
+        `Exchange - Failed to Open Market Short Order - AccountID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}, Error: ${error.message}`,
       );
       throw new ExchangeOperationFailedException(
         'opening market short order',
@@ -174,13 +174,13 @@ export abstract class AbstractExchangeService implements IExchangeService {
       );
 
       this.logger.log(
-        `Exchange - Opened Limit Long Order Successfully - Account ID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}, Price: ${price}`,
+        `Exchange - Opened Limit Long Order Successfully - AccountID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}, Price: ${price}`,
       );
 
       return order;
     } catch (error) {
       this.logger.error(
-        `Exchange - Failed to Open Limit Long Order - Account ID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}, Price: ${price}, Error: ${error.message}`,
+        `Exchange - Failed to Open Limit Long Order - AccountID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}, Price: ${price}, Error: ${error.message}`,
       );
       throw new ExchangeOperationFailedException(
         'opening limit long order',
@@ -202,13 +202,13 @@ export abstract class AbstractExchangeService implements IExchangeService {
       );
 
       this.logger.log(
-        `Exchange - Limit Short Order Opened - Account ID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}, Price: ${price}`,
+        `Exchange - Limit Short Order Opened - AccountID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}, Price: ${price}`,
       );
 
       return order;
     } catch (error) {
       this.logger.error(
-        `Exchange - Failed to Open Limit Short Order - Account ID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}, Price: ${price}, Error: ${error.message}`,
+        `Exchange - Failed to Open Limit Short Order - AccountID: ${this.account.id}, Symbol: ${symbol}, Size: ${size}, Price: ${price}, Error: ${error.message}`,
       );
       throw new ExchangeOperationFailedException(
         'opening limit short order',
@@ -235,7 +235,7 @@ export abstract class AbstractExchangeService implements IExchangeService {
       );
 
       this.logger.log(
-        `Exchange - Stop Loss Updated - Account ID: ${this.account.id}, Order ID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`,
+        `Exchange - Stop Loss Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`,
       );
 
       return updatedOrder;
@@ -262,7 +262,7 @@ export abstract class AbstractExchangeService implements IExchangeService {
       );
 
       this.logger.log(
-        `Exchange - Take Profit Updated - Account ID: ${this.account.id}, Order ID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`,
+        `Exchange - Take Profit Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`,
       );
 
       return updatedOrder;
@@ -291,13 +291,13 @@ export abstract class AbstractExchangeService implements IExchangeService {
       );
 
       this.logger.log(
-        `Exchange - Order Edited - Account ID: ${this.account.id}, Type: ${type}, Side: ${side}, Order ID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Price: ${price}`,
+        `Exchange - Order Edited - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Price: ${price}`,
       );
 
       return order;
     } catch (error) {
       this.logger.error(
-        `Exchange - Failed to Edit Order - Account ID: ${this.account.id}, Type: ${type}, Side: ${side}, Order ID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Price: ${price}, Error: ${error.message}`,
+        `Exchange - Failed to Edit Order - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Price: ${price}, Error: ${error.message}`,
       );
       throw new ExchangeOperationFailedException(
         actionDescription,
@@ -310,12 +310,12 @@ export abstract class AbstractExchangeService implements IExchangeService {
     try {
       await this.exchange.cancelAllOrders(symbol);
       this.logger.log(
-        `Exchange - Closed All Orders - Account ID: ${this.account.id}, Symbol: ${symbol}`,
+        `Exchange - Closed All Orders - AccountID: ${this.account.id}, Symbol: ${symbol}`,
       );
 
       return true;
     } catch (error) {
-      const errMsg = `Exchange - Close Orders Failed - Account ID: ${this.account.id}, Symbol: ${symbol}, Error: ${error.message}`;
+      const errMsg = `Exchange - Close Orders Failed - AccountID: ${this.account.id}, Symbol: ${symbol}, Error: ${error.message}`;
 
       this.logger.error(errMsg);
 
@@ -327,12 +327,12 @@ export abstract class AbstractExchangeService implements IExchangeService {
     try {
       await this.exchange.cancelOrder(orderId, symbol);
       this.logger.log(
-        `Exchange - Closed Order - Account ID: ${this.account.id}, Order ID: ${orderId}, Symbol: ${symbol}`,
+        `Exchange - Closed Order - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}`,
       );
 
       return true;
     } catch (error) {
-      const errMsg = `Exchange - Close Order Failed - Account ID: ${this.account.id}, Order ID: ${orderId}, Symbol: ${symbol}, Error: ${error.message}`;
+      const errMsg = `Exchange - Close Order Failed - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Error: ${error.message}`;
 
       this.logger.error(errMsg);
 
@@ -344,10 +344,10 @@ export abstract class AbstractExchangeService implements IExchangeService {
     try {
       await this.exchange.close();
       this.logger.log(
-        `Exchange - Termination Successful - Account ID: ${this.account.id}`,
+        `Exchange - Termination Successful - AccountID: ${this.account.id}`,
       );
     } catch (error) {
-      const errMsg = `Exchange - Termination Failed - Account ID: ${this.account.id}, Error: ${error.message}`;
+      const errMsg = `Exchange - Termination Failed - AccountID: ${this.account.id}, Error: ${error.message}`;
 
       this.logger.error(errMsg);
       throw new ExchangeTerminationFailedException(this.account.id, errMsg);
