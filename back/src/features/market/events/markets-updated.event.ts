@@ -5,7 +5,7 @@ export class MarketsUpdatedEvent {
   @ApiProperty()
   public readonly accountId: string;
 
-  @ApiProperty({ type: () => Object })
+  @ApiProperty({ type: () => [Object] })
   public readonly markets: Market[];
 
   constructor(accountId: string, markets: Market[]) {

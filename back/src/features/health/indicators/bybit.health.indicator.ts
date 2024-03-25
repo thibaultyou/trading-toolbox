@@ -1,9 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  HealthCheckError,
-  HealthIndicator,
-  HealthIndicatorResult,
-} from '@nestjs/terminus';
+import { HealthCheckError, HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
 import * as ccxt from 'ccxt';
 
 @Injectable()
@@ -16,10 +12,7 @@ export class BybitHealthIndicator extends HealthIndicator {
 
       return this.getStatus(key, true);
     } catch (error) {
-      throw new HealthCheckError(
-        'Bybit check failed',
-        this.getStatus(key, false, { message: error.message }),
-      );
+      throw new HealthCheckError('Bybit check failed', this.getStatus(key, false, { message: error.message }));
     }
   }
 }

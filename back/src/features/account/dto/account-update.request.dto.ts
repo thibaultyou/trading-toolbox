@@ -22,7 +22,7 @@ export class AccountUpdateRequestDto {
   @ApiProperty({
     enum: ExchangeType,
     example: ExchangeType.Bybit,
-    required: false,
+    required: false
   })
   @IsEnum(ExchangeType)
   @IsOptional()

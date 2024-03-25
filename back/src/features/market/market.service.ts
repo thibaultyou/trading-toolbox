@@ -7,21 +7,16 @@ import { AccountNotFoundException } from '../account/exceptions/account.exceptio
 import { ITrackableService } from '../common/interfaces/trackable.service.interface';
 import { ExchangeService } from '../exchange/exchange.service';
 import { MarketsUpdatedEvent } from './events/markets-updated.event';
-import {
-  MarketNotFoundException,
-  MarketsUpdateAggregatedException,
-} from './exceptions/market.exceptions';
+import { MarketNotFoundException, MarketsUpdateAggregatedException } from './exceptions/market.exceptions';
 
 @Injectable()
-export class MarketService
-  implements OnModuleInit, ITrackableService<Market[]>
-{
+export class MarketService implements OnModuleInit, ITrackableService<Market[]> {
   private logger = new Logger(MarketService.name);
   private markets: Map<string, Market[]> = new Map();
 
   constructor(
     private eventEmitter: EventEmitter2,
-    private exchangeService: ExchangeService,
+    private exchangeService: ExchangeService
   ) {}
 
   async onModuleInit() {
@@ -30,103 +25,72 @@ export class MarketService
     }, Timers.MARKETS_CACHE_COOLDOWN);
   }
 
-  addAccount(accountId: string) {
+  startTrackingAccount(accountId: string) {
     if (!this.markets.has(accountId)) {
       this.logger.log(`Market - Tracking Initiated - AccountID: ${accountId}`);
       this.refreshOne(accountId);
     } else {
-      this.logger.warn(
-        `Market - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`,
-      );
+      this.logger.warn(`Market - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
     }
   }
 
-  removeAccount(accountId: string) {
+  stopTrackingAccount(accountId: string) {
     if (this.markets.delete(accountId)) {
       this.logger.log(`Market - Tracking Stopped - AccountID: ${accountId}`);
     } else {
-      this.logger.warn(
-        `Market - Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`,
-      );
+      this.logger.warn(`Market - Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
     }
   }
 
   // NOTE don't return this payload directly since it's a huge one
-  private async fetchAllMarkets(accountId: string): Promise<Market[]> {
+  private getAccountMarkets(accountId: string): Market[] {
     this.logger.log(`Markets - Fetch Initiated - AccountID: ${accountId}`);
 
     if (!this.markets.has(accountId)) {
-      this.logger.error(
-        `Market - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`,
-      );
+      this.logger.error(`Market - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
       throw new AccountNotFoundException(accountId);
     }
 
     return this.markets.get(accountId);
   }
 
-  async fetchAllMarketIds(accountId: string): Promise<string[]> {
+  findAccountMarketIds(accountId: string): string[] {
     this.logger.log(`Market IDs - Fetch Initiated - AccountID: ${accountId}`);
-    const allMarkets = await this.fetchAllMarkets(accountId);
+    const markets = this.getAccountMarkets(accountId);
 
-    return allMarkets.map((market) => market.id);
+    return markets.map((market) => market.id);
   }
 
-  async fetchSpotMarketIds(
-    accountId: string,
-    quoteCurrency: string = 'USDT',
-  ): Promise<string[]> {
-    this.logger.log(
-      `Market Spot - Fetch Initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`,
-    );
-    const allMarkets = await this.fetchAllMarkets(accountId);
+  findAccountSpotMarketIds(accountId: string, quoteCurrency: string = 'USDT'): string[] {
+    this.logger.log(`Market Spot - Fetch Initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`);
+    const markets = this.getAccountMarkets(accountId);
 
-    return allMarkets
-      .filter(
-        (market) =>
-          market.quote === quoteCurrency && market.active && market.spot,
-      )
+    return markets
+      .filter((market) => market.quote === quoteCurrency && market.active && market.spot)
       .map((market) => market.id);
   }
 
-  async fetchContractMarketIds(
-    accountId: string,
-    quoteCurrency: string = 'USDT',
-  ): Promise<string[]> {
-    this.logger.log(
-      `Market Contract - Fetch Initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`,
-    );
+  findAccountContractMarketIds(accountId: string, quoteCurrency: string = 'USDT'): string[] {
+    this.logger.log(`Market Contract - Fetch Initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`);
 
-    const allMarkets = await this.fetchAllMarkets(accountId);
+    const markets = this.getAccountMarkets(accountId);
 
-    return allMarkets
-      .filter(
-        (market) =>
-          market.quote === quoteCurrency && market.active && market.contract,
-      )
+    return markets
+      .filter((market) => market.quote === quoteCurrency && market.active && market.contract)
       .map((market) => market.id);
   }
 
   // TODO add other market types ? future, option, index ...
 
-  async findMarketById(accountId: string, marketId: string): Promise<Market> {
-    this.logger.log(
-      `Market - Fetch Initiated - AccountID: ${accountId}, MarketID: ${marketId}`,
-    );
-    const allMarkets = this.markets.get(accountId);
+  findAccountMarketById(accountId: string, marketId: string): Market {
+    this.logger.log(`Market - Fetch Initiated - AccountID: ${accountId}, MarketID: ${marketId}`);
+    const markets = this.getAccountMarkets(accountId);
 
-    if (!allMarkets) {
-      this.logger.error(
-        `Market - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`,
-      );
-      throw new AccountNotFoundException(accountId);
-    }
-
-    const specificMarket = allMarkets.find((market) => market.id === marketId);
+    const specificMarket = markets.find((market) => market.id === marketId);
 
     if (!specificMarket) {
       this.logger.error(
-        `Market - Fetch Failed - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Market not found`,
+        `Market - Fetch Failed - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Market not found`
       );
       throw new MarketNotFoundException(accountId, marketId);
     }
@@ -142,22 +106,14 @@ export class MarketService
 
       this.markets.set(
         accountId,
-        markets.sort((a, b) => a.id.localeCompare(b.id)),
+        markets.sort((a, b) => a.id.localeCompare(b.id))
       );
-      this.eventEmitter.emit(
-        Events.MARKETS_UPDATED,
-        new MarketsUpdatedEvent(accountId, markets),
-      );
-      this.logger.log(
-        `Market - Update Success - AccountID: ${accountId}, Count: ${markets.length}`,
-      );
+      this.eventEmitter.emit(Events.MARKETS_UPDATED, new MarketsUpdatedEvent(accountId, markets));
+      this.logger.log(`Market - Update Success - AccountID: ${accountId}, Count: ${markets.length}`);
 
       return markets;
     } catch (error) {
-      this.logger.error(
-        `Market - Update Failed - AccountID: ${accountId}, Error: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Market - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw error;
     }
   }
@@ -170,7 +126,7 @@ export class MarketService
     const marketsPromises = accountIds.map((accountId) =>
       this.refreshOne(accountId).catch((error) => {
         errors.push({ accountId, error });
-      }),
+      })
     );
 
     await Promise.all(marketsPromises);
@@ -180,9 +136,9 @@ export class MarketService
 
       this.logger.error(
         `Markets - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
-        aggregatedError.stack,
+        aggregatedError.stack
       );
-      throw aggregatedError;
+      // Avoid interrupting the loop by not throwing an exception
     }
   }
 }

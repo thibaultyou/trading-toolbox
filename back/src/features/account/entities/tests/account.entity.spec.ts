@@ -10,7 +10,7 @@ describe('Account Entity', () => {
         name: 'Test Account',
         key: 'testKey',
         secret: 'testSecret',
-        exchange: ExchangeType.Bybit,
+        exchange: ExchangeType.Bybit
       };
 
       const account = Account.fromDto(dto);
@@ -26,7 +26,7 @@ describe('Account Entity', () => {
         name: 'Updated Account',
         key: 'updatedKey',
         secret: 'updatedSecret',
-        exchange: ExchangeType.MEXC,
+        exchange: ExchangeType.MEXC
       };
 
       const account = Account.fromDto(dto);

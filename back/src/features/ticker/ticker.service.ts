@@ -19,7 +19,7 @@ export class TickerService implements OnModuleInit {
   constructor(
     private readonly exchangeService: ExchangeService,
     // private readonly setupService: SetupService,
-    private readonly accountService: AccountService,
+    private readonly accountService: AccountService
   ) {}
 
   async onModuleInit() {
@@ -100,10 +100,7 @@ export class TickerService implements OnModuleInit {
   //   return this.tickerPrices[accountId] || {};
   // }
 
-  async getTickerPriceHistory(
-    base: string,
-    fetchNewOnly = false,
-  ): Promise<Candle[]> {
+  async getTickerPriceHistory(base: string, fetchNewOnly = false): Promise<Candle[]> {
     try {
       let url = `https://api.binance.com/api/v3/klines?symbol=${base}&interval=1h&limit=1000`;
 
@@ -118,7 +115,7 @@ export class TickerService implements OnModuleInit {
         open: Number(open),
         high: Number(high),
         low: Number(low),
-        close: Number(close),
+        close: Number(close)
       }));
 
       if (candles.length) {

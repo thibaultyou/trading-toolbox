@@ -19,10 +19,10 @@ describe('HealthController (e2e)', () => {
         { provide: HealthCheckService, useValue: mockHealthCheckService },
         {
           provide: TypeOrmHealthIndicator,
-          useValue: mockTypeOrmHealthIndicator,
+          useValue: mockTypeOrmHealthIndicator
         },
-        { provide: BybitHealthIndicator, useValue: mockBybitHealthIndicator },
-      ],
+        { provide: BybitHealthIndicator, useValue: mockBybitHealthIndicator }
+      ]
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -33,8 +33,8 @@ describe('HealthController (e2e)', () => {
     mockHealthCheckService.check.mockImplementation(() =>
       Promise.resolve({
         status: 'ok',
-        info: { database: { status: 'up' }, bybit: { status: 'up' } },
-      }),
+        info: { database: { status: 'up' }, bybit: { status: 'up' } }
+      })
     );
 
     await request(app.getHttpServer())
@@ -42,7 +42,7 @@ describe('HealthController (e2e)', () => {
       .expect(200)
       .expect({
         status: 'ok',
-        info: { database: { status: 'up' }, bybit: { status: 'up' } },
+        info: { database: { status: 'up' }, bybit: { status: 'up' } }
       });
   });
 
@@ -52,10 +52,10 @@ describe('HealthController (e2e)', () => {
         status: 'error',
         info: {
           database: { status: 'up' },
-          bybit: { status: 'down', message: 'Bybit check failed' },
+          bybit: { status: 'down', message: 'Bybit check failed' }
         },
-        error: { bybit: 'Bybit check failed' },
-      }),
+        error: { bybit: 'Bybit check failed' }
+      })
     );
 
     await request(app.getHttpServer())
@@ -65,9 +65,9 @@ describe('HealthController (e2e)', () => {
         status: 'error',
         info: {
           database: { status: 'up' },
-          bybit: { status: 'down', message: 'Bybit check failed' },
+          bybit: { status: 'down', message: 'Bybit check failed' }
         },
-        error: { bybit: 'Bybit check failed' },
+        error: { bybit: 'Bybit check failed' }
       });
   });
 
@@ -77,10 +77,10 @@ describe('HealthController (e2e)', () => {
         status: 'error',
         info: {
           database: { status: 'down', message: 'Database check failed' },
-          bybit: { status: 'up' },
+          bybit: { status: 'up' }
         },
-        error: { database: 'Database check failed' },
-      }),
+        error: { database: 'Database check failed' }
+      })
     );
 
     await request(app.getHttpServer())
@@ -90,9 +90,9 @@ describe('HealthController (e2e)', () => {
         status: 'error',
         info: {
           database: { status: 'down', message: 'Database check failed' },
-          bybit: { status: 'up' },
+          bybit: { status: 'up' }
         },
-        error: { database: 'Database check failed' },
+        error: { database: 'Database check failed' }
       });
   });
 });

@@ -10,7 +10,7 @@ describe('AccountCreateRequestDto', () => {
       name: 'Test Account',
       key: 'testKey',
       secret: 'testSecret',
-      exchange: ExchangeType.Bybit,
+      exchange: ExchangeType.Bybit
     });
 
     const errors = await validate(dto);
@@ -31,7 +31,7 @@ describe('AccountCreateRequestDto', () => {
       name: 'Test Account',
       key: 'testKey',
       secret: 'testSecret',
-      exchange: 'InvalidExchangeType',
+      exchange: 'InvalidExchangeType'
     });
 
     const errors = await validate(dto);

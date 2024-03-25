@@ -4,12 +4,7 @@ import { AccountDeletedEvent } from '../account-deleted.event';
 
 describe('AccountDeletedEvent', () => {
   it('should correctly assign an Account upon instantiation', () => {
-    const sampleAccount = new Account(
-      'Test Account',
-      'testKey',
-      'testSecret',
-      ExchangeType.Bybit,
-    );
+    const sampleAccount = new Account('Test Account', 'testKey', 'testSecret', ExchangeType.Bybit);
 
     sampleAccount.id = 'test-id';
 

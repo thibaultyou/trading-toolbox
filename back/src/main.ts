@@ -12,13 +12,10 @@ import { TickerExceptionsFilter } from './features/ticker/exceptions/ticker-exce
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'log'],
+    logger: ['error', 'warn', 'log']
   });
 
-  const options = new DocumentBuilder()
-    .setTitle('Trading toolbox')
-    .setVersion('1.0')
-    .build();
+  const options = new DocumentBuilder().setTitle('Trading toolbox').setVersion('1.0').build();
 
   const document = SwaggerModule.createDocument(app, options);
 
@@ -29,7 +26,7 @@ async function bootstrap() {
     new BalanceExceptionsFilter(),
     new MarketExceptionsFilter(),
     new PositionExceptionsFilter(),
-    new TickerExceptionsFilter(),
+    new TickerExceptionsFilter()
   );
 
   app.useGlobalPipes(new ValidationPipe());

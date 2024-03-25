@@ -1,15 +1,7 @@
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpException,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-import {
-  AccountAlreadyExistsException,
-  AccountNotFoundException,
-} from './account.exceptions';
+import { AccountAlreadyExistsException, AccountNotFoundException } from './account.exceptions';
 
 @Catch(AccountNotFoundException, AccountAlreadyExistsException)
 export class AccountExceptionsFilter implements ExceptionFilter {
@@ -23,7 +15,7 @@ export class AccountExceptionsFilter implements ExceptionFilter {
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      message: exception.message,
+      message: exception.message
     });
   }
 }

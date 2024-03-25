@@ -1,10 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 
 import { maskString } from '../../../../utils/string.util';
-import {
-  AccountAlreadyExistsException,
-  AccountNotFoundException,
-} from '../account.exceptions';
+import { AccountAlreadyExistsException, AccountNotFoundException } from '../account.exceptions';
 
 describe('Account Exceptions', () => {
   describe('AccountNotFoundException', () => {
@@ -12,9 +9,7 @@ describe('Account Exceptions', () => {
       const identifier = '123';
       const exception = new AccountNotFoundException(identifier);
 
-      expect(exception.message).toEqual(
-        `Account not found - ID: ${identifier}`,
-      );
+      expect(exception.message).toEqual(`Account not found - ID: ${identifier}`);
       expect(exception.getStatus()).toEqual(HttpStatus.NOT_FOUND);
     });
 
@@ -22,9 +17,7 @@ describe('Account Exceptions', () => {
       const identifier = 'testName';
       const exception = new AccountNotFoundException(identifier, true);
 
-      expect(exception.message).toEqual(
-        `Account not found - Name: ${identifier}`,
-      );
+      expect(exception.message).toEqual(`Account not found - Name: ${identifier}`);
       expect(exception.getStatus()).toEqual(HttpStatus.NOT_FOUND);
     });
   });
@@ -35,11 +28,7 @@ describe('Account Exceptions', () => {
       const key = 'testKey';
       const exception = new AccountAlreadyExistsException(accountName, key);
 
-      expect(exception.message).toEqual(
-        `Account already exists - Name: ${accountName}, Key: ${maskString(
-          key,
-        )}`,
-      );
+      expect(exception.message).toEqual(`Account already exists - Name: ${accountName}, Key: ${maskString(key)}`);
       expect(exception.getStatus()).toEqual(HttpStatus.CONFLICT);
     });
   });

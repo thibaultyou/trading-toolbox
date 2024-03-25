@@ -6,6 +6,6 @@ import { CoreService } from './core.service';
 
 @Module({
   imports: [AccountModule, ExchangeModule],
-  providers: [CoreService],
+  providers: [CoreService]
 })
 export class CoreModule {}

@@ -13,23 +13,19 @@ describe('HealthController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
-      providers: [
-        HealthCheckService,
-        TypeOrmHealthIndicator,
-        BybitHealthIndicator,
-      ],
+      providers: [HealthCheckService, TypeOrmHealthIndicator, BybitHealthIndicator]
     })
       .overrideProvider(HealthCheckService)
       .useValue({
-        check: jest.fn(),
+        check: jest.fn()
       })
       .overrideProvider(TypeOrmHealthIndicator)
       .useValue({
-        pingCheck: jest.fn(),
+        pingCheck: jest.fn()
       })
       .overrideProvider(BybitHealthIndicator)
       .useValue({
-        isHealthy: jest.fn(),
+        isHealthy: jest.fn()
       })
       .compile();
 
@@ -48,22 +44,22 @@ describe('HealthController', () => {
           status: 'ok',
           info: {
             database: { status: 'up' },
-            bybit: { status: 'up' },
+            bybit: { status: 'up' }
           },
           details: {
             database: {
-              status: 'up',
+              status: 'up'
             },
             bybit: {
-              status: 'up',
-            },
-          },
-        }),
+              status: 'up'
+            }
+          }
+        })
       );
 
       const mockResponse = {
         status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
+        json: jest.fn()
       } as unknown as Response;
 
       await controller.check(mockResponse);
@@ -71,8 +67,8 @@ describe('HealthController', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.OK);
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'ok',
-        }),
+          status: 'ok'
+        })
       );
     });
   });
@@ -84,35 +80,33 @@ describe('HealthController', () => {
           status: 'error',
           info: {
             database: { status: 'up' },
-            bybit: { status: 'down', message: 'Bybit check failed' },
+            bybit: { status: 'down', message: 'Bybit check failed' }
           },
           details: {
             database: { status: 'up' },
-            bybit: { status: 'down', message: 'Bybit check failed' },
+            bybit: { status: 'down', message: 'Bybit check failed' }
           },
           error: {
-            bybit: { status: 'down' },
-          },
-        }),
+            bybit: { status: 'down' }
+          }
+        })
       );
 
       const mockResponse = {
         status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
+        json: jest.fn()
       } as unknown as Response;
 
       await controller.check(mockResponse);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(
-        HttpStatus.SERVICE_UNAVAILABLE,
-      );
+      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.SERVICE_UNAVAILABLE);
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
           status: 'error',
           error: {
-            bybit: { status: 'down' },
-          },
-        }),
+            bybit: { status: 'down' }
+          }
+        })
       );
     });
   });
@@ -124,32 +118,30 @@ describe('HealthController', () => {
           status: 'error',
           info: {
             database: { status: 'down', message: 'Database check failed' },
-            bybit: { status: 'up' },
+            bybit: { status: 'up' }
           },
           error: {
-            database: { status: 'down' },
+            database: { status: 'down' }
           },
-          details: {},
-        }),
+          details: {}
+        })
       );
 
       const mockResponse = {
         status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
+        json: jest.fn()
       } as unknown as Response;
 
       await controller.check(mockResponse);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(
-        HttpStatus.SERVICE_UNAVAILABLE,
-      );
+      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.SERVICE_UNAVAILABLE);
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
           status: 'error',
           error: {
-            database: { status: 'down' },
-          },
-        }),
+            database: { status: 'down' }
+          }
+        })
       );
     });
   });

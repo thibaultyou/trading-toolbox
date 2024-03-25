@@ -14,52 +14,39 @@ export class MarketController extends BaseController {
 
   @Get('/:accountId/all')
   @ApiOperation({ summary: 'Fetch all market IDs for a specific account' })
-  async fetchAllMarketIds(
-    @Param('accountId') accountId: string,
-  ): Promise<string[]> {
-    return await this.marketService.fetchAllMarketIds(accountId);
+  findAccountMarketIds(@Param('accountId') accountId: string): string[] {
+    return this.marketService.findAccountMarketIds(accountId);
   }
 
   @Get('/:accountId/spot')
   @ApiOperation({
-    summary:
-      'Fetch all spot market IDs for a specific account, optionally filtered by quote currency',
+    summary: 'Fetch all spot market IDs for a specific account, optionally filtered by quote currency'
   })
   @ApiQuery({ name: 'quoteCurrency', required: false, example: 'USDT' })
-  async fetchSpotMarketIds(
+  findAccountSpotMarketIds(
     @Param('accountId') accountId: string,
-    @Query('quoteCurrency') quoteCurrency: string = 'USDT',
-  ): Promise<string[]> {
-    return await this.marketService.fetchSpotMarketIds(
-      accountId,
-      quoteCurrency,
-    );
+    @Query('quoteCurrency') quoteCurrency: string = 'USDT'
+  ): string[] {
+    return this.marketService.findAccountSpotMarketIds(accountId, quoteCurrency);
   }
 
   @Get('/:accountId/contract')
   @ApiOperation({
-    summary:
-      'Fetch all contract market IDs for a specific account, optionally filtered by quote currency',
+    summary: 'Fetch all contract market IDs for a specific account, optionally filtered by quote currency'
   })
   @ApiQuery({ name: 'quoteCurrency', required: false, example: 'USDT' })
-  async fetchContractMarketIds(
+  findAccountContractMarketIds(
     @Param('accountId') accountId: string,
-    @Query('quoteCurrency') quoteCurrency: string = 'USDT',
-  ): Promise<string[]> {
-    return await this.marketService.fetchContractMarketIds(
-      accountId,
-      quoteCurrency,
-    );
+    @Query('quoteCurrency') quoteCurrency: string = 'USDT'
+  ): string[] {
+    return this.marketService.findAccountContractMarketIds(accountId, quoteCurrency);
   }
 
   @Get('/:accountId/market/:marketId')
   @ApiOperation({
-    summary: 'Fetch a specific market by market ID for an account',
+    summary: 'Fetch a specific market by market ID for an account'
   })
-  async findMarketById(
-    @Param('accountId') accountId: string,
-    @Param('marketId') marketId: string,
-  ): Promise<Market> {
-    return await this.marketService.findMarketById(accountId, marketId);
+  findAccountMarketById(@Param('accountId') accountId: string, @Param('marketId') marketId: string): Market {
+    return this.marketService.findAccountMarketById(accountId, marketId);
   }
 }

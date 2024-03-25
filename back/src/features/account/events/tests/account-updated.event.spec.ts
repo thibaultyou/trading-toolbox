@@ -4,12 +4,7 @@ import { AccountUpdatedEvent } from '../account-updated.event';
 
 describe('AccountUpdatedEvent', () => {
   it('should correctly assign an Account upon instantiation', () => {
-    const sampleAccount = new Account(
-      'Updated Account',
-      'updatedKey',
-      'updatedSecret',
-      ExchangeType.MEXC,
-    );
+    const sampleAccount = new Account('Updated Account', 'updatedKey', 'updatedSecret', ExchangeType.MEXC);
 
     sampleAccount.id = 'updated-id';
 

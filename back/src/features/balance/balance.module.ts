@@ -7,13 +7,13 @@ import { BalanceExchangeInitializedEventHandler } from './handlers/exchange-init
 import { BalanceExchangeTerminatedEventHandler } from './handlers/exchange-terminated.balance.event-handler';
 
 @Module({
+  controllers: [BalanceController],
+  exports: [BalanceService],
   providers: [
     BalanceService,
     BalanceGateway,
     BalanceExchangeInitializedEventHandler,
-    BalanceExchangeTerminatedEventHandler,
-  ],
-  controllers: [BalanceController],
-  exports: [BalanceService],
+    BalanceExchangeTerminatedEventHandler
+  ]
 })
 export class BalanceModule {}

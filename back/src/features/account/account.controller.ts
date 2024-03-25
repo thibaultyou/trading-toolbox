@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../common/base/base.controller';
@@ -28,16 +18,16 @@ export class AccountController extends BaseController {
 
   @Get()
   @ApiOperation({ summary: 'Fetch all accounts' })
-  async findAll(): Promise<AccountResponseDto[]> {
-    const accounts = await this.accountService.findAll();
+  async getAllAccounts(): Promise<AccountResponseDto[]> {
+    const accounts = await this.accountService.getAllAccounts();
 
     return accounts.map((account) => new AccountResponseDto(account));
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Fetch an account by ID' })
-  async findOne(@Param('id') id: string): Promise<AccountResponseDto> {
-    const account = await this.accountService.findOne(id);
+  async getAccountById(@Param('id') id: string): Promise<AccountResponseDto> {
+    const account = await this.accountService.getAccountById(id);
 
     if (!account) {
       throw new AccountNotFoundException(id);
@@ -50,12 +40,8 @@ export class AccountController extends BaseController {
   @ApiOperation({ summary: 'Create a new account' })
   @ApiBody({ type: AccountCreateRequestDto })
   @UsePipes(new ValidationPipe({ transform: true }))
-  async create(
-    @Body() accountCreateRequestDto: AccountCreateRequestDto,
-  ): Promise<AccountResponseDto> {
-    const account = await this.accountService.create(
-      Account.fromDto(accountCreateRequestDto),
-    );
+  async createAccount(@Body() accountCreateRequestDto: AccountCreateRequestDto): Promise<AccountResponseDto> {
+    const account = await this.accountService.createAccount(Account.fromDto(accountCreateRequestDto));
 
     return new AccountResponseDto(account);
   }
@@ -63,17 +49,12 @@ export class AccountController extends BaseController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update an account' })
   @ApiBody({ type: AccountUpdateRequestDto })
-  @UsePipes(
-    new ValidationPipe({ transform: true, skipMissingProperties: true }),
-  )
-  async partialUpdate(
+  @UsePipes(new ValidationPipe({ transform: true, skipMissingProperties: true }))
+  async updateAccount(
     @Param('id') id: string,
-    @Body() accountUpdateRequestDto: AccountUpdateRequestDto,
+    @Body() accountUpdateRequestDto: AccountUpdateRequestDto
   ): Promise<AccountResponseDto> {
-    const account = await this.accountService.partialUpdate(
-      id,
-      Account.fromDto(accountUpdateRequestDto),
-    );
+    const account = await this.accountService.updateAccount(id, Account.fromDto(accountUpdateRequestDto));
 
     if (!account) {
       throw new AccountNotFoundException(id);
@@ -84,8 +65,8 @@ export class AccountController extends BaseController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an account by ID' })
-  async delete(@Param('id') id: string): Promise<void> {
-    const wasDeleted = await this.accountService.delete(id);
+  async deleteAccount(@Param('id') id: string): Promise<void> {
+    const wasDeleted = await this.accountService.deleteAccount(id);
 
     if (!wasDeleted) {
       throw new AccountNotFoundException(id);

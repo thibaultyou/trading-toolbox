@@ -1,10 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 
 import { maskString } from '../../../../utils/string.util';
-import {
-  AccountAlreadyExistsException,
-  AccountNotFoundException,
-} from '../account.exceptions';
+import { AccountAlreadyExistsException, AccountNotFoundException } from '../account.exceptions';
 import { AccountExceptionsFilter } from '../account.exceptions.filter';
 
 describe('AccountExceptionsFilter', () => {
@@ -17,23 +14,20 @@ describe('AccountExceptionsFilter', () => {
 
     mockResponse = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
+      json: jest.fn()
     };
 
     mockRequest = { url: '' };
   });
 
-  const executeFilterCatch = (
-    exception: AccountNotFoundException | AccountAlreadyExistsException,
-    url: string,
-  ) => {
+  const executeFilterCatch = (exception: AccountNotFoundException | AccountAlreadyExistsException, url: string) => {
     mockRequest.url = url;
 
     filter.catch(exception, {
       switchToHttp: () => ({
         getResponse: () => mockResponse,
-        getRequest: () => mockRequest,
-      }),
+        getRequest: () => mockRequest
+      })
     } as any);
   };
 
@@ -47,7 +41,7 @@ describe('AccountExceptionsFilter', () => {
       statusCode: HttpStatus.NOT_FOUND,
       timestamp: expect.any(String),
       path: '/test-url',
-      message: 'Account not found - ID: 123',
+      message: 'Account not found - ID: 123'
     });
   });
 
@@ -63,9 +57,7 @@ describe('AccountExceptionsFilter', () => {
       statusCode: HttpStatus.CONFLICT,
       timestamp: expect.any(String),
       path: '/accounts',
-      message: `Account already exists - Name: ${accountName}, Key: ${maskString(
-        key,
-      )}`,
+      message: `Account already exists - Name: ${accountName}, Key: ${maskString(key)}`
     });
   });
 });

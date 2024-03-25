@@ -2,7 +2,7 @@ import { MinMax } from 'ccxt';
 
 export enum ExchangeType {
   // TODO Replace with CamelCase
-  Bybit = 'bybit',
+  Bybit = 'bybit'
 }
 
 export type OrderExecutionData = {

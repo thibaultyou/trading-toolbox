@@ -15,13 +15,13 @@ export class BalanceController extends BaseController {
 
   @Get('/:accountId')
   @ApiOperation({ summary: 'Fetch balances for a specific account' })
-  findOne(@Param('accountId') accountId: string): Balances {
-    return this.balanceService.findOne(accountId);
+  getAccountBalances(@Param('accountId') accountId: string): Balances {
+    return this.balanceService.getAccountBalances(accountId);
   }
 
   @Get('/:accountId/usdt')
   @ApiOperation({ summary: 'Fetch USDT balance for a specific account' })
-  findUSDTBalance(@Param('accountId') accountId: string): USDTBalance {
-    return this.balanceService.findUSDTBalance(accountId);
+  getAccountUSDTBalance(@Param('accountId') accountId: string): USDTBalance {
+    return this.balanceService.getAccountUSDTBalance(accountId);
   }
 }

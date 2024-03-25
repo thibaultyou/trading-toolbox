@@ -30,5 +30,5 @@ export const Events = {
   // Ticker module
   TICKER_SUBSCRIBED: 'ticker.subscribed',
   TICKER_UNSUBSCRIBED: 'ticker.unsubscribed',
-  TICKER_UPDATED: 'ticker.updated',
+  TICKER_UPDATED: 'ticker.updated'
 };

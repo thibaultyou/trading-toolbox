@@ -73,9 +73,7 @@ class SortedMap {
     return this.map.size;
   }
 
-  forEach(
-    callback: (value: number, key: string, map: Map<string, number>) => void,
-  ) {
+  forEach(callback: (value: number, key: string, map: Map<string, number>) => void) {
     for (const [key, value] of this.map.entries()) {
       if (value !== undefined) {
         callback(value, key, this.map);

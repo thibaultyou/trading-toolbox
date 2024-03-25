@@ -7,8 +7,8 @@ import { ExchangeFactory } from './services/exchange-service.factory';
 
 @Global()
 @Module({
-  imports: [BalanceModule],
-  providers: [BybitExchangeService, ExchangeFactory, ExchangeService],
   exports: [ExchangeFactory, ExchangeService],
+  imports: [BalanceModule],
+  providers: [BybitExchangeService, ExchangeFactory, ExchangeService]
 })
 export class ExchangeModule {}

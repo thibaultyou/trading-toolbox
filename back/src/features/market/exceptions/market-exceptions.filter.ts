@@ -1,15 +1,7 @@
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpException,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-import {
-  MarketNotFoundException,
-  MarketsUpdateAggregatedException,
-} from './market.exceptions';
+import { MarketNotFoundException, MarketsUpdateAggregatedException } from './market.exceptions';
 
 @Catch(MarketNotFoundException, MarketsUpdateAggregatedException)
 export class MarketExceptionsFilter implements ExceptionFilter {
@@ -23,7 +15,7 @@ export class MarketExceptionsFilter implements ExceptionFilter {
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      message: exception.message,
+      message: exception.message
     });
   }
 }

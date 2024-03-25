@@ -27,21 +27,14 @@ export class Account {
   @Column({ type: 'enum', enum: ExchangeType })
   exchange: ExchangeType;
 
-  constructor(
-    name: string,
-    key: string,
-    secret: string,
-    exchange: ExchangeType,
-  ) {
+  constructor(name: string, key: string, secret: string, exchange: ExchangeType) {
     this.name = name;
     this.key = key;
     this.secret = secret;
     this.exchange = exchange;
   }
 
-  static fromDto(
-    data: AccountCreateRequestDto | Partial<AccountUpdateRequestDto>,
-  ): Account {
+  static fromDto(data: AccountCreateRequestDto | Partial<AccountUpdateRequestDto>): Account {
     return new Account(data.name, data.key, data.secret, data.exchange);
   }
 }

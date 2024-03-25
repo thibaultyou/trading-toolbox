@@ -14,16 +14,7 @@ export class OrderController extends BaseController {
 
   @Get('/:accountId')
   @ApiOperation({ summary: 'Fetch all orders for a specific account' })
-  findAccountOrders(@Param('accountId') accountId: string): Order[] {
-    return this.orderService.getOrders(accountId);
-  }
-
-  @Get('/:accountId/:symbol')
-  @ApiOperation({ summary: 'Fetch orders for a specific account and symbol' })
-  findAccountOrdersBySymbol(
-    @Param('accountId') accountId: string,
-    @Param('symbol') symbol: string,
-  ): Order[] {
-    return this.orderService.getOrders(accountId, symbol);
+  getAccountOrders(@Param('accountId') accountId: string): Order[] {
+    return this.orderService.getAccountOrders(accountId);
   }
 }

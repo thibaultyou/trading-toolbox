@@ -4,12 +4,7 @@ import { AccountCreatedEvent } from '../account-created.event';
 
 describe('AccountCreatedEvent', () => {
   it('should correctly assign an Account upon instantiation', () => {
-    const sampleAccount = new Account(
-      'Sample Name',
-      'SampleKey',
-      'SampleSecret',
-      ExchangeType.Bybit,
-    );
+    const sampleAccount = new Account('Sample Name', 'SampleKey', 'SampleSecret', ExchangeType.Bybit);
 
     sampleAccount.id = 'sample-id';
 

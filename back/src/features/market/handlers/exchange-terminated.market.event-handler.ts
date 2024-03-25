@@ -16,14 +16,12 @@ export class MarketExchangeTerminatedEventHandler {
     const actionContext = `Market Module - Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
 
     try {
-      this.marketService.removeAccount(event.accountId);
-      this.logger.log(
-        `${actionContext} - Removed market from watch list`,
-      );
+      this.marketService.stopTrackingAccount(event.accountId);
+      this.logger.log(`${actionContext} - Removed market from watch list`);
     } catch (error) {
       this.logger.error(
         `${actionContext} - Failed to remove market from watch list - Error: ${error.message}`,
-        error.stack,
+        error.stack
       );
     }
   }

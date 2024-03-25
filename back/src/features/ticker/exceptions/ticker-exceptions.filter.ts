@@ -1,9 +1,4 @@
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpException,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import {
@@ -15,7 +10,7 @@ import {
   TickerModuleInitException,
   TickerPriceNotFoundException,
   UnsubscribeFromTickerPriceException,
-  UpdateTickerPriceException,
+  UpdateTickerPriceException
 } from './ticker.exceptions';
 
 @Catch(
@@ -27,7 +22,7 @@ import {
   GetTickerPriceException,
   TickerPriceNotFoundException,
   FetchTickerPricesByAccountException,
-  FetchTickerPriceHistoryException,
+  FetchTickerPriceHistoryException
 )
 export class TickerExceptionsFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
@@ -40,7 +35,7 @@ export class TickerExceptionsFilter implements ExceptionFilter {
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      message: exception.message,
+      message: exception.message
     });
   }
 }

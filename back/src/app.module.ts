@@ -10,6 +10,7 @@ import { CoreModule } from './features/core/core.module';
 import { ExchangeModule } from './features/exchange/exchange.module';
 import { HealthModule } from './features/health/health.module';
 import { MarketModule } from './features/market/market.module';
+import { OrderModule } from './features/order/order.module';
 import { PositionModule } from './features/position/position.module';
 
 @Module({
@@ -22,7 +23,7 @@ import { PositionModule } from './features/position/position.module';
       password: databaseConfig.DATABASE_PASSWORD,
       database: databaseConfig.DATABASE_NAME,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
+      synchronize: true
     }),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
@@ -30,7 +31,7 @@ import { PositionModule } from './features/position/position.module';
     BalanceModule,
     ExchangeModule, // Global
     MarketModule,
-    // OrderModule,
+    OrderModule,
     PositionModule,
     // SetupModule,
     // ActionModule,
@@ -38,7 +39,7 @@ import { PositionModule } from './features/position/position.module';
     // TickerModule,
     CoreModule,
     // GridModule,
-    HealthModule,
-  ],
+    HealthModule
+  ]
 })
 export class AppModule {}

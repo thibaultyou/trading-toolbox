@@ -7,13 +7,9 @@ import { MarketController } from './market.controller';
 import { MarketService } from './market.service';
 
 @Module({
-  imports: [AccountModule],
-  providers: [
-    MarketService,
-    MarketExchangeInitializedEventHandler,
-    MarketExchangeTerminatedEventHandler,
-  ],
   controllers: [MarketController],
   exports: [MarketService],
+  imports: [AccountModule],
+  providers: [MarketService, MarketExchangeInitializedEventHandler, MarketExchangeTerminatedEventHandler]
 })
 export class MarketModule {}

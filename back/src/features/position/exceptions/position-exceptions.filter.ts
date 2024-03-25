@@ -1,14 +1,9 @@
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpException,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-import { PositionsUpdateAggregatedException } from './position.exceptions';
+import { PositionNotFoundException, PositionsUpdateAggregatedException } from './position.exceptions';
 
-@Catch(PositionsUpdateAggregatedException)
+@Catch(PositionNotFoundException, PositionsUpdateAggregatedException)
 export class PositionExceptionsFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -20,7 +15,7 @@ export class PositionExceptionsFilter implements ExceptionFilter {
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      message: exception.message,
+      message: exception.message
     });
   }
 }

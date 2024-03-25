@@ -16,15 +16,10 @@ export class MarketExchangeInitializedEventHandler {
     const actionContext = `Market Module - Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
 
     try {
-      this.marketService.addAccount(event.accountId);
-      this.logger.log(
-        `${actionContext} - Added to market watch list`,
-      );
+      this.marketService.startTrackingAccount(event.accountId);
+      this.logger.log(`${actionContext} - Added to market watch list`);
     } catch (error) {
-      this.logger.error(
-        `${actionContext} - Failed to add to market watch list - Error: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`${actionContext} - Failed to add to market watch list - Error: ${error.message}`, error.stack);
     }
   }
 }

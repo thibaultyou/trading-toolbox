@@ -16,14 +16,12 @@ export class PositionExchangeTerminatedEventHandler {
     const actionContext = `Position Module - Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
 
     try {
-      this.positionService.removeAccount(event.accountId);
-      this.logger.log(
-        `${actionContext} - Removed position from watch list`,
-      );
+      this.positionService.stopTrackingAccount(event.accountId);
+      this.logger.log(`${actionContext} - Removed position from watch list`);
     } catch (error) {
       this.logger.error(
         `${actionContext} - Failed to remove position from watch list - Error: ${error.message}`,
-        error.stack,
+        error.stack
       );
     }
   }

@@ -1,9 +1,6 @@
 import * as ccxt from 'ccxt';
 
-import {
-  ExchangeInitializationException,
-  InvalidCredentialsException,
-} from '../exceptions/exchange.exceptions';
+import { ExchangeInitializationException, InvalidCredentialsException } from '../exceptions/exchange.exceptions';
 import { AbstractExchangeService } from './abstract-exchange.service';
 
 export class BybitExchangeService extends AbstractExchangeService {
@@ -11,7 +8,7 @@ export class BybitExchangeService extends AbstractExchangeService {
     try {
       this.exchange = new ccxt.bybit({
         apiKey: this.account.key,
-        secret: this.account.secret,
+        secret: this.account.secret
       });
 
       await this.testCredentials();

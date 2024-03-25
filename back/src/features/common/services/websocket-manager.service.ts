@@ -17,27 +17,17 @@ export class WebsocketManagerService {
       this.wsConnections.set(accountId, ws);
       this.accountSubscriptions.set(accountId, new Set());
 
-      ws.on('update', (message: any) =>
-        this.handleWsUpdate(accountId, message),
-      );
+      ws.on('update', (message: any) => this.handleWsUpdate(accountId, message));
 
-      this.logger.log(
-        `WebSocket connection initialized for account ${accountId}`,
-      );
+      this.logger.log(`WebSocket connection initialized for account ${accountId}`);
     }
   }
 
-  async subscribe(
-    accountId: string,
-    wsTopics: WsTopic[] | WsTopic,
-    isPrivateTopic: boolean = false,
-  ) {
+  async subscribe(accountId: string, wsTopics: WsTopic[] | WsTopic, isPrivateTopic: boolean = false) {
     const ws = this.wsConnections.get(accountId);
 
     if (!ws) {
-      this.logger.error(
-        `No websocket client registered for account ${accountId}`,
-      );
+      this.logger.error(`No websocket client registered for account ${accountId}`);
 
       return;
     }
@@ -45,36 +35,24 @@ export class WebsocketManagerService {
     const topics = Array.isArray(wsTopics) ? wsTopics : [wsTopics];
     const subscriptions = this.accountSubscriptions.get(accountId);
 
-    const topicsToSubscribe = topics.filter(
-      (topic) => !subscriptions?.has(topic),
-    );
+    const topicsToSubscribe = topics.filter((topic) => !subscriptions?.has(topic));
 
     if (topicsToSubscribe.length > 0) {
       try {
         await ws.subscribe(topicsToSubscribe, isPrivateTopic);
         topicsToSubscribe.forEach((topic) => subscriptions?.add(topic));
-        this.logger.log(
-          `Subscribed to topics for account ${accountId}: ${topicsToSubscribe.join(', ')}`,
-        );
+        this.logger.log(`Subscribed to topics for account ${accountId}: ${topicsToSubscribe.join(', ')}`);
       } catch (error) {
-        this.logger.error(
-          `Error subscribing to topics for account ${accountId}: ${error.message}`,
-        );
+        this.logger.error(`Error subscribing to topics for account ${accountId}: ${error.message}`);
       }
     }
   }
 
-  unsubscribe(
-    accountId: string,
-    wsTopics: WsTopic[] | WsTopic,
-    isPrivateTopic: boolean = false,
-  ) {
+  unsubscribe(accountId: string, wsTopics: WsTopic[] | WsTopic, isPrivateTopic: boolean = false) {
     const ws = this.wsConnections.get(accountId);
 
     if (!ws) {
-      this.logger.error(
-        `No websocket client registered for account ${accountId}`,
-      );
+      this.logger.error(`No websocket client registered for account ${accountId}`);
 
       return;
     }
@@ -88,24 +66,18 @@ export class WebsocketManagerService {
           ws.unsubscribe([topic], isPrivateTopic);
           subscriptions.delete(topic);
         } catch (error) {
-          this.logger.error(
-            `Error unsubscribing from topic ${topic} for account ${accountId}: ${error.message}`,
-          );
+          this.logger.error(`Error unsubscribing from topic ${topic} for account ${accountId}: ${error.message}`);
         }
       }
     });
 
-    this.logger.log(
-      `Unsubscribed from topics for account ${accountId}: ${topics.join(', ')}`,
-    );
+    this.logger.log(`Unsubscribed from topics for account ${accountId}: ${topics.join(', ')}`);
   }
 
   private handleWsUpdate(accountId: string, message: any) {
     if (message?.topic) {
       this.eventEmitter.emit(`${message.topic}.${accountId}`, message.data);
-      this.logger.log(
-        `Message dispatched for topic ${message.topic} and account ${accountId}`,
-      );
+      this.logger.log(`Message dispatched for topic ${message.topic} and account ${accountId}`);
     }
   }
 

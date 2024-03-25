@@ -10,23 +10,18 @@ import { ExchangeService } from '../exchange/exchange.service';
 import { BalanceGateway } from './balance.gateway';
 import { USDTBalance } from './balance.types';
 import { BalancesUpdatedEvent } from './events/balances-updated.event';
-import {
-  BalancesUpdateAggregatedException,
-  USDTBalanceNotFoundException,
-} from './exceptions/balance.exceptions';
+import { BalancesUpdateAggregatedException, USDTBalanceNotFoundException } from './exceptions/balance.exceptions';
 import { extractUSDTEquity } from './utils/usdt-equity.util';
 
 @Injectable()
-export class BalanceService
-  implements OnModuleInit, ITrackableService<Balances>
-{
+export class BalanceService implements OnModuleInit, ITrackableService<Balances> {
   private logger = new Logger(BalanceService.name);
   private balances: Map<string, Balances> = new Map();
 
   constructor(
     private eventEmitter: EventEmitter2,
     private exchangeService: ExchangeService,
-    private balanceGateway: BalanceGateway,
+    private balanceGateway: BalanceGateway
   ) {}
 
   async onModuleInit() {
@@ -35,40 +30,28 @@ export class BalanceService
     }, Timers.BALANCES_CACHE_COOLDOWN);
   }
 
-  addAccount(accountId: string) {
+  startTrackingAccount(accountId: string) {
     if (!this.balances.has(accountId)) {
       this.logger.log(`Balance - Tracking Initiated - AccountID: ${accountId}`);
       this.refreshOne(accountId);
     } else {
-      this.logger.warn(
-        `Balance - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`,
-      );
+      this.logger.warn(`Balance - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
     }
   }
 
-  removeAccount(accountId: string) {
+  stopTrackingAccount(accountId: string) {
     if (this.balances.delete(accountId)) {
       this.logger.log(`Balance - Tracking Stopped - AccountID: ${accountId}`);
     } else {
-      this.logger.warn(
-        `Balance - Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`,
-      );
+      this.logger.warn(`Balance - Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
     }
   }
 
-  findAll(): Record<string, Balances> {
-    this.logger.log(`Balances - Fetch Initiated`);
-
-    return Object.fromEntries(this.balances);
-  }
-
-  findOne(accountId: string): Balances {
+  getAccountBalances(accountId: string): Balances {
     this.logger.log(`Balance - Fetch Initiated - AccountID: ${accountId}`);
 
     if (!this.balances.has(accountId)) {
-      this.logger.error(
-        `Balance - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`,
-      );
+      this.logger.error(`Balance - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
 
       throw new AccountNotFoundException(accountId);
     }
@@ -76,17 +59,13 @@ export class BalanceService
     return this.balances.get(accountId);
   }
 
-  findUSDTBalance(accountId: string): USDTBalance {
-    this.logger.log(
-      `Balance (USDT) - Fetch Initiated - AccountID: ${accountId}`,
-    );
+  getAccountUSDTBalance(accountId: string): USDTBalance {
+    this.logger.log(`Balance (USDT) - Fetch Initiated - AccountID: ${accountId}`);
 
-    const balances = this.findOne(accountId);
+    const balances = this.getAccountBalances(accountId);
 
     if (!balances || !balances.USDT) {
-      this.logger.error(
-        `Balance (USDT) - Fetch Failed - AccountID: ${accountId}, Reason: USDT Field Not Found`,
-      );
+      this.logger.error(`Balance (USDT) - Fetch Failed - AccountID: ${accountId}, Reason: USDT Field Not Found`);
       throw new USDTBalanceNotFoundException(accountId);
     }
 
@@ -95,7 +74,7 @@ export class BalanceService
 
     return {
       equity: usdtEquity,
-      balance: usdtBalance,
+      balance: usdtBalance
     };
   }
 
@@ -109,23 +88,17 @@ export class BalanceService
 
       this.balances.set(accountId, balances);
       this.balanceGateway.sendBalancesUpdate(accountId, balances);
-      this.eventEmitter.emit(
-        Events.BALANCES_UPDATED,
-        new BalancesUpdatedEvent(accountId, balances),
-      );
+      this.eventEmitter.emit(Events.BALANCES_UPDATED, new BalancesUpdatedEvent(accountId, balances));
       this.logger.debug(
-        `Balance - Updated Successfully - AccountID: ${accountId}, Balances: ${JSON.stringify(balances)}`,
+        `Balance - Updated Successfully - AccountID: ${accountId}, Balances: ${JSON.stringify(balances)}`
       );
       this.logger.log(
-        `Balance - USDT Equity - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(balances, this.logger).toFixed(2)} $`,
+        `Balance - USDT Equity - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(balances, this.logger).toFixed(2)} $`
       );
 
       return balances;
     } catch (error) {
-      this.logger.error(
-        `Balance - Update Failed - AccountID: ${accountId}, Error: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Balance - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw error;
     }
   }
@@ -138,7 +111,7 @@ export class BalanceService
     const balancePromises = accountIds.map((accountId) =>
       this.refreshOne(accountId).catch((error) => {
         errors.push({ accountId, error });
-      }),
+      })
     );
 
     await Promise.all(balancePromises);
@@ -148,9 +121,9 @@ export class BalanceService
 
       this.logger.error(
         `Balances - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
-        aggregatedError.stack,
+        aggregatedError.stack
       );
-      throw aggregatedError;
+      // Avoid interrupting the loop by not throwing an exception
     }
   }
 }
