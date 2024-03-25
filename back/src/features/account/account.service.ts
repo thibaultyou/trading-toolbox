@@ -127,9 +127,7 @@ export class AccountService {
       Events.ACCOUNT_UPDATED,
       new AccountUpdatedEvent(savedAccount),
     );
-    this.logger.log(
-      `Account - Update Success - AccountID: ${savedAccount.id}`,
-    );
+    this.logger.log(`Account - Update Success - AccountID: ${savedAccount.id}`);
 
     return savedAccount;
   }

@@ -3,7 +3,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 export class USDTBalanceNotFoundException extends HttpException {
   constructor(accountId: string) {
     super(
-      `Balance - USDT Fetch Error - AccountID: ${accountId}, Reason: USDT balance not found`,
+      `Balance - USDT Fetch Failed - AccountID: ${accountId}, Reason: USDT balance not found`,
       HttpStatus.NOT_FOUND,
     );
   }
@@ -19,7 +19,7 @@ export class BalancesUpdateAggregatedException extends HttpException {
       .join('; ');
 
     super(
-      `Balance - Multiple Refresh Failures - Error: ${message}`,
+      `Balances - Multiple Updates Failed - Errors: ${message}`,
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }

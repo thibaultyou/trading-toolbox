@@ -6,17 +6,9 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-import {
-  PositionComparisonException,
-  PositionNotFoundException,
-  PositionUpdateException,
-} from './position.exceptions';
+import { PositionsUpdateAggregatedException } from './position.exceptions';
 
-@Catch(
-  PositionNotFoundException,
-  PositionUpdateException,
-  PositionComparisonException,
-)
+@Catch(PositionsUpdateAggregatedException)
 export class PositionExceptionsFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();

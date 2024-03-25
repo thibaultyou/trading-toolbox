@@ -18,7 +18,7 @@ export class BalanceExchangeTerminatedEventHandler {
     try {
       this.balanceService.removeAccount(event.accountId);
       this.logger.log(
-        `${actionContext} - Successfully removed balance from watch list`,
+        `${actionContext} - Removed balance from watch list`,
       );
     } catch (error) {
       this.logger.error(

@@ -18,7 +18,7 @@ export class BalanceExchangeInitializedEventHandler {
     try {
       this.balanceService.addAccount(event.accountId);
       this.logger.log(
-        `${actionContext} - Successfully added to balance watch list`,
+        `${actionContext} - Added to balance watch list`,
       );
     } catch (error) {
       this.logger.error(

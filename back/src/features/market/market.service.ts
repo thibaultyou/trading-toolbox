@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Market } from 'ccxt';
 
 import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
+import { ITrackableService } from '../common/interfaces/trackable.service.interface';
 import { ExchangeService } from '../exchange/exchange.service';
 import { MarketsUpdatedEvent } from './events/markets-updated.event';
 import {
@@ -12,7 +13,9 @@ import {
 } from './exceptions/market.exceptions';
 
 @Injectable()
-export class MarketService {
+export class MarketService
+  implements OnModuleInit, ITrackableService<Market[]>
+{
   private logger = new Logger(MarketService.name);
   private markets: Map<string, Market[]> = new Map();
 
@@ -23,14 +26,14 @@ export class MarketService {
 
   async onModuleInit() {
     setInterval(() => {
-      this.refreshAllMarkets();
+      this.refreshAll();
     }, Timers.MARKETS_CACHE_COOLDOWN);
   }
 
   addAccount(accountId: string) {
     if (!this.markets.has(accountId)) {
-      this.refreshAccountMarkets(accountId);
       this.logger.log(`Market - Tracking Initiated - AccountID: ${accountId}`);
+      this.refreshOne(accountId);
     } else {
       this.logger.warn(
         `Market - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`,
@@ -54,7 +57,7 @@ export class MarketService {
 
     if (!this.markets.has(accountId)) {
       this.logger.error(
-        `Markets - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`,
+        `Market - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`,
       );
       throw new AccountNotFoundException(accountId);
     }
@@ -74,7 +77,7 @@ export class MarketService {
     quoteCurrency: string = 'USDT',
   ): Promise<string[]> {
     this.logger.log(
-      `Market Spot IDs - Fetch Initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`,
+      `Market Spot - Fetch Initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`,
     );
     const allMarkets = await this.fetchAllMarkets(accountId);
 
@@ -91,7 +94,7 @@ export class MarketService {
     quoteCurrency: string = 'USDT',
   ): Promise<string[]> {
     this.logger.log(
-      `Market Contract IDs - Fetch Initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`,
+      `Market Contract - Fetch Initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`,
     );
 
     const allMarkets = await this.fetchAllMarkets(accountId);
@@ -131,8 +134,8 @@ export class MarketService {
     return specificMarket;
   }
 
-  private async refreshAccountMarkets(accountId: string) {
-    this.logger.log(`Market - Refresh Initiated - AccountID: ${accountId}`);
+  async refreshOne(accountId: string): Promise<Market[]> {
+    this.logger.debug(`Market - Refresh Initiated - AccountID: ${accountId}`);
 
     try {
       const markets = await this.exchangeService.getMarkets(accountId);
@@ -148,6 +151,8 @@ export class MarketService {
       this.logger.log(
         `Market - Update Success - AccountID: ${accountId}, Count: ${markets.length}`,
       );
+
+      return markets;
     } catch (error) {
       this.logger.error(
         `Market - Update Failed - AccountID: ${accountId}, Error: ${error.message}`,
@@ -157,13 +162,13 @@ export class MarketService {
     }
   }
 
-  private async refreshAllMarkets() {
-    this.logger.log(`Markets - Refresh Initiated`);
+  async refreshAll(): Promise<void> {
+    this.logger.debug(`Markets - Refresh Initiated`);
     const accountIds = Array.from(this.markets.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
 
     const marketsPromises = accountIds.map((accountId) =>
-      this.refreshAccountMarkets(accountId).catch((error) => {
+      this.refreshOne(accountId).catch((error) => {
         errors.push({ accountId, error });
       }),
     );
@@ -174,7 +179,7 @@ export class MarketService {
       const aggregatedError = new MarketsUpdateAggregatedException(errors);
 
       this.logger.error(
-        `Markets - Multiple Updates Failed - Error: ${aggregatedError.message}`,
+        `Markets - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
         aggregatedError.stack,
       );
       throw aggregatedError;

@@ -4,14 +4,16 @@ import { Position } from 'ccxt';
 
 import { Events, Timers } from '../../config';
 import { ExchangeService } from '../../features/exchange/exchange.service';
-import { delay } from '../../utils/delay.util';
+import { ITrackableService } from '../common/interfaces/trackable.service.interface';
 import { PositionsUpdatedEvent } from './events/positions-updated.event';
-import { PositionComparisonException } from './exceptions/position.exceptions';
+import { PositionsUpdateAggregatedException } from './exceptions/position.exceptions';
 
 @Injectable()
-export class PositionService implements OnModuleInit {
+export class PositionService
+  implements OnModuleInit, ITrackableService<Position[]>
+{
   private logger = new Logger(PositionService.name);
-  private positions: Record<string, Position[]> = {};
+  private positions: Map<string, Position[]> = new Map();
 
   constructor(
     private eventEmitter: EventEmitter2,
@@ -19,60 +21,83 @@ export class PositionService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    this.updatePositions();
     setInterval(() => {
-      this.updatePositions();
-    }, Timers.POSITION_UPDATE_COOLDOWN);
+      this.refreshAll();
+    }, Timers.POSITIONS_CACHE_COOLDOWN);
   }
 
-  async getPositions(accountName: string): Promise<Position[]> {
-    return this.positions[accountName] || [];
-  }
-
-  private async updatePositions() {
-    const initializedAccountIds =
-      this.exchangeService.getInitializedAccountIds();
-
-    try {
-      for (const accountId of initializedAccountIds) {
-        const newPositions =
-          await this.exchangeService.getOpenPositions(accountId);
-
-        if (this.hasPositionsChanged(accountId, newPositions)) {
-          this.positions[accountId] = newPositions;
-          this.logger.debug(
-            `Updating positions for ${accountId} account: ${JSON.stringify(
-              newPositions,
-            )}`,
-          );
-          this.eventEmitter.emit(
-            Events.POSITION_UPDATED,
-            new PositionsUpdatedEvent(accountId, newPositions),
-          );
-        }
-
-        this.logger.log(`Fetching positions for ${accountId} account`);
-        await delay(Timers.POSITION_UPDATE_COOLDOWN);
-      }
-    } catch (error) {
-      this.logger.error(
-        `Error during positions update: ${error.message}`,
-        error.stack,
+  addAccount(accountId: string) {
+    if (!this.positions.has(accountId)) {
+      this.logger.log(
+        `Position - Tracking Initiated - AccountID: ${accountId}`,
+      );
+      this.refreshOne(accountId);
+    } else {
+      this.logger.warn(
+        `Position - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`,
       );
     }
   }
 
-  private hasPositionsChanged(
-    accountId: string,
-    newPositions: Position[],
-  ): boolean {
-    const currentPositions = this.positions[accountId] || [];
+  removeAccount(accountId: string) {
+    if (this.positions.delete(accountId)) {
+      this.logger.log(`Position - Tracking Stopped - AccountID: ${accountId}`);
+    } else {
+      this.logger.warn(
+        `Position - Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`,
+      );
+    }
+  }
+
+  async refreshOne(accountId: string): Promise<Position[]> {
+    this.logger.debug(`Position - Refresh Initiated - AccountID: ${accountId}`);
 
     try {
-      return JSON.stringify(newPositions) !== JSON.stringify(currentPositions);
+      const positions = await this.exchangeService.getOpenPositions(accountId);
+
+      this.positions.set(accountId, positions);
+      this.eventEmitter.emit(
+        Events.POSITIONS_UPDATED,
+        new PositionsUpdatedEvent(accountId, positions),
+      );
+      this.logger.log(
+        `Position - Update Success - AccountID: ${accountId}, Count: ${positions.length}`,
+      );
+      this.logger.debug(
+        `Position - Open Positions - AccountID: ${accountId}, Positions: ${JSON.stringify(positions)}`,
+      );
+
+      return positions;
     } catch (error) {
-      this.logger.error('Error during positions comparison', error.stack);
-      throw new PositionComparisonException(error);
+      this.logger.error(
+        `Position - Update Failed - AccountID: ${accountId}, Error: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  async refreshAll(): Promise<void> {
+    this.logger.debug(`Positions - Refresh Initiated`);
+    const accountIds = Array.from(this.positions.keys());
+    const errors: Array<{ accountId: string; error: Error }> = [];
+
+    const positionsPromises = accountIds.map((accountId) =>
+      this.refreshOne(accountId).catch((error) => {
+        errors.push({ accountId, error });
+      }),
+    );
+
+    await Promise.all(positionsPromises);
+
+    if (errors.length > 0) {
+      const aggregatedError = new PositionsUpdateAggregatedException(errors);
+
+      this.logger.error(
+        `Positions - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
+        aggregatedError.stack,
+      );
+      throw aggregatedError;
     }
   }
 }

@@ -69,18 +69,14 @@ export class ExchangeService {
     const exchange = this.getExchange(accountId);
 
     try {
-      this.logger.log(
-        `Exchange - Resource Cleanup Started - AccountID: ${accountId}`,
-      );
+      this.logger.log(`Exchange - Cleanup Started - AccountID: ${accountId}`);
       exchange.clean();
       this.exchanges.delete(accountId);
       this.eventEmitter.emit(
         Events.EXCHANGE_TERMINATED,
         new ExchangeInitializedEvent(accountId),
       );
-      this.logger.log(
-        `Exchange - Resource Cleanup Completed - AccountID: ${accountId}`,
-      );
+      this.logger.log(`Exchange - Cleanup Completed - AccountID: ${accountId}`);
     } catch (error) {
       this.logger.error(
         `Exchange - Cleanup Error - AccountID: ${accountId}, Error: ${error.message}`,
@@ -139,7 +135,7 @@ export class ExchangeService {
     try {
       const markets = await exchange.getMarkets();
 
-      this.logger.log(
+      this.logger.debug(
         `Exchange - Markets Fetched - AccountID: '${accountId}', Count: ${markets.length}`,
       );
 
@@ -162,7 +158,7 @@ export class ExchangeService {
     try {
       const orders = await exchange.getOpenOrders();
 
-      this.logger.log(
+      this.logger.debug(
         `Exchange - Open Orders Fetched - AccountID: ${accountId}, Count: ${orders.length}`,
       );
 
@@ -185,7 +181,7 @@ export class ExchangeService {
     try {
       const positions = await exchange.getOpenPositions();
 
-      this.logger.log(
+      this.logger.debug(
         `Exchange - Open Positions Fetched - AccountID: ${accountId}, Count: ${positions.length}`,
       );
 

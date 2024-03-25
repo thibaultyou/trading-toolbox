@@ -1,10 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Balances } from 'ccxt';
 import { Balance } from 'ccxt/js/src/base/types';
 
 import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
+import { ITrackableService } from '../common/interfaces/trackable.service.interface';
 import { ExchangeService } from '../exchange/exchange.service';
 import { BalanceGateway } from './balance.gateway';
 import { USDTBalance } from './balance.types';
@@ -16,7 +17,9 @@ import {
 import { extractUSDTEquity } from './utils/usdt-equity.util';
 
 @Injectable()
-export class BalanceService {
+export class BalanceService
+  implements OnModuleInit, ITrackableService<Balances>
+{
   private logger = new Logger(BalanceService.name);
   private balances: Map<string, Balances> = new Map();
 
@@ -28,14 +31,14 @@ export class BalanceService {
 
   async onModuleInit() {
     setInterval(() => {
-      this.refreshAllBalances();
+      this.refreshAll();
     }, Timers.BALANCES_CACHE_COOLDOWN);
   }
 
   addAccount(accountId: string) {
     if (!this.balances.has(accountId)) {
-      this.refreshAccountBalances(accountId);
       this.logger.log(`Balance - Tracking Initiated - AccountID: ${accountId}`);
+      this.refreshOne(accountId);
     } else {
       this.logger.warn(
         `Balance - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`,
@@ -98,8 +101,8 @@ export class BalanceService {
 
   // TODO add updates from websocket ?
 
-  private async refreshAccountBalances(accountId: string) {
-    this.logger.log(`Balance - Refresh Initiated - AccountID: ${accountId}`);
+  async refreshOne(accountId: string): Promise<Balances> {
+    this.logger.debug(`Balance - Refresh Initiated - AccountID: ${accountId}`);
 
     try {
       const balances = await this.exchangeService.getBalances(accountId);
@@ -116,6 +119,8 @@ export class BalanceService {
       this.logger.log(
         `Balance - USDT Equity - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(balances, this.logger).toFixed(2)} $`,
       );
+
+      return balances;
     } catch (error) {
       this.logger.error(
         `Balance - Update Failed - AccountID: ${accountId}, Error: ${error.message}`,
@@ -125,13 +130,13 @@ export class BalanceService {
     }
   }
 
-  private async refreshAllBalances() {
-    this.logger.log(`Balances - Refresh Initiated`);
+  async refreshAll(): Promise<void> {
+    this.logger.debug(`Balances - Refresh Initiated`);
     const accountIds = Array.from(this.balances.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
 
     const balancePromises = accountIds.map((accountId) =>
-      this.refreshAccountBalances(accountId).catch((error) => {
+      this.refreshOne(accountId).catch((error) => {
         errors.push({ accountId, error });
       }),
     );
@@ -142,7 +147,7 @@ export class BalanceService {
       const aggregatedError = new BalancesUpdateAggregatedException(errors);
 
       this.logger.error(
-        `Balances - Multiple Updates Failed - Error: ${aggregatedError.message}`,
+        `Balances - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
         aggregatedError.stack,
       );
       throw aggregatedError;

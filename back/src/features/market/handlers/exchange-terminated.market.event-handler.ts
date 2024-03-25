@@ -18,7 +18,7 @@ export class MarketExchangeTerminatedEventHandler {
     try {
       this.marketService.removeAccount(event.accountId);
       this.logger.log(
-        `${actionContext} - Successfully removed market from watch list`,
+        `${actionContext} - Removed market from watch list`,
       );
     } catch (error) {
       this.logger.error(

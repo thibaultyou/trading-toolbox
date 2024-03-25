@@ -10,6 +10,7 @@ import { CoreModule } from './features/core/core.module';
 import { ExchangeModule } from './features/exchange/exchange.module';
 import { HealthModule } from './features/health/health.module';
 import { MarketModule } from './features/market/market.module';
+import { PositionModule } from './features/position/position.module';
 
 @Module({
   imports: [
@@ -30,7 +31,7 @@ import { MarketModule } from './features/market/market.module';
     ExchangeModule, // Global
     MarketModule,
     // OrderModule,
-    // PositionModule,
+    PositionModule,
     // SetupModule,
     // ActionModule,
     // AlertModule,

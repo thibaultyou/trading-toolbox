@@ -1,20 +1,17 @@
-export class PositionNotFoundException extends Error {
-  constructor(accountName: string) {
-    super(`Positions not found for ${accountName}`);
-    this.name = this.constructor.name;
-  }
-}
+import { HttpException, HttpStatus } from '@nestjs/common';
 
-export class PositionUpdateException extends Error {
-  constructor(error: any) {
-    super(`Error updating positions: ${error.message}`);
-    this.name = this.constructor.name;
-  }
-}
+export class PositionsUpdateAggregatedException extends HttpException {
+  constructor(errors: Array<{ accountId: string; error: Error }>) {
+    const message = errors
+      .map(
+        ({ accountId, error }) =>
+          `AccountID: ${accountId}, Error: ${error.message}`,
+      )
+      .join('; ');
 
-export class PositionComparisonException extends Error {
-  constructor(error: any) {
-    super(`Error during positions comparison: ${error.message}`);
-    this.name = this.constructor.name;
+    super(
+      `Positions - Multiple Updates Failed - Errors: ${message}`,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
 }

@@ -18,7 +18,7 @@ export class MarketExchangeInitializedEventHandler {
     try {
       this.marketService.addAccount(event.accountId);
       this.logger.log(
-        `${actionContext} - Successfully added to market watch list`,
+        `${actionContext} - Added to market watch list`,
       );
     } catch (error) {
       this.logger.error(
