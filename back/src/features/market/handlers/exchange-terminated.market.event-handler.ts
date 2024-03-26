@@ -17,10 +17,10 @@ export class MarketExchangeTerminatedEventHandler {
 
     try {
       this.marketService.stopTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Removed market from watch list`);
+      this.logger.log(`${actionContext} - Removed account from market watch list`);
     } catch (error) {
       this.logger.error(
-        `${actionContext} - Failed to remove market from watch list - Error: ${error.message}`,
+        `${actionContext} - Failed to remove account from market watch list - Error: ${error.message}`,
         error.stack
       );
     }

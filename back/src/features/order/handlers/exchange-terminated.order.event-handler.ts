@@ -17,10 +17,10 @@ export class OrderExchangeTerminatedEventHandler {
 
     try {
       this.orderService.stopTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Removed order from watch list`);
+      this.logger.log(`${actionContext} - Removed account from order watch list`);
     } catch (error) {
       this.logger.error(
-        `${actionContext} - Failed to remove order from watch list - Error: ${error.message}`,
+        `${actionContext} - Failed to remove account from order watch list - Error: ${error.message}`,
         error.stack
       );
     }

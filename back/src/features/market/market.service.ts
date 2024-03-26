@@ -2,15 +2,16 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Market } from 'ccxt';
 
+import { IAccountTracker } from '../../common/interfaces/account-tracker.interface';
+import { IDataRefresher } from '../../common/interfaces/data-refresher.interface';
 import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
-import { ITrackableService } from '../common/interfaces/trackable.service.interface';
 import { ExchangeService } from '../exchange/exchange.service';
 import { MarketsUpdatedEvent } from './events/markets-updated.event';
 import { MarketNotFoundException, MarketsUpdateAggregatedException } from './exceptions/market.exceptions';
 
 @Injectable()
-export class MarketService implements OnModuleInit, ITrackableService<Market[]> {
+export class MarketService implements OnModuleInit, IAccountTracker, IDataRefresher<Market[]> {
   private logger = new Logger(MarketService.name);
   private markets: Map<string, Market[]> = new Map();
 
@@ -25,10 +26,10 @@ export class MarketService implements OnModuleInit, ITrackableService<Market[]> 
     }, Timers.MARKETS_CACHE_COOLDOWN);
   }
 
-  startTrackingAccount(accountId: string) {
+  async startTrackingAccount(accountId: string): Promise<void> {
     if (!this.markets.has(accountId)) {
       this.logger.log(`Market - Tracking Initiated - AccountID: ${accountId}`);
-      this.refreshOne(accountId);
+      await this.refreshOne(accountId);
     } else {
       this.logger.warn(`Market - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
     }

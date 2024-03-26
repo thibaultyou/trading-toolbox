@@ -17,10 +17,10 @@ export class BalanceExchangeTerminatedEventHandler {
 
     try {
       this.balanceService.stopTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Removed balance from watch list`);
+      this.logger.log(`${actionContext} - Removed account from balance watch list`);
     } catch (error) {
       this.logger.error(
-        `${actionContext} - Failed to remove balance from watch list - Error: ${error.message}`,
+        `${actionContext} - Failed to remove account from balance watch list - Error: ${error.message}`,
         error.stack
       );
     }

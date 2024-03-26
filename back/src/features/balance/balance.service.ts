@@ -1,11 +1,11 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Balances } from 'ccxt';
-import { Balance } from 'ccxt/js/src/base/types';
 
+import { IAccountTracker } from '../../common/interfaces/account-tracker.interface';
+import { IDataRefresher } from '../../common/interfaces/data-refresher.interface';
 import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
-import { ITrackableService } from '../common/interfaces/trackable.service.interface';
 import { ExchangeService } from '../exchange/exchange.service';
 import { BalanceGateway } from './balance.gateway';
 import { USDTBalance } from './balance.types';
@@ -14,7 +14,7 @@ import { BalancesUpdateAggregatedException, USDTBalanceNotFoundException } from 
 import { extractUSDTEquity } from './utils/usdt-equity.util';
 
 @Injectable()
-export class BalanceService implements OnModuleInit, ITrackableService<Balances> {
+export class BalanceService implements OnModuleInit, IAccountTracker, IDataRefresher<Balances> {
   private logger = new Logger(BalanceService.name);
   private balances: Map<string, Balances> = new Map();
 
@@ -30,10 +30,10 @@ export class BalanceService implements OnModuleInit, ITrackableService<Balances>
     }, Timers.BALANCES_CACHE_COOLDOWN);
   }
 
-  startTrackingAccount(accountId: string) {
+  async startTrackingAccount(accountId: string): Promise<void> {
     if (!this.balances.has(accountId)) {
       this.logger.log(`Balance - Tracking Initiated - AccountID: ${accountId}`);
-      this.refreshOne(accountId);
+      await this.refreshOne(accountId);
     } else {
       this.logger.warn(`Balance - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
     }
@@ -70,7 +70,7 @@ export class BalanceService implements OnModuleInit, ITrackableService<Balances>
     }
 
     const usdtEquity = extractUSDTEquity(balances, this.logger);
-    const usdtBalance: Balance = balances.USDT;
+    const usdtBalance = balances.USDT;
 
     return {
       equity: usdtEquity,
@@ -92,11 +92,8 @@ export class BalanceService implements OnModuleInit, ITrackableService<Balances>
         this.balances.set(accountId, newBalances);
         this.balanceGateway.sendBalancesUpdate(accountId, newBalances);
         this.eventEmitter.emit(Events.BALANCES_UPDATED, new BalancesUpdatedEvent(accountId, newBalances));
-        this.logger.debug(
-          `Balance - Update Success - AccountID: ${accountId}, Balances: ${JSON.stringify(newBalances)}`
-        );
         this.logger.log(
-          `Balance - USDT Equity - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(newBalances, this.logger).toFixed(2)} $`
+          `Balance - Update Success - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(newBalances, this.logger).toFixed(2)} $`
         );
       } else {
         this.logger.debug(`Balance - No Update Required - AccountID: ${accountId}`);

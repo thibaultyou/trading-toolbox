@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { BaseController } from '../common/base/base.controller';
+import { BaseController } from '../../common/base/base.controller';
 import { AccountService } from './account.service';
 import { AccountResponseDto } from './dto/account.response.dto';
 import { AccountCreateRequestDto } from './dto/account-create.request.dto';

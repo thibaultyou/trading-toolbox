@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { BaseController } from '../common/base/base.controller';
+import { BaseController } from '../../common/base/base.controller';
 import { TickerService } from './ticker.service';
 
 @ApiTags('Tickers')

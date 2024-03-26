@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Balances, Market, Order, Position } from 'ccxt';
-import { Events } from 'src/config';
 
+import { Events } from '../../config';
 import { Account } from '../account/entities/account.entity';
 import { ExchangeInitializedEvent } from './events/exchange-initialized.event';
 import { ExchangeTerminatedEvent } from './events/exchange-terminated.event';

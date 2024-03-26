@@ -2,7 +2,7 @@ import { Controller, Delete, Get, Param } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Order, Position } from 'ccxt';
 
-import { BaseController } from '../common/base/base.controller';
+import { BaseController } from '../../common/base/base.controller';
 import { PositionService } from './position.service';
 
 @ApiTags('Positions')

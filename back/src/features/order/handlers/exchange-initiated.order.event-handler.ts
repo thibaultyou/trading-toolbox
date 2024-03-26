@@ -16,10 +16,13 @@ export class OrderExchangeInitializedEventHandler {
     const actionContext = `Order Module - Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
 
     try {
-      this.orderService.startTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Added to order watch list`);
+      await this.orderService.startTrackingAccount(event.accountId);
+      this.logger.log(`${actionContext} - Added account to order watch list`);
     } catch (error) {
-      this.logger.error(`${actionContext} - Failed to add to order watch list - Error: ${error.message}`, error.stack);
+      this.logger.error(
+        `${actionContext} - Failed to add account to order watch list - Error: ${error.message}`,
+        error.stack
+      );
     }
   }
 }

@@ -16,11 +16,11 @@ export class BalanceExchangeInitializedEventHandler {
     const actionContext = `Balance Module - Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
 
     try {
-      this.balanceService.startTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Added to balance watch list`);
+      await this.balanceService.startTrackingAccount(event.accountId);
+      this.logger.log(`${actionContext} - Added account to balance watch list`);
     } catch (error) {
       this.logger.error(
-        `${actionContext} - Failed to add to balance watch list - Error: ${error.message}`,
+        `${actionContext} - Failed to add account to balance watch list - Error: ${error.message}`,
         error.stack
       );
     }

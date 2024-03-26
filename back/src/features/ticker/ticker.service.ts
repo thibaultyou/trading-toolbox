@@ -1,17 +1,19 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
+import { IAccountTracker } from '../../common/interfaces/account-tracker.interface';
+import { IDataRefresher } from '../../common/interfaces/data-refresher.interface';
 import { Events, Timers } from '../../config';
 import { TickersUpdatedEvent } from './events/tickers-updated.event';
 
 @Injectable()
-export class TickerService implements OnModuleInit {
+export class TickerService implements OnModuleInit, IAccountTracker, IDataRefresher<Set<string>> {
   private logger = new Logger(TickerService.name);
-  private ordersTickers: Map<string, string[]> = new Map();
-  private positionsTickers: Map<string, string[]> = new Map();
+  private ordersTickers: Map<string, Set<string>> = new Map();
+  private positionsTickers: Map<string, Set<string>> = new Map();
   private trackedTickers: Map<string, Set<string>> = new Map();
 
-  constructor(private eventEmitter: EventEmitter2) {} // private readonly accountService: AccountService // private readonly setupService: SetupService, // private readonly exchangeService: ExchangeService,
+  constructor(private eventEmitter: EventEmitter2) {}
 
   async onModuleInit() {
     setInterval(() => {
@@ -19,9 +21,22 @@ export class TickerService implements OnModuleInit {
     }, Timers.TICKERS_CACHE_COOLDOWN);
   }
 
-  // getAccountTickers
-  // subscribeTickerByMarketId
-  // unsubscribeTickerByMarketId
+  // FIXME
+  async startTrackingAccount(_accountId: string): Promise<void> {
+    throw new Error('TickerService - startTrackingAccount - Not Implemented');
+  }
+
+  stopTrackingAccount(accountId: string) {
+    if (
+      this.ordersTickers.delete(accountId) &&
+      this.positionsTickers.delete(accountId) &&
+      this.trackedTickers.delete(accountId)
+    ) {
+      this.logger.log(`Ticker - Tracking Stopped - AccountID: ${accountId}`);
+    } else {
+      this.logger.warn(`Ticker - Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
+    }
+  }
 
   private async updateTickersWatchList(
     type: 'positions' | 'orders',
@@ -29,22 +44,18 @@ export class TickerService implements OnModuleInit {
     marketIds: string[]
   ): Promise<void> {
     const tickersMap = type === 'positions' ? this.positionsTickers : this.ordersTickers;
-    const isTrackingAccount = !tickersMap.has(accountId);
 
-    tickersMap.set(accountId, marketIds);
+    tickersMap.set(accountId, new Set(marketIds));
     this.logger.debug(
       `Ticker - ${type.charAt(0).toUpperCase() + type.slice(1)} Watch List Updated - AccountID: ${accountId}, MarketIDs: ${marketIds.join(', ')}`
     );
 
-    if (isTrackingAccount) {
-      this.logger.debug(`Ticker - Immediate Refresh Triggered - AccountID: ${accountId}`);
-      this.refreshAll().catch((error) =>
-        this.logger.error(
-          `Ticker - Immediate Refresh Failed - AccountID: ${accountId}, Error: ${error.message}`,
-          error.stack
-        )
-      );
-    }
+    await this.refreshOne(accountId).catch((error) =>
+      this.logger.error(
+        `Ticker - Immediate Refresh Failed - AccountID: ${accountId}, Error: ${error.message}`,
+        error.stack
+      )
+    );
   }
 
   updateTickerPositionsWatchList(accountId: string, marketIds: string[]) {
@@ -55,29 +66,34 @@ export class TickerService implements OnModuleInit {
     this.updateTickersWatchList('orders', accountId, marketIds);
   }
 
+  async refreshOne(accountId: string): Promise<Set<string>> {
+    this.logger.debug(`Ticker - Refresh Initiated - AccountID: ${accountId}`);
+    const ordersTickers = new Set(this.ordersTickers.get(accountId) || []);
+    const positionsTickers = new Set(this.positionsTickers.get(accountId) || []);
+    const newUniqueTickers = new Set([...ordersTickers, ...positionsTickers]);
+    const haveTickersChanged = this.haveTickersChanged(
+      this.trackedTickers.get(accountId) || new Set(),
+      newUniqueTickers
+    );
+
+    if (!haveTickersChanged) {
+      this.trackedTickers.set(accountId, newUniqueTickers);
+      const marketIds = Array.from(newUniqueTickers).sort();
+
+      this.eventEmitter.emit(Events.TICKERS_UPDATED, new TickersUpdatedEvent(accountId, marketIds));
+      this.logger.log(`Ticker - Update Success - AccountID: ${accountId}, MarketIDs: ${marketIds.join(', ')}`);
+    } else {
+      this.logger.debug(`Ticker - Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
+    }
+
+    return newUniqueTickers;
+  }
+
   async refreshAll(): Promise<void> {
     this.logger.debug(`Ticker - Refresh All Initiated`);
     const accountIds = new Set([...this.ordersTickers.keys(), ...this.positionsTickers.keys()]);
 
-    accountIds.forEach((accountId) => {
-      const ordersTickers = new Set(this.ordersTickers.get(accountId) || []);
-      const positionsTickers = new Set(this.positionsTickers.get(accountId) || []);
-      const currentUniqueTickers = new Set([...ordersTickers, ...positionsTickers]);
-      const haveTickersChanged = this.haveTickersChanged(
-        this.trackedTickers.get(accountId) || new Set(),
-        currentUniqueTickers
-      );
-
-      if (!haveTickersChanged) {
-        this.trackedTickers.set(accountId, currentUniqueTickers);
-        const marketIds = Array.from(currentUniqueTickers);
-
-        this.eventEmitter.emit(Events.TICKERS_UPDATED, new TickersUpdatedEvent(accountId, marketIds));
-        this.logger.log(`Ticker - Update Success - AccountID: ${accountId}, MarketIDs: ${marketIds.join(', ')}`);
-      } else {
-        this.logger.debug(`Ticker - Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
-      }
-    });
+    accountIds.forEach((accountId) => this.refreshOne(accountId));
   }
 
   private haveTickersChanged(setA: Set<string>, setB: Set<string>): boolean {

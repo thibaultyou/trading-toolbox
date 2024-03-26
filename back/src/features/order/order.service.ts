@@ -2,15 +2,16 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Order } from 'ccxt';
 
+import { IAccountTracker } from '../../common/interfaces/account-tracker.interface';
+import { IDataRefresher } from '../../common/interfaces/data-refresher.interface';
 import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
-import { ITrackableService } from '../common/interfaces/trackable.service.interface';
 import { ExchangeService } from '../exchange/exchange.service';
 import { OrdersUpdatedEvent } from './events/orders-updated.event';
 import { OrdersUpdateAggregatedException } from './exceptions/orders.exceptions';
 
 @Injectable()
-export class OrderService implements OnModuleInit, ITrackableService<Order[]> {
+export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresher<Order[]> {
   private logger = new Logger(OrderService.name);
   private orders: Map<string, Order[]> = new Map();
 
@@ -25,10 +26,10 @@ export class OrderService implements OnModuleInit, ITrackableService<Order[]> {
     }, Timers.ORDERS_CACHE_COOLDOWN);
   }
 
-  startTrackingAccount(accountId: string) {
+  async startTrackingAccount(accountId: string): Promise<void> {
     if (!this.orders.has(accountId)) {
       this.logger.log(`Order - Tracking Initiated - AccountID: ${accountId}`);
-      this.refreshOne(accountId);
+      await this.refreshOne(accountId);
     } else {
       this.logger.warn(`Order - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
     }

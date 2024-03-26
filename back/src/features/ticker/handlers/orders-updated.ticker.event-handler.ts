@@ -18,7 +18,7 @@ export class TickerOrdersUpdatedEventHandler {
     try {
       this.tickerService.updateTickerOrdersWatchList(
         event.accountId,
-        event.orders.map((p) => p.symbol)
+        event.orders.map((o) => o.info.symbol)
       );
       this.logger.log(`${actionContext} - Updated ticker watch list`);
     } catch (error) {

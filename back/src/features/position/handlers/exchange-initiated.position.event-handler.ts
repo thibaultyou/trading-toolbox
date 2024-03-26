@@ -16,11 +16,11 @@ export class PositionExchangeInitializedEventHandler {
     const actionContext = `Position Module - Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
 
     try {
-      this.positionService.startTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Added to position watch list`);
+      await this.positionService.startTrackingAccount(event.accountId);
+      this.logger.log(`${actionContext} - Added account to position watch list`);
     } catch (error) {
       this.logger.error(
-        `${actionContext} - Failed to add to position watch list - Error: ${error.message}`,
+        `${actionContext} - Failed to add account to position watch list - Error: ${error.message}`,
         error.stack
       );
     }
