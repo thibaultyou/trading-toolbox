@@ -58,13 +58,20 @@ export class OrderService implements OnModuleInit, ITrackableService<Order[]> {
     this.logger.debug(`Order - Refresh Initiated - AccountID: ${accountId}`);
 
     try {
-      const orders = await this.exchangeService.getOpenOrders(accountId);
+      const newOrders = await this.exchangeService.getOpenOrders(accountId);
+      const currentOrders = this.orders.get(accountId) || [];
+      const haveOrdersChanged = this.haveOrdersChanged(currentOrders, newOrders);
 
-      this.orders.set(accountId, orders);
-      this.eventEmitter.emit(Events.ORDERS_UPDATED, new OrdersUpdatedEvent(accountId, orders));
-      this.logger.log(`Order - Update Success - AccountID: ${accountId}, Count: ${orders.length}`);
+      if (haveOrdersChanged) {
+        this.orders.set(accountId, newOrders);
+        this.eventEmitter.emit(Events.ORDERS_UPDATED, new OrdersUpdatedEvent(accountId, newOrders));
+        // this.logger.log(`Order - Update Success - AccountID: ${accountId}, Count: ${newOrders.length}, Orders: ${JSON.stringify(newOrders)}`);
+        this.logger.log(`Order - Update Success - AccountID: ${accountId}, Count: ${newOrders.length}`);
+      } else {
+        this.logger.debug(`Order - No Update Required - AccountID: ${accountId}`);
+      }
 
-      return orders;
+      return newOrders;
     } catch (error) {
       this.logger.error(`Order - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw error;
@@ -72,7 +79,7 @@ export class OrderService implements OnModuleInit, ITrackableService<Order[]> {
   }
 
   async refreshAll(): Promise<void> {
-    this.logger.debug(`Orders - Refresh Initiated`);
+    this.logger.debug(`Order - Refresh All Initiated`);
     const accountIds = Array.from(this.orders.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
 
@@ -87,8 +94,24 @@ export class OrderService implements OnModuleInit, ITrackableService<Order[]> {
     if (errors.length > 0) {
       const aggregatedError = new OrdersUpdateAggregatedException(errors);
 
-      this.logger.error(`Orders - Multiple Updates Failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
+      this.logger.error(`Order - Multiple Updates Failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
       // Avoid interrupting the loop by not throwing an exception
     }
+  }
+
+  private haveOrdersChanged(currentOrders: Order[], newOrders: Order[]): boolean {
+    if (currentOrders.length !== newOrders.length) return true;
+
+    const orderMap = new Map(currentOrders.map((order) => [order.id, order]));
+
+    for (const order of newOrders) {
+      const currentOrder = orderMap.get(order.id);
+
+      if (!currentOrder || currentOrder.lastUpdateTimestamp !== order.lastUpdateTimestamp) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

@@ -12,6 +12,7 @@ import { HealthModule } from './features/health/health.module';
 import { MarketModule } from './features/market/market.module';
 import { OrderModule } from './features/order/order.module';
 import { PositionModule } from './features/position/position.module';
+import { TickerModule } from './features/ticker/ticker.module';
 
 @Module({
   imports: [
@@ -36,7 +37,7 @@ import { PositionModule } from './features/position/position.module';
     // SetupModule,
     // ActionModule,
     // AlertModule,
-    // TickerModule,
+    TickerModule,
     CoreModule,
     // GridModule,
     HealthModule

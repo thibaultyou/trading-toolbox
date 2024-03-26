@@ -26,18 +26,16 @@ export class ExchangeService {
   ) {}
 
   async initializeExchange(account: Account): Promise<void> {
+    this.logger.debug(`Exchange - Initialization Initiated - AccountID: ${account.id}`);
+
     if (!account) {
-      this.logger.error(
-        `Exchange - Initialization skipped - Exchange: ${account.exchange}, Account: ${account.name}, Reason: Missing account`
-      );
+      this.logger.error(`Exchange - Initialization Skipped - Account: ${account.name}, Reason: Missing account`);
 
       return;
     }
 
     if (this.exchanges.has(account.id)) {
-      this.logger.error(
-        `Exchange - Initialization skipped - Exchange: ${account.exchange}, AccountID: ${account.id}, Reason: Already initialized`
-      );
+      this.logger.error(`Exchange - Initialization Skipped - AccountID: ${account.id}, Reason: Already initialized`);
 
       return;
     }
@@ -46,32 +44,35 @@ export class ExchangeService {
       const exchange = await this.exchangeFactory.createExchange(account);
 
       this.exchanges.set(account.id, exchange);
+      this.logger.log(`Exchange - Initialized Successfully - AccountID: ${account.id}`);
       this.eventEmitter.emit(Events.EXCHANGE_INITIALIZED, new ExchangeInitializedEvent(account.id));
-      this.logger.log(`Exchange - Initialized Successfully - Exchange: ${account.exchange}, AccountID: ${account.id}`);
     } catch (error) {
       this.logger.error(
-        `Exchange - Initialization Failed - Exchange: ${account.exchange}, AccountID: ${account.id}, Error: ${error.message}`,
+        `Exchange - Initialization Failed - AccountID: ${account.id}, Error: ${error.message}`,
         error.stack
       );
     }
   }
 
-  // FIXME delete, replace with events in other modules
-  getInitializedAccountIds(): string[] {
-    return Array.from(this.exchanges.keys());
-  }
+  async cleanResources(accountId: string): Promise<void> {
+    this.logger.debug(`Exchange - Cleanup Initiated - AccountID: ${accountId}`);
 
-  cleanResources(accountId: string): void {
     const exchange = this.getExchange(accountId);
+
+    if (!exchange) {
+      this.logger.warn(`Exchange - Cleanup Skipped - AccountID: ${accountId}, Reason: No associated exchange`);
+
+      return;
+    }
 
     try {
       this.logger.log(`Exchange - Cleanup Started - AccountID: ${accountId}`);
-      exchange.clean();
+      await exchange.clean();
       this.exchanges.delete(accountId);
       this.eventEmitter.emit(Events.EXCHANGE_TERMINATED, new ExchangeTerminatedEvent(accountId));
       this.logger.log(`Exchange - Cleanup Completed - AccountID: ${accountId}`);
     } catch (error) {
-      this.logger.error(`Exchange - Cleanup Error - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      this.logger.error(`Exchange - Cleanup Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw new ExchangeOperationFailedException('cleanResources', error);
     }
   }

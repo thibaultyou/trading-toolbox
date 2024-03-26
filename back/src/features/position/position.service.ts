@@ -103,7 +103,7 @@ export class PositionService implements OnModuleInit, ITrackableService<Position
   }
 
   async refreshAll(): Promise<void> {
-    this.logger.debug(`Positions - Refresh Initiated`);
+    this.logger.debug(`Position - Refresh All Initiated`);
     const accountIds = Array.from(this.positions.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
 
@@ -119,7 +119,7 @@ export class PositionService implements OnModuleInit, ITrackableService<Position
       const aggregatedError = new PositionsUpdateAggregatedException(errors);
 
       this.logger.error(
-        `Positions - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
+        `Position - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
         aggregatedError.stack
       );
       // Avoid interrupting the loop by not throwing an exception

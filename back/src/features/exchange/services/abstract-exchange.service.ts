@@ -39,7 +39,7 @@ export abstract class AbstractExchangeService implements IExchangeService {
     try {
       const balances = await this.exchange.fetchBalance();
 
-      this.logger.log(`Exchange - Fetched Balances Successfully - AccountID: ${this.account.id}`);
+      this.logger.debug(`Exchange - Fetched Balances Successfully - AccountID: ${this.account.id}`);
 
       return balances;
     } catch (error) {
@@ -52,7 +52,7 @@ export abstract class AbstractExchangeService implements IExchangeService {
     try {
       const markets = await this.exchange.fetchMarkets();
 
-      this.logger.log(`Exchange - Fetched Markets Successfully - AccountID: ${this.account.id}`);
+      this.logger.debug(`Exchange - Fetched Markets Successfully - AccountID: ${this.account.id}`);
 
       return markets;
     } catch (error) {
@@ -65,7 +65,7 @@ export abstract class AbstractExchangeService implements IExchangeService {
     try {
       const orders = await this.exchange.fetchOpenOrders();
 
-      this.logger.log(`Exchange - Fetched Open Orders Successfully - AccountID: ${this.account.id}`);
+      this.logger.debug(`Exchange - Fetched Open Orders Successfully - AccountID: ${this.account.id}`);
 
       return orders;
     } catch (error) {
@@ -80,7 +80,7 @@ export abstract class AbstractExchangeService implements IExchangeService {
     try {
       const positions = await this.exchange.fetchPositions();
 
-      this.logger.log(`Exchange - Fetched Open Positions Successfully - AccountID: ${this.account.id}`);
+      this.logger.debug(`Exchange - Fetched Open Positions Successfully - AccountID: ${this.account.id}`);
 
       return positions;
     } catch (error) {

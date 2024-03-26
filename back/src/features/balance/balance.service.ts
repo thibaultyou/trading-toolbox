@@ -84,19 +84,25 @@ export class BalanceService implements OnModuleInit, ITrackableService<Balances>
     this.logger.debug(`Balance - Refresh Initiated - AccountID: ${accountId}`);
 
     try {
-      const balances = await this.exchangeService.getBalances(accountId);
+      const newBalances = await this.exchangeService.getBalances(accountId);
+      const currentBalances = this.balances.get(accountId);
+      const haveBalancesChanged = this.haveBalancesChanged(currentBalances, newBalances);
 
-      this.balances.set(accountId, balances);
-      this.balanceGateway.sendBalancesUpdate(accountId, balances);
-      this.eventEmitter.emit(Events.BALANCES_UPDATED, new BalancesUpdatedEvent(accountId, balances));
-      this.logger.debug(
-        `Balance - Updated Successfully - AccountID: ${accountId}, Balances: ${JSON.stringify(balances)}`
-      );
-      this.logger.log(
-        `Balance - USDT Equity - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(balances, this.logger).toFixed(2)} $`
-      );
+      if (haveBalancesChanged) {
+        this.balances.set(accountId, newBalances);
+        this.balanceGateway.sendBalancesUpdate(accountId, newBalances);
+        this.eventEmitter.emit(Events.BALANCES_UPDATED, new BalancesUpdatedEvent(accountId, newBalances));
+        this.logger.debug(
+          `Balance - Update Success - AccountID: ${accountId}, Balances: ${JSON.stringify(newBalances)}`
+        );
+        this.logger.log(
+          `Balance - USDT Equity - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(newBalances, this.logger).toFixed(2)} $`
+        );
+      } else {
+        this.logger.debug(`Balance - No Update Required - AccountID: ${accountId}`);
+      }
 
-      return balances;
+      return newBalances;
     } catch (error) {
       this.logger.error(`Balance - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw error;
@@ -104,7 +110,7 @@ export class BalanceService implements OnModuleInit, ITrackableService<Balances>
   }
 
   async refreshAll(): Promise<void> {
-    this.logger.debug(`Balances - Refresh Initiated`);
+    this.logger.debug(`Balance - Refresh All Initiated`);
     const accountIds = Array.from(this.balances.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
 
@@ -120,10 +126,32 @@ export class BalanceService implements OnModuleInit, ITrackableService<Balances>
       const aggregatedError = new BalancesUpdateAggregatedException(errors);
 
       this.logger.error(
-        `Balances - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
+        `Balance - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
         aggregatedError.stack
       );
       // Avoid interrupting the loop by not throwing an exception
     }
+  }
+
+  haveBalancesChanged(currentBalances: Balances | undefined, newBalances: Balances): boolean {
+    if (!currentBalances) return true;
+
+    for (const key of Object.keys(newBalances)) {
+      const currentBalance = currentBalances[key];
+      const newBalance = newBalances[key];
+
+      if (!currentBalance) return true;
+
+      if (
+        currentBalance.free !== newBalance.free ||
+        currentBalance.used !== newBalance.used ||
+        currentBalance.total !== newBalance.total ||
+        (currentBalance.debt || 0) !== (newBalance.debt || 0)
+      ) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

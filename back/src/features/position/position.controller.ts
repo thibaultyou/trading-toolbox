@@ -20,7 +20,10 @@ export class PositionController extends BaseController {
 
   @Delete('/:accountId/:positionId')
   @ApiOperation({ summary: 'Close a specific position for a specific account' })
-  async closePosition(@Param('accountId') accountId: string, @Param('positionId') positionId: string): Promise<Order> {
+  async closePositionById(
+    @Param('accountId') accountId: string,
+    @Param('positionId') positionId: string
+  ): Promise<Order> {
     return this.positionService.closePositionById(accountId, positionId);
   }
 }
