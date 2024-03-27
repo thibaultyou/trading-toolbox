@@ -1,7 +1,7 @@
 {
   "name": "trading-toolbox-frontend",
   "version": "0.0.1",
-  "description": "A frontend application for automated cryptocurrency trading on exchanges like Bybit and MEXC, leveraging CCXT and other APIs for trade monitoring, execution, and strategy implementation.",
+  "description": "A frontend application for automated cryptocurrency trading on exchanges like Bybit, leveraging CCXT and other APIs for trade monitoring, execution, and strategy implementation.",
   "author": "Thibault YOU",
   "private": true,
   "license": "SEE LICENSE IN LICENSE.md",

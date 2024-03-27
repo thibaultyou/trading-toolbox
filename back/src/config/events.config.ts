@@ -28,10 +28,10 @@ export const Events = {
   POSITION_CLOSED: 'position.closed',
 
   // Ticker module
-  TICKERS_UPDATED: 'tickers.updated',
+  // TICKERS_UPDATED: 'tickers.updated',
 
   // Core module
   TICKER_UPDATED: 'ticker.updated',
-  TOPIC_SUBSCRIBED: 'topic.subscribed',
-  TOPIC_UNSUBSCRIBED: 'topic.unsubscribed'
+  WEBSOCKET_SUBSCRIBE: 'websocket.subscribe',
+  WEBSOCKET_UNSUBSCRIBE: 'websocket.unsubscribe'
 };

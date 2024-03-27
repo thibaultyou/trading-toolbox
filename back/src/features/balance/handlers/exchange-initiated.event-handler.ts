@@ -6,8 +6,8 @@ import { ExchangeInitializedEvent } from '../../exchange/events/exchange-initial
 import { BalanceService } from '../balance.service';
 
 @Injectable()
-export class BalanceExchangeInitializedEventHandler {
-  private logger = new Logger(BalanceExchangeInitializedEventHandler.name);
+export class BalanceModuleExchangeInitializedEventHandler {
+  private logger = new Logger(BalanceModuleExchangeInitializedEventHandler.name);
 
   constructor(private balanceService: BalanceService) {}
 

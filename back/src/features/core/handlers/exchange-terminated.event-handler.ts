@@ -6,13 +6,13 @@ import { ExchangeTerminatedEvent } from '../../exchange/events/exchange-terminat
 import { WebsocketManagerService } from '../services/websocket-manager.service';
 
 @Injectable()
-export class CoreExchangeTerminatedEventHandler {
-  private logger = new Logger(CoreExchangeTerminatedEventHandler.name);
+export class CoreModuleExchangeTerminatedEventHandler {
+  private logger = new Logger(CoreModuleExchangeTerminatedEventHandler.name);
 
   constructor(private websocketManagerService: WebsocketManagerService) {}
 
   @OnEvent(Events.EXCHANGE_TERMINATED)
-  async handle(event: ExchangeTerminatedEvent) {
+  handle(event: ExchangeTerminatedEvent) {
     const actionContext = `Core Module - Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
 
     try {

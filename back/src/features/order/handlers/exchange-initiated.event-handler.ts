@@ -6,8 +6,8 @@ import { ExchangeInitializedEvent } from '../../exchange/events/exchange-initial
 import { OrderService } from '../order.service';
 
 @Injectable()
-export class OrderExchangeInitializedEventHandler {
-  private logger = new Logger(OrderExchangeInitializedEventHandler.name);
+export class OrderModuleExchangeInitializedEventHandler {
+  private logger = new Logger(OrderModuleExchangeInitializedEventHandler.name);
 
   constructor(private orderService: OrderService) {}
 

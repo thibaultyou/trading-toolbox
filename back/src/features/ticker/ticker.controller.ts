@@ -1,7 +1,8 @@
-import { Controller } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Param } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../../common/base/base.controller';
+import { GetTickerPriceException, TickerPriceNotFoundException } from './exceptions/ticker.exceptions';
 import { TickerService } from './ticker.service';
 
 @ApiTags('Tickers')
@@ -11,54 +12,21 @@ export class TickerController extends BaseController {
     super('TickerController');
   }
 
-  // @Get('/:accountId/:base/price')
-  // @ApiOperation({ summary: 'Get subscribed ticker price' })
-  // async getTickerPrice(
-  //   @Param('accountId') accountId: string,
-  //   @Param('base') base: string,
-  // ): Promise<number> {
-  //   try {
-  //     const price = this.tickerService.getTickerPrice(accountId, base);
+  @Get('/:accountId/:marketId/price')
+  @ApiOperation({ summary: 'Get ticker price' })
+  async getTickerPrice(@Param('accountId') accountId: string, @Param('marketId') marketId: string): Promise<number> {
+    try {
+      const price = this.tickerService.getTickerPrice(accountId, marketId);
 
-  //     if (price === undefined) {
-  //       throw new TickerPriceNotFoundException(accountId, base);
-  //     }
+      if (price === undefined) {
+        throw new TickerPriceNotFoundException(accountId, marketId);
+      }
 
-  //     return price;
-  //   } catch (error) {
-  //     throw new GetTickerPriceException(accountId, base, error);
-  //   }
-  // }
-
-  // @Post('/:accountId/:base/subscribe')
-  // @ApiOperation({ summary: 'Subscribe to a ticker price' })
-  // async subscribeTicker(
-  //   @Param('accountId') accountId: string,
-  //   @Param('base') base: string,
-  // ): Promise<string> {
-  //   try {
-  //     this.tickerService.subscribeToTickerPrice(accountId, base);
-
-  //     return `Subscribed to ticker ${base} price for account ${accountId}`;
-  //   } catch (error) {
-  //     throw new SubscribeToTickerPriceException(base, error);
-  //   }
-  // }
-
-  // @Delete('/:accountId/:base/unsubscribe')
-  // @ApiOperation({ summary: 'Unsubscribe from a ticker price' })
-  // async unsubscribeTicker(
-  //   @Param('accountId') accountId: string,
-  //   @Param('base') base: string,
-  // ): Promise<string> {
-  //   try {
-  //     this.tickerService.unsubscribeFromTickerPrice(accountId, base);
-
-  //     return `Unsubscribed from ticker ${base} price for account ${accountId}`;
-  //   } catch (error) {
-  //     throw new UnsubscribeFromTickerPriceException(base, error);
-  //   }
-  // }
+      return price;
+    } catch (error) {
+      throw new GetTickerPriceException(accountId, marketId, error);
+    }
+  }
 
   // @Get('/:base/history')
   // @ApiOperation({ summary: 'Get ticker price history' })

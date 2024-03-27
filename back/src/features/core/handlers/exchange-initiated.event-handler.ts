@@ -6,8 +6,8 @@ import { ExchangeInitializedEvent } from '../../exchange/events/exchange-initial
 import { WebsocketManagerService } from '../services/websocket-manager.service';
 
 @Injectable()
-export class CoreExchangeInitializedEventHandler {
-  private logger = new Logger(CoreExchangeInitializedEventHandler.name);
+export class CoreModuleExchangeInitializedEventHandler {
+  private logger = new Logger(CoreModuleExchangeInitializedEventHandler.name);
 
   constructor(private websocketManagerService: WebsocketManagerService) {}
 
@@ -16,7 +16,7 @@ export class CoreExchangeInitializedEventHandler {
     const actionContext = `Core Module - Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
 
     try {
-      this.websocketManagerService.startTrackingAccount;
+      await this.websocketManagerService.startTrackingAccount(event.accountId);
       this.logger.log(`${actionContext} - Added account to websocket manager`);
     } catch (error) {
       this.logger.error(

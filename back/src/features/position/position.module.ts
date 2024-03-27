@@ -1,13 +1,17 @@
 import { Module } from '@nestjs/common';
 
-import { PositionExchangeInitializedEventHandler } from './handlers/exchange-initiated.position.event-handler';
-import { PositionExchangeTerminatedEventHandler } from './handlers/exchange-terminated.position.event-handler';
+import { PositionModuleExchangeInitializedEventHandler } from './handlers/exchange-initiated.event-handler';
+import { PositionModuleExchangeTerminatedEventHandler } from './handlers/exchange-terminated.event-handler';
 import { PositionController } from './position.controller';
 import { PositionService } from './position.service';
 
 @Module({
   controllers: [PositionController],
   exports: [PositionService],
-  providers: [PositionService, PositionExchangeInitializedEventHandler, PositionExchangeTerminatedEventHandler]
+  providers: [
+    PositionService,
+    PositionModuleExchangeInitializedEventHandler,
+    PositionModuleExchangeTerminatedEventHandler
+  ]
 })
 export class PositionModule {}

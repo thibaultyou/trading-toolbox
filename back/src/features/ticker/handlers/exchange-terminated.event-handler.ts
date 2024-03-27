@@ -6,13 +6,13 @@ import { ExchangeTerminatedEvent } from '../../exchange/events/exchange-terminat
 import { TickerService } from '../ticker.service';
 
 @Injectable()
-export class TickerExchangeTerminatedEventHandler {
-  private logger = new Logger(TickerExchangeTerminatedEventHandler.name);
+export class TickerModuleExchangeTerminatedEventHandler {
+  private logger = new Logger(TickerModuleExchangeTerminatedEventHandler.name);
 
   constructor(private tickerService: TickerService) {}
 
   @OnEvent(Events.EXCHANGE_TERMINATED)
-  async handle(event: ExchangeTerminatedEvent) {
+  handle(event: ExchangeTerminatedEvent) {
     const actionContext = `Ticker Module - Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
 
     try {

@@ -3,8 +3,8 @@ import { Module } from '@nestjs/common';
 import { BalanceController } from './balance.controller';
 import { BalanceGateway } from './balance.gateway';
 import { BalanceService } from './balance.service';
-import { BalanceExchangeInitializedEventHandler } from './handlers/exchange-initiated.balance.event-handler';
-import { BalanceExchangeTerminatedEventHandler } from './handlers/exchange-terminated.balance.event-handler';
+import { BalanceModuleExchangeInitializedEventHandler } from './handlers/exchange-initiated.event-handler';
+import { BalanceModuleExchangeTerminatedEventHandler } from './handlers/exchange-terminated.event-handler';
 
 @Module({
   controllers: [BalanceController],
@@ -12,8 +12,8 @@ import { BalanceExchangeTerminatedEventHandler } from './handlers/exchange-termi
   providers: [
     BalanceService,
     BalanceGateway,
-    BalanceExchangeInitializedEventHandler,
-    BalanceExchangeTerminatedEventHandler
+    BalanceModuleExchangeInitializedEventHandler,
+    BalanceModuleExchangeTerminatedEventHandler
   ]
 })
 export class BalanceModule {}

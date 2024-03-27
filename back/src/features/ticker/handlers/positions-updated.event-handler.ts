@@ -6,8 +6,8 @@ import { PositionsUpdatedEvent } from '../../position/events/positions-updated.e
 import { TickerService } from '../ticker.service';
 
 @Injectable()
-export class TickerPositionsUpdatedEventHandler {
-  private logger = new Logger(TickerPositionsUpdatedEventHandler.name);
+export class TickerModulePositionsUpdatedEventHandler {
+  private logger = new Logger(TickerModulePositionsUpdatedEventHandler.name);
 
   constructor(private tickerService: TickerService) {}
 

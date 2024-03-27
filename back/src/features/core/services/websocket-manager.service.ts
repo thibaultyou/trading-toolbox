@@ -1,13 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { WebsocketClient, WSClientConfigurableOptions, WsTopic } from 'bybit-api';
+import { WebsocketClient, WSClientConfigurableOptions } from 'bybit-api';
 
 import { IAccountTracker } from '../../../common/interfaces/account-tracker.interface';
 import { Events } from '../../../config';
-import { AccountService } from '../../../features/account/account.service';
-import { Account } from '../../../features/account/entities/account.entity';
-import { TopicSubscribedEvent } from '../events/topic-subscribed.event';
-import { TopicUnsubscribedEvent } from '../events/topic-unsubscribed.event';
+import { AccountService } from '../../account/account.service';
+import { Account } from '../../account/entities/account.entity';
+import { TickerUpdatedEvent } from '../../ticker/events/ticker-updated.event';
 
 @Injectable()
 export class WebsocketManagerService implements IAccountTracker {
@@ -67,9 +66,9 @@ export class WebsocketManagerService implements IAccountTracker {
     }
   }
 
-  async subscribe(accountId: string, wsTopics: WsTopic[] | WsTopic, isPrivateTopic: boolean = false) {
-    this.logger.debug(
-      `WebSocket - Subscription Initiated - AccountID: ${accountId}, Topics: ${Array.isArray(wsTopics) ? wsTopics.join(',') : wsTopics}`
+  async subscribe(accountId: string, wsTopics: string[] | string, isPrivateTopic: boolean = false) {
+    this.logger.log(
+      `WebSocket - Subscription Initiated - AccountID: ${accountId}, Topics: ${Array.isArray(wsTopics) ? wsTopics.join(', ') : wsTopics}`
     );
     let ws = this.wsConnections.get(accountId);
 
@@ -88,7 +87,6 @@ export class WebsocketManagerService implements IAccountTracker {
 
     const topics = Array.isArray(wsTopics) ? wsTopics : [wsTopics];
     const subscriptions = this.subscriptions.get(accountId);
-
     const topicsToSubscribe = topics.filter((topic) => !subscriptions?.has(topic));
 
     if (topicsToSubscribe.length > 0) {
@@ -96,17 +94,18 @@ export class WebsocketManagerService implements IAccountTracker {
         await ws.subscribe(topicsToSubscribe, isPrivateTopic);
         topicsToSubscribe.forEach((topic) => {
           subscriptions.add(topic);
-          this.eventEmitter.emit(Events.TOPIC_SUBSCRIBED, new TopicSubscribedEvent(accountId, topic));
         });
         this.subscriptions.set(accountId, subscriptions);
-        this.logger.log(`WebSocket - Subscribed - AccountID: ${accountId}, Topics: ${topicsToSubscribe.join(', ')}`);
+        this.logger.log(
+          `WebSocket - Subscribed - AccountID: ${accountId}, Topics: ${topicsToSubscribe.sort().join(', ')}`
+        );
       } catch (error) {
         this.logger.error(`WebSocket - Subscription Failed - AccountID: ${accountId}, Error: ${error}`);
       }
     }
   }
 
-  unsubscribe(accountId: string, wsTopics: WsTopic[] | WsTopic, isPrivateTopic: boolean = false) {
+  unsubscribe(accountId: string, wsTopics: string[] | string, isPrivateTopic: boolean = false) {
     const ws = this.wsConnections.get(accountId);
 
     if (!ws) {
@@ -125,7 +124,6 @@ export class WebsocketManagerService implements IAccountTracker {
         try {
           ws.unsubscribe([topic], isPrivateTopic);
           subscriptions.delete(topic);
-          this.eventEmitter.emit(Events.TOPIC_UNSUBSCRIBED, new TopicUnsubscribedEvent(accountId, topic));
         } catch (error) {
           this.logger.error(
             `WebSocket - Unsubscription Failed - AccountID: ${accountId}, Topic: ${topic}, Error: ${error.message}`
@@ -133,14 +131,13 @@ export class WebsocketManagerService implements IAccountTracker {
         }
       }
     });
-
     this.logger.log(`WebSocket - Unsubscribed - AccountID: ${accountId}, Topics: ${topics.join(', ')}`);
   }
 
   private handleWsUpdate(accountId: string, message: any) {
     if (message?.topic) {
       const topicHandlerMapping = {
-        'tickers.': this.handleTickerUpdate
+        'tickers.': this.handleTickerUpdate.bind(this)
         // FIXME update this
         // execution: this.handleExecutionUpdate,
         // position: this.handlePositionUpdate,
@@ -150,11 +147,12 @@ export class WebsocketManagerService implements IAccountTracker {
 
       for (const [key, handler] of Object.entries(topicHandlerMapping)) {
         if (message.topic.startsWith(key)) {
-          handler.call(this, message);
+          handler(accountId, message);
 
           return;
         }
       }
+      this.logger.warn(`WebSocket - Unrecognized Topic - AccountID: ${accountId}, Topic: ${message.topic}`);
       // FIXME update this
       // this.logger.warn(message.data)
       // this.eventEmitter.emit(`${message.topic}.${accountId}`, message.data);
@@ -162,11 +160,22 @@ export class WebsocketManagerService implements IAccountTracker {
     }
   }
 
-  // FIXME update this
   private handleTickerUpdate(accountId: string, msg: any) {
-    // this.logger.log(
-    //   `WebSocket - Ticker Updated - AccountID: ${msg.topic}, Data: ${JSON.stringify(msg.data)}`,
-    // );
+    const marketId = msg.topic.substring('tickers.'.length);
+    const { bid1Price, ask1Price } = msg.data;
+
+    if (bid1Price && ask1Price) {
+      const calculatedPrice = (parseFloat(bid1Price) + parseFloat(ask1Price)) / 2;
+
+      this.eventEmitter.emit(Events.TICKER_UPDATED, new TickerUpdatedEvent(accountId, marketId, calculatedPrice));
+      this.logger.debug(
+        `WebSocket - Ticker Update - AccountID: ${accountId}, MarketID: ${marketId}, Price: ${calculatedPrice.toFixed(2)}`
+      );
+    } else {
+      this.logger.debug(
+        `WebSocket - Ticker Update Skipped - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Null Values`
+      );
+    }
   }
 
   private cleanResources(accountId: string) {
@@ -205,36 +214,4 @@ export class WebsocketManagerService implements IAccountTracker {
 //     Events.UPDATE_BALANCE,
 //     new UpdateBalanceEvent(this.account.id, msg.data),
 //   );
-// }
-
-// performWsAction(action: string, topic: string, actionDescription: string) {
-//   try {
-//     const tickerSymbol = topic.split('.')[1];
-
-//     if (action === 'subscribe' && !this.subcriptions.has(tickerSymbol)) {
-//       this.ws[action](topic);
-//       this.subcriptions.add(tickerSymbol);
-//     } else if (
-//       action === 'unsubscribe' &&
-//       this.subcriptions.has(tickerSymbol)
-//     ) {
-//       this.ws[action](topic);
-//       this.subcriptions.delete(tickerSymbol);
-//     } else {
-//       this.logger.debug(`Ignoring ${actionDescription}`);
-
-//       return;
-//     }
-
-//     this.logger.log(
-//       `${
-//         actionDescription.charAt(0).toUpperCase() + actionDescription.slice(1)
-//       } ${topic}`,
-//     );
-//   } catch (error) {
-//     throw new ExchangeOperationFailedException(
-//       actionDescription,
-//       error.message,
-//     );
-//   }
 // }

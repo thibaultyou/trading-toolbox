@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 
-import { TickerExchangeTerminatedEventHandler } from './handlers/exchange-terminated.ticker.event-handler';
-import { TickerOrdersUpdatedEventHandler } from './handlers/orders-updated.ticker.event-handler';
-import { TickerPositionsUpdatedEventHandler } from './handlers/positions-updated.ticker.event-handler';
+import { TickerModuleExchangeTerminatedEventHandler } from './handlers/exchange-terminated.event-handler';
+import { TickerModuleOrdersUpdatedEventHandler } from './handlers/orders-updated.event-handler';
+import { TickerModulePositionsUpdatedEventHandler } from './handlers/positions-updated.event-handler';
+import { TickerModuleTickerUpdatedEventHandler } from './handlers/ticker-updated.event-handler';
 import { TickerController } from './ticker.controller';
 import { TickerService } from './ticker.service';
 
@@ -11,9 +12,10 @@ import { TickerService } from './ticker.service';
   exports: [TickerService],
   providers: [
     TickerService,
-    TickerExchangeTerminatedEventHandler,
-    TickerOrdersUpdatedEventHandler,
-    TickerPositionsUpdatedEventHandler
+    TickerModuleExchangeTerminatedEventHandler,
+    TickerModuleOrdersUpdatedEventHandler,
+    TickerModulePositionsUpdatedEventHandler,
+    TickerModuleTickerUpdatedEventHandler
   ]
 })
 export class TickerModule {}

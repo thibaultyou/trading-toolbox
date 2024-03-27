@@ -6,8 +6,8 @@ import { ExchangeInitializedEvent } from '../../exchange/events/exchange-initial
 import { MarketService } from '../market.service';
 
 @Injectable()
-export class MarketExchangeInitializedEventHandler {
-  private logger = new Logger(MarketExchangeInitializedEventHandler.name);
+export class MarketModuleExchangeInitializedEventHandler {
+  private logger = new Logger(MarketModuleExchangeInitializedEventHandler.name);
 
   constructor(private marketService: MarketService) {}
 
