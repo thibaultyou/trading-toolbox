@@ -13,11 +13,11 @@ export class CoreModuleExchangeTerminatedEventHandler {
 
   @OnEvent(Events.EXCHANGE_TERMINATED)
   handle(event: ExchangeTerminatedEvent) {
-    const actionContext = `Core Module - Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
+    const actionContext = `Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
 
     try {
       this.websocketManagerService.stopTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Removed account from websocket manager`);
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(
         `${actionContext} - Failed to remove account from websocket manager - Error: ${error.message}`,

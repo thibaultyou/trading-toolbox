@@ -13,14 +13,11 @@ export class TickerModuleOrdersUpdatedEventHandler {
 
   @OnEvent(Events.ORDERS_UPDATED)
   handle(event: OrdersUpdatedEvent) {
-    const actionContext = `Ticker Module - Event: ORDERS_UPDATED - AccountID: ${event.accountId}`;
+    const actionContext = `Event: ORDERS_UPDATED - AccountID: ${event.accountId}`;
 
     try {
-      this.tickerService.updateTickerOrdersWatchList(
-        event.accountId,
-        event.orders.map((o) => o.info.symbol)
-      );
-      this.logger.log(`${actionContext} - Updated ticker watch list`);
+      this.tickerService.updateTickerOrdersWatchList(event.accountId, new Set(event.orders.map((o) => o.info.symbol)));
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(`${actionContext} - Failed to update ticker watch list - Error: ${error.message}`, error.stack);
     }

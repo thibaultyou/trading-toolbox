@@ -13,11 +13,11 @@ export class TickerModuleExchangeTerminatedEventHandler {
 
   @OnEvent(Events.EXCHANGE_TERMINATED)
   handle(event: ExchangeTerminatedEvent) {
-    const actionContext = `Ticker Module - Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
+    const actionContext = `Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
 
     try {
       this.tickerService.stopTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Removed account from ticker watch list`);
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(
         `${actionContext} - Failed to remove account from ticker watch list - Error: ${error.message}`,

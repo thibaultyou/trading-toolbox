@@ -13,11 +13,11 @@ export class OrderModuleExchangeInitializedEventHandler {
 
   @OnEvent(Events.EXCHANGE_INITIALIZED)
   async handle(event: ExchangeInitializedEvent) {
-    const actionContext = `Order Module - Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
+    const actionContext = `Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
 
     try {
       await this.orderService.startTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Added account to order watch list`);
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(
         `${actionContext} - Failed to add account to order watch list - Error: ${error.message}`,

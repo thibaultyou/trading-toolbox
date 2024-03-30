@@ -13,11 +13,11 @@ export class OrderModuleExchangeTerminatedEventHandler {
 
   @OnEvent(Events.EXCHANGE_TERMINATED)
   handle(event: ExchangeTerminatedEvent) {
-    const actionContext = `Order Module - Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
+    const actionContext = `Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
 
     try {
       this.orderService.stopTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Removed account from order watch list`);
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(
         `${actionContext} - Failed to remove account from order watch list - Error: ${error.message}`,

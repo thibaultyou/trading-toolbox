@@ -13,11 +13,11 @@ export class CoreModuleExchangeInitializedEventHandler {
 
   @OnEvent(Events.EXCHANGE_INITIALIZED)
   async handle(event: ExchangeInitializedEvent) {
-    const actionContext = `Core Module - Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
+    const actionContext = `Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
 
     try {
       await this.websocketManagerService.startTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Added account to websocket manager`);
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(
         `${actionContext} - Failed to add account to websocket manager - Error: ${error.message}`,

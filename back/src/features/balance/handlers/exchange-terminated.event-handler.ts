@@ -13,11 +13,11 @@ export class BalanceModuleExchangeTerminatedEventHandler {
 
   @OnEvent(Events.EXCHANGE_TERMINATED)
   handle(event: ExchangeTerminatedEvent) {
-    const actionContext = `Balance Module - Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
+    const actionContext = `Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
 
     try {
       this.balanceService.stopTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Removed account from balance watch list`);
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(
         `${actionContext} - Failed to remove account from balance watch list - Error: ${error.message}`,

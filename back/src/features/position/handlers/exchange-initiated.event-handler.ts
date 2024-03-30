@@ -13,11 +13,11 @@ export class PositionModuleExchangeInitializedEventHandler {
 
   @OnEvent(Events.EXCHANGE_INITIALIZED)
   async handle(event: ExchangeInitializedEvent) {
-    const actionContext = `Position Module - Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
+    const actionContext = `Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
 
     try {
       await this.positionService.startTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Added account to position watch list`);
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(
         `${actionContext} - Failed to add account to position watch list - Error: ${error.message}`,

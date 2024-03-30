@@ -28,26 +28,26 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
   async startTrackingAccount(accountId: string): Promise<void> {
     if (!this.orders.has(accountId)) {
-      this.logger.log(`Order - Tracking Initiated - AccountID: ${accountId}`);
+      this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
       await this.refreshOne(accountId);
     } else {
-      this.logger.warn(`Order - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
+      this.logger.warn(`Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
     }
   }
 
   stopTrackingAccount(accountId: string) {
     if (this.orders.delete(accountId)) {
-      this.logger.log(`Order - Tracking Stopped - AccountID: ${accountId}`);
+      this.logger.log(`Tracking Stopped - AccountID: ${accountId}`);
     } else {
-      this.logger.warn(`Order - Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
+      this.logger.warn(`Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
     }
   }
 
   getAccountOrders(accountId: string): Order[] {
-    this.logger.log(`Order - Fetch Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Fetch Initiated - AccountID: ${accountId}`);
 
     if (!this.orders.has(accountId)) {
-      this.logger.error(`Order - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.error(`Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
 
       throw new AccountNotFoundException(accountId);
     }
@@ -56,7 +56,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
   }
 
   async refreshOne(accountId: string): Promise<Order[]> {
-    this.logger.debug(`Order - Refresh Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Refresh Initiated - AccountID: ${accountId}`);
 
     try {
       const newOrders = await this.exchangeService.getOpenOrders(accountId);
@@ -66,21 +66,21 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       if (haveOrdersChanged) {
         this.orders.set(accountId, newOrders);
         this.eventEmitter.emit(Events.ORDERS_UPDATED, new OrdersUpdatedEvent(accountId, newOrders));
-        // this.logger.log(`Order - Update Success - AccountID: ${accountId}, Count: ${newOrders.length}, Orders: ${JSON.stringify(newOrders)}`);
-        this.logger.log(`Order - Update Success - AccountID: ${accountId}, Count: ${newOrders.length}`);
+        // this.logger.log(`Update Success - AccountID: ${accountId}, Count: ${newOrders.length}, Orders: ${JSON.stringify(newOrders)}`);
+        this.logger.log(`Updated - AccountID: ${accountId}, Count: ${newOrders.length}`);
       } else {
-        this.logger.debug(`Order - No Update Required - AccountID: ${accountId}`);
+        this.logger.log(`No Update Required - AccountID: ${accountId}`);
       }
 
       return newOrders;
     } catch (error) {
-      this.logger.error(`Order - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      this.logger.error(`Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw error;
     }
   }
 
   async refreshAll(): Promise<void> {
-    this.logger.debug(`Order - Refresh All Initiated`);
+    this.logger.log(`Refresh All Initiated`);
     const accountIds = Array.from(this.orders.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
 
@@ -95,7 +95,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     if (errors.length > 0) {
       const aggregatedError = new OrdersUpdateAggregatedException(errors);
 
-      this.logger.error(`Order - Multiple Updates Failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
+      this.logger.error(`Multiple Updates Failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
       // Avoid interrupting the loop by not throwing an exception
     }
   }

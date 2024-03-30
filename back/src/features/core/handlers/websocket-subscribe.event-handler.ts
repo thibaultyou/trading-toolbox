@@ -11,13 +11,13 @@ export class CoreModuleWebSocketSubscribeEventEventHandler {
 
   constructor(private websocketManagerService: WebsocketManagerService) {}
 
-  @OnEvent(Events.WEBSOCKET_SUBSCRIBE)
+  @OnEvent(Events.SUBSCRIBE_WEBSOCKET)
   async handle(event: WebSocketSubscribeEvent) {
-    const actionContext = `Core Module - Event: WEBSOCKET_SUBSCRIBE - AccountID: ${event.accountId}`;
+    const actionContext = `Event: SUBSCRIBE_WEBSOCKET - AccountID: ${event.accountId}`;
 
     try {
       await this.websocketManagerService.subscribe(event.accountId, event.topics);
-      this.logger.log(`${actionContext} - Added topic to websocket manager`);
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(
         `${actionContext} - Failed to add topic to websocket manager - Error: ${error.message}`,

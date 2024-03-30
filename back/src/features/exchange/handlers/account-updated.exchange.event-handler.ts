@@ -13,12 +13,12 @@ export class ExchangeAccountUpdatedEventHandler {
 
   @OnEvent(Events.ACCOUNT_UPDATED)
   async handle(event: AccountUpdatedEvent) {
-    const actionContext = `Exchange Module - Event: ACCOUNT_UPDATED - AccountID: ${event.account.id}`;
+    const actionContext = `Event: ACCOUNT_UPDATED - AccountID: ${event.account.id}`;
 
     try {
       await this.exchangeService.cleanResources(event.account.id);
       await this.exchangeService.initializeExchange(event.account);
-      this.logger.log(`${actionContext} - Exchange updated`);
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(`${actionContext} - Failed to updated exchange - Error: ${error.message}`, error.stack);
     }

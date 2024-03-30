@@ -28,18 +28,18 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
 
   async startTrackingAccount(accountId: string): Promise<void> {
     if (!this.markets.has(accountId)) {
-      this.logger.log(`Market - Tracking Initiated - AccountID: ${accountId}`);
+      this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
       await this.refreshOne(accountId);
     } else {
-      this.logger.warn(`Market - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
+      this.logger.warn(`Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
     }
   }
 
   stopTrackingAccount(accountId: string) {
     if (this.markets.delete(accountId)) {
-      this.logger.log(`Market - Tracking Stopped - AccountID: ${accountId}`);
+      this.logger.log(`Tracking Stopped - AccountID: ${accountId}`);
     } else {
-      this.logger.warn(`Market - Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
+      this.logger.warn(`Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
     }
   }
 
@@ -48,7 +48,7 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
     this.logger.log(`Markets - Fetch Initiated - AccountID: ${accountId}`);
 
     if (!this.markets.has(accountId)) {
-      this.logger.error(`Market - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.error(`Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
       throw new AccountNotFoundException(accountId);
     }
 
@@ -84,15 +84,13 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
   // TODO add other market types ? future, option, index ...
 
   findAccountMarketById(accountId: string, marketId: string): Market {
-    this.logger.log(`Market - Fetch Initiated - AccountID: ${accountId}, MarketID: ${marketId}`);
+    this.logger.log(`Fetch Initiated - AccountID: ${accountId}, MarketID: ${marketId}`);
     const markets = this.getAccountMarkets(accountId);
 
     const specificMarket = markets.find((market) => market.id === marketId);
 
     if (!specificMarket) {
-      this.logger.error(
-        `Market - Fetch Failed - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Market not found`
-      );
+      this.logger.error(`Fetch Failed - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Market not found`);
       throw new MarketNotFoundException(accountId, marketId);
     }
 
@@ -100,7 +98,7 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
   }
 
   async refreshOne(accountId: string): Promise<Market[]> {
-    this.logger.debug(`Market - Refresh Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Refresh Initiated - AccountID: ${accountId}`);
 
     try {
       const markets = await this.exchangeService.getMarkets(accountId);
@@ -110,17 +108,17 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
         markets.sort((a, b) => a.id.localeCompare(b.id))
       );
       this.eventEmitter.emit(Events.MARKETS_UPDATED, new MarketsUpdatedEvent(accountId, markets));
-      this.logger.log(`Market - Update Success - AccountID: ${accountId}, Count: ${markets.length}`);
+      this.logger.log(`Updated - AccountID: ${accountId}, Count: ${markets.length}`);
 
       return markets;
     } catch (error) {
-      this.logger.error(`Market - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      this.logger.error(`Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw error;
     }
   }
 
   async refreshAll(): Promise<void> {
-    this.logger.debug(`Markets - Refresh Initiated`);
+    this.logger.log(`Markets - Refresh Initiated`);
     const accountIds = Array.from(this.markets.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
 

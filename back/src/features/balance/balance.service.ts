@@ -32,26 +32,26 @@ export class BalanceService implements OnModuleInit, IAccountTracker, IDataRefre
 
   async startTrackingAccount(accountId: string): Promise<void> {
     if (!this.balances.has(accountId)) {
-      this.logger.log(`Balance - Tracking Initiated - AccountID: ${accountId}`);
+      this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
       await this.refreshOne(accountId);
     } else {
-      this.logger.warn(`Balance - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
+      this.logger.warn(`Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
     }
   }
 
   stopTrackingAccount(accountId: string) {
     if (this.balances.delete(accountId)) {
-      this.logger.log(`Balance - Tracking Stopped - AccountID: ${accountId}`);
+      this.logger.log(`Tracking Stopped - AccountID: ${accountId}`);
     } else {
-      this.logger.warn(`Balance - Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
+      this.logger.warn(`Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
     }
   }
 
   getAccountBalances(accountId: string): Balances {
-    this.logger.log(`Balance - Fetch Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Fetch Initiated - AccountID: ${accountId}`);
 
     if (!this.balances.has(accountId)) {
-      this.logger.error(`Balance - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.error(`Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
 
       throw new AccountNotFoundException(accountId);
     }
@@ -78,10 +78,8 @@ export class BalanceService implements OnModuleInit, IAccountTracker, IDataRefre
     };
   }
 
-  // TODO add updates from websocket ?
-
   async refreshOne(accountId: string): Promise<Balances> {
-    this.logger.debug(`Balance - Refresh Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Refresh Initiated - AccountID: ${accountId}`);
 
     try {
       const newBalances = await this.exchangeService.getBalances(accountId);
@@ -93,21 +91,21 @@ export class BalanceService implements OnModuleInit, IAccountTracker, IDataRefre
         this.balanceGateway.sendBalancesUpdate(accountId, newBalances);
         this.eventEmitter.emit(Events.BALANCES_UPDATED, new BalancesUpdatedEvent(accountId, newBalances));
         this.logger.log(
-          `Balance - Update Success - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(newBalances, this.logger).toFixed(2)} $`
+          `Updated - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(newBalances, this.logger).toFixed(2)} $`
         );
       } else {
-        this.logger.debug(`Balance - No Update Required - AccountID: ${accountId}`);
+        this.logger.log(`Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
       }
 
       return newBalances;
     } catch (error) {
-      this.logger.error(`Balance - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      this.logger.error(`Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw error;
     }
   }
 
   async refreshAll(): Promise<void> {
-    this.logger.debug(`Balance - Refresh All Initiated`);
+    this.logger.log(`Refresh All Initiated`);
     const accountIds = Array.from(this.balances.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
 
@@ -122,10 +120,7 @@ export class BalanceService implements OnModuleInit, IAccountTracker, IDataRefre
     if (errors.length > 0) {
       const aggregatedError = new BalancesUpdateAggregatedException(errors);
 
-      this.logger.error(
-        `Balance - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
-        aggregatedError.stack
-      );
+      this.logger.error(`Multiple Updates Failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
       // Avoid interrupting the loop by not throwing an exception
     }
   }

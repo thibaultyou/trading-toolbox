@@ -13,11 +13,11 @@ export class ExchangeAccountCreatedEventHandler {
 
   @OnEvent(Events.ACCOUNT_CREATED)
   async handle(event: AccountCreatedEvent) {
-    const actionContext = `Exchange Module - Event: ACCOUNT_CREATED - AccountID: ${event.account.id}`;
+    const actionContext = `Event: ACCOUNT_CREATED - AccountID: ${event.account.id}`;
 
     try {
       await this.exchangeService.initializeExchange(event.account);
-      this.logger.log(`${actionContext} - Exchange initialized`);
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(`${actionContext} - Failed to initialize exchange - Error: ${error.message}`, error.stack);
     }

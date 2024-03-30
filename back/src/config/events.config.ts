@@ -29,9 +29,10 @@ export const Events = {
 
   // Ticker module
   // TICKERS_UPDATED: 'tickers.updated',
+  TICKER_PRICE_UPDATED: 'ticker.price.updated',
 
   // Core module
-  TICKER_UPDATED: 'ticker.updated',
-  WEBSOCKET_SUBSCRIBE: 'websocket.subscribe',
-  WEBSOCKET_UNSUBSCRIBE: 'websocket.unsubscribe'
+  TICKER_DATA_UPDATED: 'ticker.data.updated',
+  SUBSCRIBE_WEBSOCKET: 'websocket.subscribe',
+  UNSUBSCRIBE_WEBSOCKET: 'websocket.unsubscribe'
 };

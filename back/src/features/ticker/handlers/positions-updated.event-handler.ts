@@ -13,16 +13,19 @@ export class TickerModulePositionsUpdatedEventHandler {
 
   @OnEvent(Events.POSITIONS_UPDATED)
   handle(event: PositionsUpdatedEvent) {
-    const actionContext = `Ticker Module - Event: POSITIONS_UPDATED - AccountID: ${event.accountId}`;
+    const actionContext = `Event: POSITIONS_UPDATED - AccountID: ${event.accountId}`;
 
     try {
       this.tickerService.updateTickerPositionsWatchList(
         event.accountId,
-        event.positions.map((p) => p.info.symbol)
+        new Set(event.positions.map((p) => p.info.symbol))
       );
-      this.logger.log(`${actionContext} - Updated ticker watch list`);
+      this.logger.log(actionContext);
     } catch (error) {
-      this.logger.error(`${actionContext} - Failed to update ticker watch list - Error: ${error.message}`, error.stack);
+      this.logger.error(
+        `${actionContext} - Failed to refresh ticker watch list - Error: ${error.message}`,
+        error.stack
+      );
     }
   }
 }

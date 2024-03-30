@@ -30,26 +30,26 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
 
   async startTrackingAccount(accountId: string): Promise<void> {
     if (!this.positions.has(accountId)) {
-      this.logger.log(`Position - Tracking Initiated - AccountID: ${accountId}`);
+      this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
       await this.refreshOne(accountId);
     } else {
-      this.logger.warn(`Position - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
+      this.logger.warn(`Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
     }
   }
 
   stopTrackingAccount(accountId: string) {
     if (this.positions.delete(accountId)) {
-      this.logger.log(`Position - Tracking Stopped - AccountID: ${accountId}`);
+      this.logger.log(`Tracking Stopped - AccountID: ${accountId}`);
     } else {
-      this.logger.warn(`Position - Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
+      this.logger.warn(`Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
     }
   }
 
   getAccountPositions(accountId: string): Position[] {
-    this.logger.log(`Position - Fetch Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Fetch Initiated - AccountID: ${accountId}`);
 
     if (!this.positions.has(accountId)) {
-      this.logger.error(`Position - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.error(`Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
 
       throw new AccountNotFoundException(accountId);
     }
@@ -58,13 +58,13 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
   }
 
   async closePositionById(accountId: string, positionId: string): Promise<Order> {
-    this.logger.log(`Position - Close Initiated - AccountID: ${accountId}, PositionID: ${positionId}`);
+    this.logger.log(`Close Initiated - AccountID: ${accountId}, PositionID: ${positionId}`);
 
     const position = this.getAccountPositions(accountId).find((p) => p.id === positionId);
 
     if (!position) {
       this.logger.error(
-        `Position - Close Failed - AccountID: ${accountId}, PositionID: ${positionId}, Reason: Position not found`
+        `Close Failed - AccountID: ${accountId}, PositionID: ${positionId}, Reason: Position not found`
       );
       throw new PositionNotFoundException(accountId, positionId);
     }
@@ -74,37 +74,35 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
 
       this.eventEmitter.emit(Events.POSITION_CLOSED, new PositionsClosedEvent(accountId, order));
       this.logger.log(
-        `Position - Close Succeeded - AccountID: ${accountId}, PositionID: ${positionId}, Order: ${JSON.stringify(order)}`
+        `Close Succeeded - AccountID: ${accountId}, PositionID: ${positionId}, Order: ${JSON.stringify(order)}`
       );
 
       return order;
     } catch (error) {
-      this.logger.error(
-        `Position - Close Failed - AccountID: ${accountId}, PositionID: ${positionId}, Error: ${error.message}`
-      );
+      this.logger.error(`Close Failed - AccountID: ${accountId}, PositionID: ${positionId}, Error: ${error.message}`);
       throw new ClosePositionException(accountId, positionId, error.message);
     }
   }
 
   async refreshOne(accountId: string): Promise<Position[]> {
-    this.logger.debug(`Position - Refresh Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Refresh Initiated - AccountID: ${accountId}`);
 
     try {
       const positions = await this.exchangeService.getOpenPositions(accountId);
 
       this.positions.set(accountId, positions);
       this.eventEmitter.emit(Events.POSITIONS_UPDATED, new PositionsUpdatedEvent(accountId, positions));
-      this.logger.log(`Position - Update Success - AccountID: ${accountId}, Count: ${positions.length}`);
+      this.logger.log(`Updated - AccountID: ${accountId}, Count: ${positions.length}`);
 
       return positions;
     } catch (error) {
-      this.logger.error(`Position - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      this.logger.error(`Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw error;
     }
   }
 
   async refreshAll(): Promise<void> {
-    this.logger.debug(`Position - Refresh All Initiated`);
+    this.logger.log(`Refresh All Initiated`);
     const accountIds = Array.from(this.positions.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
 
@@ -119,10 +117,7 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
     if (errors.length > 0) {
       const aggregatedError = new PositionsUpdateAggregatedException(errors);
 
-      this.logger.error(
-        `Position - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
-        aggregatedError.stack
-      );
+      this.logger.error(`Multiple Updates Failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
       // Avoid interrupting the loop by not throwing an exception
     }
   }

@@ -2,7 +2,6 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../../common/base/base.controller';
-import { GetTickerPriceException, TickerPriceNotFoundException } from './exceptions/ticker.exceptions';
 import { TickerService } from './ticker.service';
 
 @ApiTags('Tickers')
@@ -14,18 +13,8 @@ export class TickerController extends BaseController {
 
   @Get('/:accountId/:marketId/price')
   @ApiOperation({ summary: 'Get ticker price' })
-  async getTickerPrice(@Param('accountId') accountId: string, @Param('marketId') marketId: string): Promise<number> {
-    try {
-      const price = this.tickerService.getTickerPrice(accountId, marketId);
-
-      if (price === undefined) {
-        throw new TickerPriceNotFoundException(accountId, marketId);
-      }
-
-      return price;
-    } catch (error) {
-      throw new GetTickerPriceException(accountId, marketId, error);
-    }
+  getTickerPrice(@Param('accountId') accountId: string, @Param('marketId') marketId: string): number {
+    return this.tickerService.getTickerPrice(accountId, marketId);
   }
 
   // @Get('/:base/history')

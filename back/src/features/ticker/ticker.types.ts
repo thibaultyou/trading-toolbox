@@ -5,3 +5,15 @@ export interface Candle {
   low: number;
   close: number;
 }
+
+export interface TickerData {
+  bid1Price?: string;
+  ask1Price?: string;
+  // bid1Volume?: string;
+  // ask1Volume?: string;
+}
+
+export enum WatchListType {
+  Positions = 'positions',
+  Orders = 'orders'
+}

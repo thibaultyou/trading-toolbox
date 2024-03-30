@@ -13,11 +13,11 @@ export class MarketModuleExchangeInitializedEventHandler {
 
   @OnEvent(Events.EXCHANGE_INITIALIZED)
   async handle(event: ExchangeInitializedEvent) {
-    const actionContext = `Market Module - Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
+    const actionContext = `Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
 
     try {
       await this.marketService.startTrackingAccount(event.accountId);
-      this.logger.log(`${actionContext} - Added account to market watch list`);
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(
         `${actionContext} - Failed to add account to market watch list - Error: ${error.message}`,

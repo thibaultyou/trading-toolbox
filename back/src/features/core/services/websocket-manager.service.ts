@@ -6,7 +6,7 @@ import { IAccountTracker } from '../../../common/interfaces/account-tracker.inte
 import { Events } from '../../../config';
 import { AccountService } from '../../account/account.service';
 import { Account } from '../../account/entities/account.entity';
-import { TickerUpdatedEvent } from '../../ticker/events/ticker-updated.event';
+import { TickerDataUpdatedEvent } from '../../ticker/events/ticker-data-updated.event';
 
 @Injectable()
 export class WebsocketManagerService implements IAccountTracker {
@@ -21,7 +21,7 @@ export class WebsocketManagerService implements IAccountTracker {
 
   async startTrackingAccount(accountId: string): Promise<void> {
     if (this.wsConnections.has(accountId)) {
-      this.logger.warn(`WebSocket - Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
+      this.logger.warn(`Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
 
       return;
     }
@@ -31,7 +31,7 @@ export class WebsocketManagerService implements IAccountTracker {
     try {
       account = await this.accountService.getAccountById(accountId);
     } catch (error) {
-      this.logger.error(`WebSocket - Account Fetch Failed - AccountID: ${accountId}, Error: ${error.message}`);
+      this.logger.error(`Account Fetch Failed - AccountID: ${accountId}, Error: ${error.message}`);
       // TODO custom exception
       throw new Error(`TODO`);
     }
@@ -49,9 +49,9 @@ export class WebsocketManagerService implements IAccountTracker {
       ws.on('update', (message: any) => this.handleWsUpdate(accountId, message));
       this.wsConnections.set(accountId, ws);
       this.subscriptions.set(accountId, new Set());
-      this.logger.log(`WebSocket - Tracking Initiated - AccountID: ${accountId}`);
+      this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
     } catch (error) {
-      this.logger.error(`WebSocket - Tracking Failed - AccountID: ${accountId}, Error: ${error.message}`);
+      this.logger.error(`Tracking Failed - AccountID: ${accountId}, Error: ${error.message}`);
       // TODO custom exception
       throw new Error(`TODO`);
     }
@@ -60,15 +60,15 @@ export class WebsocketManagerService implements IAccountTracker {
   stopTrackingAccount(accountId: string) {
     if (this.wsConnections.has(accountId)) {
       this.cleanResources(accountId);
-      this.logger.log(`WebSocket - Tracking Stopped and Resources Cleaned - AccountID: ${accountId}`);
+      this.logger.log(`Tracking Stopped and Resources Cleaned - AccountID: ${accountId}`);
     } else {
-      this.logger.warn(`WebSocket - Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
+      this.logger.warn(`Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
     }
   }
 
   async subscribe(accountId: string, wsTopics: string[] | string, isPrivateTopic: boolean = false) {
     this.logger.log(
-      `WebSocket - Subscription Initiated - AccountID: ${accountId}, Topics: ${Array.isArray(wsTopics) ? wsTopics.join(', ') : wsTopics}`
+      `Subscription Initiated - AccountID: ${accountId}, Topics: ${Array.isArray(wsTopics) ? wsTopics.join(', ') : wsTopics}`
     );
     let ws = this.wsConnections.get(accountId);
 
@@ -78,9 +78,7 @@ export class WebsocketManagerService implements IAccountTracker {
     }
 
     if (!ws) {
-      this.logger.error(
-        `WebSocket - Subscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`
-      );
+      this.logger.error(`Subscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`);
 
       return;
     }
@@ -96,11 +94,9 @@ export class WebsocketManagerService implements IAccountTracker {
           subscriptions.add(topic);
         });
         this.subscriptions.set(accountId, subscriptions);
-        this.logger.log(
-          `WebSocket - Subscribed - AccountID: ${accountId}, Topics: ${topicsToSubscribe.sort().join(', ')}`
-        );
+        this.logger.log(`Subscribed - AccountID: ${accountId}, Topics: ${topicsToSubscribe.sort().join(', ')}`);
       } catch (error) {
-        this.logger.error(`WebSocket - Subscription Failed - AccountID: ${accountId}, Error: ${error}`);
+        this.logger.error(`Subscription Failed - AccountID: ${accountId}, Error: ${error}`);
       }
     }
   }
@@ -109,9 +105,7 @@ export class WebsocketManagerService implements IAccountTracker {
     const ws = this.wsConnections.get(accountId);
 
     if (!ws) {
-      this.logger.error(
-        `WebSocket - Unsubscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`
-      );
+      this.logger.error(`Unsubscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`);
 
       return;
     }
@@ -126,12 +120,12 @@ export class WebsocketManagerService implements IAccountTracker {
           subscriptions.delete(topic);
         } catch (error) {
           this.logger.error(
-            `WebSocket - Unsubscription Failed - AccountID: ${accountId}, Topic: ${topic}, Error: ${error.message}`
+            `Unsubscription Failed - AccountID: ${accountId}, Topic: ${topic}, Error: ${error.message}`
           );
         }
       }
     });
-    this.logger.log(`WebSocket - Unsubscribed - AccountID: ${accountId}, Topics: ${topics.join(', ')}`);
+    this.logger.log(`Unsubscribed - AccountID: ${accountId}, Topics: ${topics.join(', ')}`);
   }
 
   private handleWsUpdate(accountId: string, message: any) {
@@ -152,7 +146,7 @@ export class WebsocketManagerService implements IAccountTracker {
           return;
         }
       }
-      this.logger.warn(`WebSocket - Unrecognized Topic - AccountID: ${accountId}, Topic: ${message.topic}`);
+      this.logger.warn(`Unrecognized Topic - AccountID: ${accountId}, Topic: ${message.topic}`);
       // FIXME update this
       // this.logger.warn(message.data)
       // this.eventEmitter.emit(`${message.topic}.${accountId}`, message.data);
@@ -162,20 +156,8 @@ export class WebsocketManagerService implements IAccountTracker {
 
   private handleTickerUpdate(accountId: string, msg: any) {
     const marketId = msg.topic.substring('tickers.'.length);
-    const { bid1Price, ask1Price } = msg.data;
 
-    if (bid1Price && ask1Price) {
-      const calculatedPrice = (parseFloat(bid1Price) + parseFloat(ask1Price)) / 2;
-
-      this.eventEmitter.emit(Events.TICKER_UPDATED, new TickerUpdatedEvent(accountId, marketId, calculatedPrice));
-      this.logger.debug(
-        `WebSocket - Ticker Update - AccountID: ${accountId}, MarketID: ${marketId}, Price: ${calculatedPrice.toFixed(2)}`
-      );
-    } else {
-      this.logger.debug(
-        `WebSocket - Ticker Update Skipped - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Null Values`
-      );
-    }
+    this.eventEmitter.emit(Events.TICKER_DATA_UPDATED, new TickerDataUpdatedEvent(accountId, marketId, msg.data));
   }
 
   private cleanResources(accountId: string) {

@@ -13,11 +13,11 @@ export class ExchangeAccountDeletedEventHandler {
 
   @OnEvent(Events.ACCOUNT_DELETED)
   async handle(event: AccountDeletedEvent) {
-    const actionContext = `Exchange Module - Event: ACCOUNT_DELETED - AccountID: ${event.account.id}`;
+    const actionContext = `Event: ACCOUNT_DELETED - AccountID: ${event.account.id}`;
 
     try {
       await this.exchangeService.cleanResources(event.account.id);
-      this.logger.log(`${actionContext} - Exchange cleaned`);
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(`${actionContext} - Failed to clean exchange resources - Error: ${error.message}`, error.stack);
     }

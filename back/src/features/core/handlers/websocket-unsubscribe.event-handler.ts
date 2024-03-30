@@ -11,13 +11,13 @@ export class CoreModuleWebSocketUnsubscribeEventEventHandler {
 
   constructor(private websocketManagerService: WebsocketManagerService) {}
 
-  @OnEvent(Events.WEBSOCKET_UNSUBSCRIBE)
+  @OnEvent(Events.UNSUBSCRIBE_WEBSOCKET)
   handle(event: WebSocketUnsubscribeEvent) {
-    const actionContext = `Core Module - Event: WEBSOCKET_UNSUBSCRIBE - AccountID: ${event.accountId}`;
+    const actionContext = `Event: UNSUBSCRIBE_WEBSOCKET - AccountID: ${event.accountId}`;
 
     try {
       this.websocketManagerService.unsubscribe(event.accountId, event.topics);
-      this.logger.log(`${actionContext} - Removed topic from websocket manager`);
+      this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(
         `${actionContext} - Failed to remove topic from websocket manager - Error: ${error.message}`,
