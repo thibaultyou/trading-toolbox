@@ -152,7 +152,7 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
       this.trackedTickers.set(accountId, newUniqueTickers);
       this.logger.log(logMessage);
     } else {
-      this.logger.log(`Watch List Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
+      this.logger.debug(`Watch List Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
     }
 
     return newUniqueTickers;

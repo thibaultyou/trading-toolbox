@@ -14,6 +14,6 @@ export interface TickerData {
 }
 
 export enum WatchListType {
-  Positions = 'positions',
-  Orders = 'orders'
+  Positions = 'Positions',
+  Orders = 'Orders'
 }

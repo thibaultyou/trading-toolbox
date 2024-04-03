@@ -11,6 +11,8 @@ import { AccountCreatedEvent } from './events/account-created.event';
 import { AccountDeletedEvent } from './events/account-deleted.event';
 import { AccountUpdatedEvent } from './events/account-updated.event';
 import { AccountAlreadyExistsException, AccountNotFoundException } from './exceptions/account.exceptions';
+import { AccountCreateRequestDto } from './dto/account-create.request.dto';
+import { AccountUpdateRequestDto } from './dto/account-update.request.dto';
 
 @Injectable()
 export class AccountService {
@@ -42,26 +44,27 @@ export class AccountService {
     return account;
   }
 
-  async createAccount(account: Account): Promise<Account> {
-    this.logger.log(`Create Initiated - Name: ${account.name}`);
+  async createAccount(dto: AccountCreateRequestDto): Promise<Account> {
+    this.logger.log(`Create Initiated - Name: ${dto.name}`);
     const existingAccount = await this.accountRepository.findOne({
-      where: [{ name: account.name }, { key: account.key }]
+      where: [{ name: dto.name }, { key: dto.key }]
     });
 
     if (existingAccount) {
-      if (existingAccount.name === account.name) {
-        this.logger.error(`Create Failed - Name: ${account.name}, Reason: Account with this name already exists`);
+      if (existingAccount.name === dto.name) {
+        this.logger.error(`Create Failed - Name: ${dto.name}, Reason: Account with this name already exists`);
       }
 
-      if (existingAccount.key === account.key) {
+      if (existingAccount.key === dto.key) {
         this.logger.error(
-          `Create Failed - Key: ${maskString(account.key)}, Reason: Account with this key already exists`
+          `Create Failed - Key: ${maskString(dto.key)}, Reason: Account with this key already exists`
         );
       }
 
-      throw new AccountAlreadyExistsException(account.name, account.key);
+      throw new AccountAlreadyExistsException(dto.name, dto.key);
     }
 
+    const account = Account.fromDto(dto);
     try {
       await this.exchangeFactory.createExchange(account);
     } catch (error) {
@@ -77,7 +80,7 @@ export class AccountService {
     return savedAccount;
   }
 
-  async updateAccount(id: string, updateFields: Partial<Account>): Promise<Account> {
+  async updateAccount(id: string, dto: AccountUpdateRequestDto): Promise<Account> {
     this.logger.log(`Update Initiated - AccountID: ${id}`);
     const account = await this.getAccountById(id);
 
@@ -86,7 +89,7 @@ export class AccountService {
       throw new AccountNotFoundException(id);
     }
 
-    Object.assign(account, updateFields);
+    Object.assign(account, dto);
 
     const savedAccount = await this.accountRepository.save(account);
 

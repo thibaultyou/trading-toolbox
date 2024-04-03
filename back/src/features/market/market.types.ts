@@ -1,1 +1,9 @@
-export type MarketType = 'spot' | 'margin' | 'swap' | 'future' | 'option' | 'delivery' | 'index';
+export enum MarketType {
+  Spot = 'spot',
+  Margin = 'margin',
+  Swap = 'swap',
+  Future = 'future',
+  Option = 'option',
+  Delivery = 'delivery',
+  Index = 'index'
+}

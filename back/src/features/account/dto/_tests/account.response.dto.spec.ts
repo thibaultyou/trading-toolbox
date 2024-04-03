@@ -1,7 +1,7 @@
 import { maskString } from '../../../../utils/string.util';
 import { ExchangeType } from '../../../exchange/exchange.types';
 import { Account } from '../../entities/account.entity';
-import { AccountResponseDto } from '../account.response.dto';
+import { AccountResponseDto } from '../account-read.response.dto';
 
 describe('AccountResponseDto', () => {
   it('should correctly initialize from an Account entity', () => {

@@ -1,8 +1,8 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Market } from 'ccxt';
+import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../../common/base/base.controller';
+import { MarketReadResponseDto } from './dto/market-read.response.dto';
 import { MarketService } from './market.service';
 
 @ApiTags('Markets')
@@ -12,29 +12,18 @@ export class MarketController extends BaseController {
     super('Markets');
   }
 
-  // @Get('/:accountId/all')
-  // @ApiOperation({ summary: 'Fetch all market IDs for a specific account' })
-  // findAccountMarketIds(@Param('accountId') accountId: string): string[] {
-  //   return this.marketService.findAccountMarketIds(accountId);
-  // }
-
-  // @Get('/:accountId/spot')
-  // @ApiOperation({
-  //   summary: 'Fetch all spot market IDs for a specific account, optionally filtered by quote currency'
-  // })
-  // @ApiQuery({ name: 'quoteCurrency', required: false, example: 'USDT' })
-  // findAccountSpotMarketIds(
-  //   @Param('accountId') accountId: string,
-  //   @Query('quoteCurrency') quoteCurrency: string = 'USDT'
-  // ): string[] {
-  //   return this.marketService.findAccountSpotMarketIds(accountId, quoteCurrency);
-  // }
-
-  @Get('/:accountId/contract')
+  @Get('/:accountId/contract/all')
   @ApiOperation({
-    summary: 'Fetch all contract market IDs for a specific account, optionally filtered by quote currency'
+    summary: 'Fetch all contract market IDs'
   })
-  @ApiQuery({ name: 'quoteCurrency', required: false, example: 'USDT' })
+  @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
+  @ApiQuery({
+    name: 'quoteCurrency',
+    required: false,
+    example: 'USDT',
+    description:
+      "Filters contract markets by the quote currency (e.g., 'USDT', 'BTC'). If unspecified, defaults to 'USDT'."
+  })
   findAccountContractMarketIds(
     @Param('accountId') accountId: string,
     @Query('quoteCurrency') quoteCurrency: string = 'USDT'
@@ -42,11 +31,21 @@ export class MarketController extends BaseController {
     return this.marketService.findAccountContractMarketIds(accountId, quoteCurrency);
   }
 
-  @Get('/:accountId/market/:marketId')
+  @Get('/:accountId/contract/:marketId')
   @ApiOperation({
-    summary: 'Fetch a specific market by market ID for an account'
+    summary: 'Fetch a single contract market'
   })
-  findAccountMarketById(@Param('accountId') accountId: string, @Param('marketId') marketId: string): Market {
-    return this.marketService.findAccountMarketById(accountId, marketId);
+  @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
+  @ApiParam({
+    name: 'marketId',
+    required: true,
+    description: 'The market ID of the contract market',
+    example: 'BTCUSDT'
+  })
+  findAccountMarketById(
+    @Param('accountId') accountId: string,
+    @Param('marketId') marketId: string
+  ): MarketReadResponseDto {
+    return new MarketReadResponseDto(this.marketService.findAccountContractMarketById(accountId, marketId));
   }
 }

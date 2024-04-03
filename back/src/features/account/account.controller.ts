@@ -1,10 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../../common/base/base.controller';
 import { AccountService } from './account.service';
-import { AccountResponseDto } from './dto/account.response.dto';
 import { AccountCreateRequestDto } from './dto/account-create.request.dto';
+import { AccountReadResponseDto } from './dto/account-read.response.dto';
 import { AccountUpdateRequestDto } from './dto/account-update.request.dto';
 import { Account } from './entities/account.entity';
 import { AccountNotFoundException } from './exceptions/account.exceptions';
@@ -18,53 +18,68 @@ export class AccountController extends BaseController {
 
   @Get()
   @ApiOperation({ summary: 'Fetch all accounts' })
-  async getAllAccounts(): Promise<AccountResponseDto[]> {
+  async getAllAccounts(): Promise<AccountReadResponseDto[]> {
     const accounts = await this.accountService.getAllAccounts();
 
-    return accounts.map((account) => new AccountResponseDto(account));
+    return accounts.map((account) => new AccountReadResponseDto(account));
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Fetch an account by ID' })
-  async getAccountById(@Param('id') id: string): Promise<AccountResponseDto> {
+  @ApiOperation({ summary: 'Fetch a single account' })
+  @ApiParam({ name: 'id', required: true, description: 'The ID of the account' })
+  async getAccountById(@Param('id') id: string): Promise<AccountReadResponseDto> {
     const account = await this.accountService.getAccountById(id);
 
     if (!account) {
       throw new AccountNotFoundException(id);
     }
 
-    return new AccountResponseDto(account);
+    return new AccountReadResponseDto(account);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new account' })
-  @ApiBody({ type: AccountCreateRequestDto })
+  @ApiBody({
+    description: 'Account creation details',
+    type: AccountCreateRequestDto,
+    examples: {
+      aBybitAccount: {
+        summary: 'Bybit Account',
+        value: {
+          name: 'TEST',
+          exchange: 'bybit',
+          key: 'API_KEY',
+          secret: 'API_SECRET'
+        }
+      }
+    }
+  })
   @UsePipes(new ValidationPipe({ transform: true }))
-  async createAccount(@Body() accountCreateRequestDto: AccountCreateRequestDto): Promise<AccountResponseDto> {
-    const account = await this.accountService.createAccount(Account.fromDto(accountCreateRequestDto));
-
-    return new AccountResponseDto(account);
+  async createAccount(@Body() accountCreateRequestDto: AccountCreateRequestDto): Promise<AccountReadResponseDto> {
+    return new AccountReadResponseDto(await this.accountService.createAccount(accountCreateRequestDto));
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update an account' })
-  @ApiBody({ type: AccountUpdateRequestDto })
+  @ApiParam({ name: 'id', required: true, description: 'The ID of the account' })
+  @ApiBody({ description: 'Account update details', type: AccountUpdateRequestDto })
   @UsePipes(new ValidationPipe({ transform: true, skipMissingProperties: true }))
   async updateAccount(
     @Param('id') id: string,
     @Body() accountUpdateRequestDto: AccountUpdateRequestDto
-  ): Promise<AccountResponseDto> {
-    const account = await this.accountService.updateAccount(id, Account.fromDto(accountUpdateRequestDto));
+  ): Promise<AccountReadResponseDto> {
+    const account = await this.accountService.updateAccount(id, accountUpdateRequestDto);
 
     if (!account) {
       throw new AccountNotFoundException(id);
     }
 
-    return new AccountResponseDto(account);
+    return new AccountReadResponseDto(account);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete an account by ID' })
+  @ApiOperation({ summary: 'Delete an account' })
+  @ApiParam({ name: 'id', required: true, description: 'The ID of the account' })
   async deleteAccount(@Param('id') id: string): Promise<void> {
     const wasDeleted = await this.accountService.deleteAccount(id);
 

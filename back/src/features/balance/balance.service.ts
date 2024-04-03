@@ -94,7 +94,7 @@ export class BalanceService implements OnModuleInit, IAccountTracker, IDataRefre
           `Updated - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(newBalances, this.logger).toFixed(2)} $`
         );
       } else {
-        this.logger.log(`Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
+        this.logger.debug(`Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
       }
 
       return newBalances;
@@ -121,7 +121,7 @@ export class BalanceService implements OnModuleInit, IAccountTracker, IDataRefre
       const aggregatedError = new BalancesUpdateAggregatedException(errors);
 
       this.logger.error(`Multiple Updates Failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
-      // Avoid interrupting the loop by not throwing an exception
+      // NOTE Avoid interrupting the loop by not throwing an exception
     }
   }
 

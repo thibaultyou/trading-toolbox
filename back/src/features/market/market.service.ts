@@ -62,18 +62,8 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
     return markets.map((market) => market.id);
   }
 
-  findAccountSpotMarketIds(accountId: string, quoteCurrency: string = 'USDT'): string[] {
-    this.logger.log(`Market Spot - Fetch Initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`);
-    const markets = this.getAccountMarkets(accountId);
-
-    return markets
-      .filter((market) => market.quote === quoteCurrency && market.active && market.spot)
-      .map((market) => market.id);
-  }
-
   findAccountContractMarketIds(accountId: string, quoteCurrency: string = 'USDT'): string[] {
     this.logger.log(`Market Contract - Fetch Initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`);
-
     const markets = this.getAccountMarkets(accountId);
 
     return markets
@@ -81,13 +71,12 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
       .map((market) => market.id);
   }
 
-  // TODO add other market types ? future, option, index ...
+  // TODO add other market types ? spot, future, option, index ...
 
-  findAccountMarketById(accountId: string, marketId: string): Market {
+  findAccountContractMarketById(accountId: string, marketId: string): Market {
     this.logger.log(`Fetch Initiated - AccountID: ${accountId}, MarketID: ${marketId}`);
     const markets = this.getAccountMarkets(accountId);
-
-    const specificMarket = markets.find((market) => market.id === marketId);
+    const specificMarket = markets.find((market) => market.id === marketId && market.active && market.contract);
 
     if (!specificMarket) {
       this.logger.error(`Fetch Failed - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Market not found`);
@@ -121,7 +110,6 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
     this.logger.log(`Markets - Refresh Initiated`);
     const accountIds = Array.from(this.markets.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
-
     const marketsPromises = accountIds.map((accountId) =>
       this.refreshOne(accountId).catch((error) => {
         errors.push({ accountId, error });
@@ -137,7 +125,7 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
         `Markets - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
         aggregatedError.stack
       );
-      // Avoid interrupting the loop by not throwing an exception
+      // NOTE Avoid interrupting the loop by not throwing an exception
     }
   }
 }

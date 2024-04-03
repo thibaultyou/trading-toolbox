@@ -5,26 +5,22 @@ import { ExchangeType } from '../../exchange/exchange.types';
 
 export class AccountUpdateRequestDto {
   @ApiProperty({ required: false })
-  @IsString()
   @IsOptional()
+  @IsString({ message: 'Name must be a string if provided.' })
   name?: string;
 
   @ApiProperty({ required: false })
-  @IsString()
   @IsOptional()
+  @IsString({ message: 'Key must be a string if provided.' })
   key?: string;
 
   @ApiProperty({ required: false })
-  @IsString()
   @IsOptional()
+  @IsString({ message: 'Secret must be a string if provided.' })
   secret?: string;
 
-  @ApiProperty({
-    enum: ExchangeType,
-    example: ExchangeType.Bybit,
-    required: false
-  })
-  @IsEnum(ExchangeType)
+  @ApiProperty({ enum: ExchangeType, example: ExchangeType.Bybit, required: false })
   @IsOptional()
+  @IsEnum(ExchangeType, { message: 'Invalid exchange type if provided.' })
   exchange?: ExchangeType;
 }

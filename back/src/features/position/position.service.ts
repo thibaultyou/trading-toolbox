@@ -6,8 +6,8 @@ import { IAccountTracker } from '../../common/interfaces/account-tracker.interfa
 import { IDataRefresher } from '../../common/interfaces/data-refresher.interface';
 import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
-import { ClosePositionException } from '../exchange/exceptions/exchange.exceptions';
 import { ExchangeService } from '../exchange/exchange.service';
+import { OrderSide } from '../order/order.types';
 import { PositionsClosedEvent } from './events/position-closed.event';
 import { PositionsUpdatedEvent } from './events/positions-updated.event';
 import { PositionNotFoundException, PositionsUpdateAggregatedException } from './exceptions/position.exceptions';
@@ -45,11 +45,11 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
     }
   }
 
-  getAccountPositions(accountId: string): Position[] {
-    this.logger.log(`Fetch Initiated - AccountID: ${accountId}`);
+  getAccountOpenPositions(accountId: string): Position[] {
+    this.logger.log(`Fetch Open Initiated - AccountID: ${accountId}`);
 
     if (!this.positions.has(accountId)) {
-      this.logger.error(`Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.error(`Fetch Open Failed - AccountID: ${accountId}, Reason: Account not found`);
 
       throw new AccountNotFoundException(accountId);
     }
@@ -57,30 +57,40 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
     return this.positions.get(accountId);
   }
 
-  async closePositionById(accountId: string, positionId: string): Promise<Order> {
-    this.logger.log(`Close Initiated - AccountID: ${accountId}, PositionID: ${positionId}`);
+  async closePosition(accountId: string, marketId: string, side: OrderSide): Promise<Order> {
+    this.logger.log(
+      `Close Initiated - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}`,
+      this.positions.get(accountId)
+    );
 
-    const position = this.getAccountPositions(accountId).find((p) => p.id === positionId);
+    const position = this.getAccountOpenPositions(accountId).find(
+      (p) => p.info.symbol === marketId && p.info.side.toLowerCase() === side
+    );
 
     if (!position) {
       this.logger.error(
-        `Close Failed - AccountID: ${accountId}, PositionID: ${positionId}, Reason: Position not found`
+        `Close Failed - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}, Reason: Position not found`
       );
-      throw new PositionNotFoundException(accountId, positionId);
+      throw new PositionNotFoundException(accountId, marketId);
     }
 
     try {
-      const order = await this.exchangeService.closePosition(accountId, position);
+      // FIXME remove
+      this.logger.error(position);
+      //
+      const order = await this.exchangeService.closePosition(accountId, marketId, side, position.contracts);
 
       this.eventEmitter.emit(Events.POSITION_CLOSED, new PositionsClosedEvent(accountId, order));
-      this.logger.log(
-        `Close Succeeded - AccountID: ${accountId}, PositionID: ${positionId}, Order: ${JSON.stringify(order)}`
-      );
+      this.logger.log(`Close Succeeded - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
 
       return order;
     } catch (error) {
-      this.logger.error(`Close Failed - AccountID: ${accountId}, PositionID: ${positionId}, Error: ${error.message}`);
-      throw new ClosePositionException(accountId, positionId, error.message);
+      this.logger.error(
+        `Close Failed - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}, Error: ${error.message}`
+      );
+      throw error;
+      // FIXME
+      // throw new ClosePositionException(accountId, positionId, error.message);
     }
   }
 
@@ -118,7 +128,7 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
       const aggregatedError = new PositionsUpdateAggregatedException(errors);
 
       this.logger.error(`Multiple Updates Failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
-      // Avoid interrupting the loop by not throwing an exception
+      // NOTE Avoid interrupting the loop by not throwing an exception
     }
   }
 }
