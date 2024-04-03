@@ -20,7 +20,7 @@ export class OrderReadResponseDto {
     description: 'Trading symbol for the order',
     example: 'DOGEUSDT'
   })
-  symbol: string;
+  marketId: string;
 
   @ApiProperty({
     description: 'Price per unit for the order',
@@ -64,6 +64,19 @@ export class OrderReadResponseDto {
   leavesQty: number;
 
   @ApiProperty({
+    description: 'Mode for Take Profit and Stop Loss',
+    example: 'Partial'
+  })
+  tpslMode: Order['info']['tpslMode'];
+
+  @ApiProperty({
+    description: 'Price at which the order is triggered',
+    example: 0.5,
+    type: Number
+  })
+  triggerPrice: number;
+
+  @ApiProperty({
     description: 'Timestamp when the order was created',
     example: 1711934440046,
     type: Number
@@ -80,13 +93,15 @@ export class OrderReadResponseDto {
   constructor(order: Order) {
     this.orderId = order.info.orderId;
     this.orderLinkId = order.info.orderLinkId;
-    this.symbol = order.info.symbol;
+    this.marketId = order.info.symbol;
     this.price = parseFloat(order.info.price);
     this.amount = order.amount;
     this.side = order.info.side.toLowerCase() === 'buy' ? OrderSide.Buy : OrderSide.Sell;
     this.status = order.status;
     this.type = order.info.orderType.toLowerCase() === 'limit' ? OrderType.Limit : OrderType.Market;
     this.leavesQty = parseFloat(order.info.leavesQty);
+    this.tpslMode = order.info.tpslMode;
+    this.triggerPrice = parseFloat(order.info.triggerPrice);
     this.createdTime = parseInt(order.info.createdTime);
     this.updatedTime = parseInt(order.info.updatedTime);
   }

@@ -20,16 +20,17 @@ export interface IExchangeService {
     stopLossPrice?: number,
     takeProfitPrice?: number,
     params?: Record<string, any>
-  ): Promise<Order[]>;
+  ): Promise<Order>;
   closePosition(symbol: string, side: OrderSide, volume: number): Promise<Order>;
+  cancelOrders(symbol: string, params?: Record<string, any>): Promise<Order[]>;
+  cancelOrder(orderId: string, symbol: string): Promise<Order>;
+  clean(): Promise<void>;
 
   // openMarketLongOrder(symbol: string, size: number): Promise<Order>;
   // openMarketShortOrder(symbol: string, size: number): Promise<Order>;
   // openLimitLongOrder(symbol: string, size: number, price: number): Promise<Order>;
   // openLimitShortOrder(symbol: string, size: number, price: number): Promise<Order>;
-  updateStopLoss(orderId: string, symbol: string, amount: number, stopLossPrice: number): Promise<Order>;
-  updateTakeProfit(orderId: string, symbol: string, amount: number, takeProfitPrice: number): Promise<Order>;
-  closeOrder(orderId: string, symbol: string): Promise<boolean>;
-  closeOrdersWithSymbol(symbol: string): Promise<boolean>;
-  clean(): Promise<void>;
+  // updateStopLoss(orderId: string, symbol: string, amount: number, stopLossPrice: number): Promise<Order>;
+  // updateTakeProfit(orderId: string, symbol: string, amount: number, takeProfitPrice: number): Promise<Order>;
+  // closeOrdersWithSymbol(symbol: string): Promise<boolean>;
 }

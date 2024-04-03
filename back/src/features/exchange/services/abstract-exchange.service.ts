@@ -9,6 +9,8 @@ import {
 } from '../exceptions/exchange.exceptions';
 import { IExchangeService } from '../exchange.interfaces';
 
+// TODO improve logging, error handling, custom exceptions
+
 export abstract class AbstractExchangeService implements IExchangeService {
   protected readonly logger = new Logger(AbstractExchangeService.name);
   protected exchange: Exchange;
@@ -90,7 +92,6 @@ export abstract class AbstractExchangeService implements IExchangeService {
 
   async getOrder(orderId: string, symbol: string): Promise<Order> {
     try {
-      // NOTE symbol is required on bybit
       const order = await this.exchange.fetchOrder(orderId, symbol);
 
       this.logger.log(
@@ -127,35 +128,14 @@ export abstract class AbstractExchangeService implements IExchangeService {
     stopLossPrice?: number,
     takeProfitPrice?: number,
     params?: Record<string, any>
-  ): Promise<Order[]> {
-    this.logger.log(
-      `Order Open Initiated - AccountID: ${this.account.id}, Symbol: ${symbol}, Side: ${side}, Volume: ${volume}${price ? `, Price: ${price}` : ''}${stopLossPrice ? `, Stop Loss: ${stopLossPrice}` : ''}${takeProfitPrice ? `, Take Profit: ${takeProfitPrice}` : ''}`
-    );
-
-    // TODO improve
-    if (volume <= 0) {
-      throw new Error('Volume must be greater than zero.');
-    }
-
-    if (price !== undefined && price <= 0) {
-      throw new Error('Price must be greater than zero when specified.');
-    }
-
+  ): Promise<Order> {
     const orderType = price ? OrderType.Limit : OrderType.Market;
-    let primaryOrder: Order;
-    const additionalOrders: Order[] = [];
 
     try {
-      // Create the primary order
-      primaryOrder = await this.exchange.createOrder(symbol, orderType, side, volume, price, params);
-      this.logger.log(
-        `${orderType} Order Opened - OrderID: ${primaryOrder.id}, Side: ${side}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}`
-      );
+      let order: Order;
 
-      // Handle stop loss and take profit
-      if (stopLossPrice && takeProfitPrice) {
-        // If both are specified, create them together (if supported)
-        const tpAndSlOrder = await this.exchange.createOrderWithTakeProfitAndStopLoss(
+      if (stopLossPrice || takeProfitPrice) {
+        order = await this.exchange.createOrderWithTakeProfitAndStopLoss(
           symbol,
           orderType,
           side,
@@ -165,44 +145,15 @@ export abstract class AbstractExchangeService implements IExchangeService {
           stopLossPrice,
           params
         );
-
-        additionalOrders.push({ ...tpAndSlOrder, symbol });
       } else {
-        if (stopLossPrice) {
-          const slOrder = await this.exchange.createStopLossOrder(
-            symbol,
-            orderType,
-            side,
-            volume,
-            price,
-            stopLossPrice,
-            params
-          );
-
-          additionalOrders.push({ ...slOrder, symbol });
-        }
-
-        if (takeProfitPrice) {
-          const tpOrder = await this.exchange.createTakeProfitOrder(
-            symbol,
-            orderType,
-            side,
-            volume,
-            price,
-            takeProfitPrice,
-            params
-          );
-
-          additionalOrders.push({ ...tpOrder, symbol });
-        }
+        order = await this.exchange.createOrder(symbol, orderType, side, volume, price, params);
       }
 
-      // Log additional orders
-      additionalOrders.forEach((order) =>
-        this.logger.log(`Additional Order Created - OrderID: ${order.id}, Type: ${order.type}`)
+      this.logger.log(
+        `${orderType} Order Opened - OrderID: ${order.id}, Side: ${side}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}`
       );
 
-      return [{ ...primaryOrder, symbol }, ...additionalOrders];
+      return { ...order, symbol };
     } catch (error) {
       this.logger.error(
         `Failed to Open ${orderType} Order - Side: ${side}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}. Error: ${error.message}`,
@@ -225,102 +176,102 @@ export abstract class AbstractExchangeService implements IExchangeService {
     }
   }
 
-  async updateStopLoss(orderId: string, symbol: string, amount: number, stopLossPrice: number): Promise<Order> {
+  // async updateStopLoss(orderId: string, symbol: string, amount: number, stopLossPrice: number): Promise<Order> {
+  //   try {
+  //     const updatedOrder = await this.editOrder(
+  //       orderId,
+  //       symbol,
+  //       'stop_loss',
+  //       'sell',
+  //       amount,
+  //       stopLossPrice,
+  //       'updating stop loss'
+  //     );
+
+  //     this.logger.log(
+  //       `Stop Loss Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`
+  //     );
+
+  //     return updatedOrder;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
+
+  // async updateTakeProfit(orderId: string, symbol: string, amount: number, takeProfitPrice: number): Promise<Order> {
+  //   try {
+  //     const updatedOrder = await this.editOrder(
+  //       orderId,
+  //       symbol,
+  //       'take_profit',
+  //       'sell',
+  //       amount,
+  //       takeProfitPrice,
+  //       'updating take profit'
+  //     );
+
+  //     this.logger.log(
+  //       `Take Profit Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`
+  //     );
+
+  //     return updatedOrder;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
+
+  // private async editOrder(
+  //   orderId: string,
+  //   symbol: string,
+  //   type: string,
+  //   side: string,
+  //   amount: number,
+  //   price: number,
+  //   actionDescription: string
+  // ): Promise<Order> {
+  //   try {
+  //     const order = await this.exchange.editOrder(orderId, symbol, type, side, amount, price);
+
+  //     this.logger.log(
+  //       `Order Edited - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Price: ${price}`
+  //     );
+
+  //     return order;
+  //   } catch (error) {
+  //     this.logger.error(
+  //       `Failed to Edit Order - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Price: ${price}, Error: ${error.message}`
+  //     );
+  //     throw new ExchangeOperationFailedException(actionDescription, error.message);
+  //   }
+  // }
+
+  async cancelOrders(symbol: string, params?: Record<string, any>): Promise<Order[]> {
     try {
-      const updatedOrder = await this.editOrder(
-        orderId,
-        symbol,
-        'stop_loss',
-        'sell',
-        amount,
-        stopLossPrice,
-        'updating stop loss'
-      );
+      const orders = (await this.exchange.cancelAllOrders(symbol, params)) as Order[];
 
       this.logger.log(
-        `Stop Loss Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`
+        `Orders Cancelled - AccountID: ${this.account.id}${symbol ? `, Symbol: ${symbol}` : ''}${params ? `, Details: ${params}` : ''}`
       );
 
-      return updatedOrder;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async updateTakeProfit(orderId: string, symbol: string, amount: number, takeProfitPrice: number): Promise<Order> {
-    try {
-      const updatedOrder = await this.editOrder(
-        orderId,
-        symbol,
-        'take_profit',
-        'sell',
-        amount,
-        takeProfitPrice,
-        'updating take profit'
-      );
-
-      this.logger.log(
-        `Take Profit Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`
-      );
-
-      return updatedOrder;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  private async editOrder(
-    orderId: string,
-    symbol: string,
-    type: string,
-    side: string,
-    amount: number,
-    price: number,
-    actionDescription: string
-  ): Promise<Order> {
-    try {
-      const order = await this.exchange.editOrder(orderId, symbol, type, side, amount, price);
-
-      this.logger.log(
-        `Order Edited - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Price: ${price}`
-      );
-
-      return order;
+      return orders.map((order) => ({ ...order, symbol }));
     } catch (error) {
       this.logger.error(
-        `Failed to Edit Order - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Price: ${price}, Error: ${error.message}`
+        `Failed to Cancel Orders - AccountID: ${this.account.id}${symbol ? `, Symbol: ${symbol}` : ''}${params ? `, Details: ${params}` : ''}, Error: ${error.message}`
       );
-      throw new ExchangeOperationFailedException(actionDescription, error.message);
+      throw new ExchangeOperationFailedException('cancel orders', error.message);
     }
   }
 
-  async closeOrdersWithSymbol(symbol: string): Promise<boolean> {
+  async cancelOrder(orderId: string, symbol: string): Promise<Order> {
     try {
-      await this.exchange.cancelAllOrders(symbol);
-      this.logger.log(`Closed All Orders - AccountID: ${this.account.id}, Symbol: ${symbol}`);
+      const order = (await this.exchange.cancelOrder(orderId, symbol)) as Order;
 
-      return true;
+      return { ...order, symbol };
     } catch (error) {
-      const errMsg = `Close Orders Failed - AccountID: ${this.account.id}, Symbol: ${symbol}, Error: ${error.message}`;
-
-      this.logger.error(errMsg);
-
-      return false;
-    }
-  }
-
-  async closeOrder(orderId: string, symbol: string): Promise<boolean> {
-    try {
-      await this.exchange.cancelOrder(orderId, symbol);
-      this.logger.log(`Closed Order - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}`);
-
-      return true;
-    } catch (error) {
-      const errMsg = `Close Order Failed - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Error: ${error.message}`;
-
-      this.logger.error(errMsg);
-
-      return false;
+      this.logger.error(
+        `Failed to Cancel Order - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Error: ${error.message}`
+      );
+      throw new ExchangeOperationFailedException('cancel order', error.message);
     }
   }
 

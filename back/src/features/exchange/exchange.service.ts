@@ -11,6 +11,9 @@ import { ExchangeNotFoundException, ExchangeOperationFailedException } from './e
 import { IExchangeService } from './exchange.interfaces';
 import { ExchangeFactory } from './services/exchange-service.factory';
 
+// TODO move bybit related content out of here
+// TODO improve logging, error handling, custom exceptions
+
 @Injectable()
 export class ExchangeService {
   private logger: Logger = new Logger(ExchangeService.name);
@@ -191,11 +194,12 @@ export class ExchangeService {
     stopLossPrice?: number,
     takeProfitPrice?: number,
     params?: Record<string, any>
-  ): Promise<Order[]> {
+  ): Promise<Order> {
     this.logger.log(`Open Order Initiated - AccountID: ${accountId}`);
     const exchange = this.getExchange(accountId);
 
     try {
+      // TODO ensure that symbol is in hedge mode before opening the order
       const order = await exchange.openOrder(symbol, side, volume, price, stopLossPrice, takeProfitPrice, params);
 
       this.logger.log(`Order Opened - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
@@ -219,7 +223,7 @@ export class ExchangeService {
         undefined,
         undefined,
         undefined,
-        { positionIdx: side === OrderSide.Buy ? 1 : 2 }
+        { positionIdx: side === OrderSide.Buy ? 1 : 2 } // NOTE needed for bybit hedge mode
       );
 
       this.logger.log(`Position Closed - AccountID: ${accountId}, Symbol: ${symbol}, Side: ${side}`);
@@ -235,141 +239,180 @@ export class ExchangeService {
     }
   }
 
-  async updateStopLoss(
-    accountId: string,
-    orderId: string,
-    symbol: string,
-    amount: number,
-    stopLossPrice: number
-  ): Promise<Order> {
-    this.logger.log(
-      `Stop Loss Update Initiated - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`
-    );
-    const exchange = this.getExchange(accountId);
-
-    try {
-      // TODO add logs
-      return await exchange.updateStopLoss(orderId, symbol, amount, stopLossPrice);
-    } catch (error) {
-      this.logger.error(`Stop Loss Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
-      throw new ExchangeOperationFailedException('updateStopLoss', error);
-    }
-  }
-
-  async updateTakeProfit(
-    accountId: string,
-    orderId: string,
-    symbol: string,
-    amount: number,
-    takeProfitPrice: number
-  ): Promise<Order> {
-    this.logger.log(
-      `Take Profit Update Initiated - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`
-    );
-    const exchange = this.getExchange(accountId);
-
-    try {
-      // TODO add logs
-      return await exchange.updateTakeProfit(orderId, symbol, amount, takeProfitPrice);
-    } catch (error) {
-      this.logger.error(`Take Profit Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
-      throw new ExchangeOperationFailedException('updateTakeProfit', error);
-    }
-  }
-
-  async closeOrder(accountId: string, orderId: string, symbol: string): Promise<boolean> {
+  async cancelOrder(accountId: string, orderId: string, symbol: string): Promise<Order> {
     this.logger.log(`Order Close Initiated - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}`);
     const exchange = this.getExchange(accountId);
 
     try {
-      // TODO add logs
-      return await exchange.closeOrder(orderId, symbol);
+      const order = await exchange.cancelOrder(orderId, symbol);
+
+      if (!order) {
+        this.logger.error(
+          `Order Cancellation Failed - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}`
+        );
+      } else {
+        this.logger.log(`Order Cancelled - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}`);
+      }
+
+      return order;
     } catch (error) {
-      this.logger.error(`Order Close Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
-      throw new ExchangeOperationFailedException('closeOrder', error);
+      this.logger.error(`Order Cancellation Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      throw new ExchangeOperationFailedException('cancelOrder', error);
     }
   }
 
-  async closeOrdersWithSymbol(accountId: string, symbol: string): Promise<boolean> {
-    this.logger.log(`Orders Close With Symbol Initiated - AccountID: ${accountId}, Symbol: ${symbol}`);
+  // TODO add filter options via params ?
+  async cancelOrders(accountId: string, symbol: string): Promise<Order[]> {
+    this.logger.log(`Orders Close Initiated - AccountID: ${accountId}, Symbol: ${symbol}`);
     const exchange = this.getExchange(accountId);
 
     try {
-      // TODO add logs
-      return await exchange.closeOrdersWithSymbol(symbol);
+      const orders = await exchange.cancelOrders(symbol);
+
+      if (orders.length === 0) {
+        this.logger.error(`Orders Cancellation Failed - AccountID: ${accountId}, Symbol: ${symbol}`);
+      } else {
+        this.logger.log(`Orders Cancelled - AccountID: ${accountId}, Symbol: ${symbol}`);
+      }
+
+      return orders;
     } catch (error) {
-      this.logger.error(
-        `Orders Close With Symbol Failed - AccountID: ${accountId}, Symbol: ${symbol}, Error: ${error.message}`,
-        error.stack
-      );
-      throw new ExchangeOperationFailedException('closeOrdersWithSymbol', error);
+      this.logger.error(`Orders Cancellation Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      throw new ExchangeOperationFailedException('cancelOrders', error);
     }
   }
+
+  // async updateStopLoss(
+  //   accountId: string,
+  //   orderId: string,
+  //   symbol: string,
+  //   amount: number,
+  //   stopLossPrice: number
+  // ): Promise<Order> {
+  //   this.logger.log(
+  //     `Stop Loss Update Initiated - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`
+  //   );
+  //   const exchange = this.getExchange(accountId);
+
+  //   try {
+  //     const order = await exchange.updateStopLoss(orderId, symbol, amount, stopLossPrice);
+  //     this.logger.log(`Stop Loss Updated - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`);
+  //     return order;
+  //   } catch (error) {
+  //     this.logger.error(`Stop Loss Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+  //     throw new ExchangeOperationFailedException('updateStopLoss', error);
+  //   }
+  // }
+
+  // async updateTakeProfit(
+  //   accountId: string,
+  //   orderId: string,
+  //   symbol: string,
+  //   amount: number,
+  //   takeProfitPrice: number
+  // ): Promise<Order> {
+  //   this.logger.log(
+  //     `Take Profit Update Initiated - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`
+  //   );
+  //   const exchange = this.getExchange(accountId);
+
+  //   try {
+  //     const order = await exchange.updateTakeProfit(orderId, symbol, amount, takeProfitPrice);
+  //     this.logger.log(
+  //       `Take Profit Updated - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`
+  //     );
+  //     return order;
+  //   } catch (error) {
+  //     this.logger.error(`Take Profit Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+  //     throw new ExchangeOperationFailedException('updateTakeProfit', error);
+  //   }
+  // }
+
+  //   async closeOrdersWithSymbol(accountId: string, symbol: string): Promise<boolean> {
+  //     this.logger.log(`Close Orders With Symbol Initiated - AccountID: ${accountId}, Symbol: ${symbol}`);
+  //     const exchange = this.getExchange(accountId);
+
+  //     try {
+  //       const result = await exchange.closeOrdersWithSymbol(symbol);
+  //       if (!result) {
+  //         this.logger.error(`Order Close Failed - AccountID: ${accountId}, Symbol: ${symbol}`);
+  //       } else {
+  //         this.logger.log(`Order Closed - AccountID: ${accountId}, Symbol: ${symbol}`);
+  //       }
+  //       return result;
+  //     } catch (error) {
+  //       this.logger.error(
+  //         `Orders Close With Symbol Failed - AccountID: ${accountId}, Symbol: ${symbol}, Error: ${error.message}`,
+  //         error.stack
+  //       );
+  //       throw new ExchangeOperationFailedException('closeOrdersWithSymbol', error);
+  //     }
+  //   }
+
+  // async openLimitLongOrder(accountId: string, symbol: string, volume: number, price: number): Promise<Order> {
+  //   this.logger.log(
+  //     `Limit Long Order Open Initiated - AccountID: ${accountId}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}`
+  //   );
+  //   const exchange = this.getExchange(accountId);
+
+  //   try {
+  //     // TODO add logs
+  //     return await exchange.openLimitLongOrder(symbol, volume, price);
+  //   } catch (error) {
+  //     this.logger.error(`Limit Long Order Open Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+  //     throw new ExchangeOperationFailedException('openLimitLongOrder', error);
+  //   }
+  // }
+
+  // async openLimitShortOrder(accountId: string, symbol: string, volume: number, price: number): Promise<Order> {
+  //   this.logger.log(
+  //     `Limit Short Order Open Initiated - AccountID: ${accountId}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}`
+  //   );
+  //   const exchange = this.getExchange(accountId);
+
+  //   try {
+  //     // TODO add logs
+  //     return await exchange.openLimitShortOrder(symbol, volume, price);
+  //   } catch (error) {
+  //     this.logger.error(
+  //       `Limit Short Order Open Failed - AccountID: ${accountId}, Error: ${error.message}`,
+  //       error.stack
+  //     );
+  //     throw new ExchangeOperationFailedException('openLimitShortOrder', error);
+  //   }
+  // }
+
+  // async openMarketLongOrder(accountId: string, symbol: string, volume: number): Promise<Order> {
+  //   this.logger.log(`Market Long Order Open Initiated - AccountID: ${accountId}, Symbol: ${symbol}, Volume: ${volume}`);
+  //   const exchange = this.getExchange(accountId);
+
+  //   try {
+  //     // TODO add logs
+  //     return await exchange.openMarketLongOrder(symbol, volume);
+  //   } catch (error) {
+  //     this.logger.error(
+  //       `Market Long Order Open Failed - AccountID: ${accountId}, Error: ${error.message}`,
+  //       error.stack
+  //     );
+  //     throw new ExchangeOperationFailedException('openMarketLongOrder', error);
+  //   }
+  // }
+
+  // async openMarketShortOrder(accountId: string, symbol: string, volume: number): Promise<Order> {
+  //   this.logger.log(
+  //     `Market Short Order Open Initiated - AccountID: ${accountId}, Symbol: ${symbol}, Volume: ${volume}`
+  //   );
+  //   const exchange = this.getExchange(accountId);
+
+  //   try {
+  //     // TODO add logs
+  //     return await exchange.openMarketShortOrder(symbol, volume);
+  //   } catch (error) {
+  //     this.logger.error(
+  //       `Market Short Order Open Failed - AccountID: ${accountId}, Error: ${error.message}`,
+  //       error.stack
+  //     );
+  //     throw new ExchangeOperationFailedException('openMarketShortOrder', error);
+  //   }
+  // }
 }
-
-// async openLimitLongOrder(accountId: string, symbol: string, volume: number, price: number): Promise<Order> {
-//   this.logger.log(
-//     `Limit Long Order Open Initiated - AccountID: ${accountId}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}`
-//   );
-//   const exchange = this.getExchange(accountId);
-
-//   try {
-//     // TODO add logs
-//     return await exchange.openLimitLongOrder(symbol, volume, price);
-//   } catch (error) {
-//     this.logger.error(`Limit Long Order Open Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
-//     throw new ExchangeOperationFailedException('openLimitLongOrder', error);
-//   }
-// }
-
-// async openLimitShortOrder(accountId: string, symbol: string, volume: number, price: number): Promise<Order> {
-//   this.logger.log(
-//     `Limit Short Order Open Initiated - AccountID: ${accountId}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}`
-//   );
-//   const exchange = this.getExchange(accountId);
-
-//   try {
-//     // TODO add logs
-//     return await exchange.openLimitShortOrder(symbol, volume, price);
-//   } catch (error) {
-//     this.logger.error(
-//       `Limit Short Order Open Failed - AccountID: ${accountId}, Error: ${error.message}`,
-//       error.stack
-//     );
-//     throw new ExchangeOperationFailedException('openLimitShortOrder', error);
-//   }
-// }
-
-// async openMarketLongOrder(accountId: string, symbol: string, volume: number): Promise<Order> {
-//   this.logger.log(`Market Long Order Open Initiated - AccountID: ${accountId}, Symbol: ${symbol}, Volume: ${volume}`);
-//   const exchange = this.getExchange(accountId);
-
-//   try {
-//     // TODO add logs
-//     return await exchange.openMarketLongOrder(symbol, volume);
-//   } catch (error) {
-//     this.logger.error(
-//       `Market Long Order Open Failed - AccountID: ${accountId}, Error: ${error.message}`,
-//       error.stack
-//     );
-//     throw new ExchangeOperationFailedException('openMarketLongOrder', error);
-//   }
-// }
-
-// async openMarketShortOrder(accountId: string, symbol: string, volume: number): Promise<Order> {
-//   this.logger.log(
-//     `Market Short Order Open Initiated - AccountID: ${accountId}, Symbol: ${symbol}, Volume: ${volume}`
-//   );
-//   const exchange = this.getExchange(accountId);
-
-//   try {
-//     // TODO add logs
-//     return await exchange.openMarketShortOrder(symbol, volume);
-//   } catch (error) {
-//     this.logger.error(
-//       `Market Short Order Open Failed - AccountID: ${accountId}, Error: ${error.message}`,
-//       error.stack
-//     );
-//     throw new ExchangeOperationFailedException('openMarketShortOrder', error);
-//   }
-// }

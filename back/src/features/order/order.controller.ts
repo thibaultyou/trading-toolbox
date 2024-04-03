@@ -1,11 +1,16 @@
-import { Body, Controller, Get, NotFoundException, Param, Post, Query, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../../common/base/base.controller';
 import { OrderCreateRequestDto } from './dto/order-create.request.dto';
 import { OrderCreateResponseDto } from './dto/order-create.response.dto';
+import { OrderDeleteResponseDto } from './dto/order-delete.response.dto';
 import { OrderReadResponseDto } from './dto/order-read.response.dto';
 import { OrderService } from './order.service';
+
+// TODO add order update
+// TODO add create many
+// TODO add cancel many
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -17,7 +22,11 @@ export class OrderController extends BaseController {
   @Get('/:accountId')
   @ApiOperation({ summary: 'Fetch all orders' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
-  @ApiQuery({ name: 'marketId', required: false, description: 'Optional market ID to filter orders' })
+  @ApiQuery({
+    name: 'marketId',
+    required: false,
+    description: 'Optional ID of the market symbol to filter orders (e.g., BTCUSDT)'
+  })
   async getAccountOrders(
     @Param('accountId') accountId: string,
     @Query('marketId') marketId?: string
@@ -28,7 +37,7 @@ export class OrderController extends BaseController {
   }
 
   @Post('/:accountId')
-  @ApiOperation({ summary: 'Create an order for a specific account' })
+  @ApiOperation({ summary: 'Create an order' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   @ApiBody({
     description: 'Order creation details',
@@ -37,7 +46,7 @@ export class OrderController extends BaseController {
       aLimitOrder: {
         summary: 'Limit Order',
         value: {
-          symbol: 'FTMUSDT',
+          marketId: 'FTMUSDT',
           side: 'buy',
           volume: 1,
           price: 0.9666,
@@ -48,7 +57,7 @@ export class OrderController extends BaseController {
       aMarketOrder: {
         summary: 'Market Order',
         value: {
-          symbol: 'FTMUSDT',
+          marketId: 'FTMUSDT',
           side: 'sell',
           volume: 1
         }
@@ -59,34 +68,17 @@ export class OrderController extends BaseController {
   async createOrder(
     @Param('accountId') accountId: string,
     @Body() createOrderRequestDto: OrderCreateRequestDto
-  ): Promise<OrderCreateResponseDto[]> {
-    return (await this.orderService.createOrder(accountId, createOrderRequestDto)).map(
-      (o) => new OrderCreateResponseDto(o)
-    );
+  ): Promise<OrderCreateResponseDto> {
+    return new OrderCreateResponseDto(await this.orderService.createOrder(accountId, createOrderRequestDto));
   }
 
   @Get('/:accountId/open')
   @ApiOperation({ summary: 'Fetch all open orders' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
-  @ApiQuery({
-    name: 'marketId',
-    required: false,
-    description: 'Optional trading symbol to filter orders (e.g., BTCUSDT)'
-  })
-  getAccountOpenOrders(
-    @Param('accountId') accountId: string,
-    @Query('marketId') marketId?: string
-  ): OrderReadResponseDto[] {
-    return this.orderService.getAccountOpenOrders(accountId, marketId).map((order) => new OrderReadResponseDto(order));
-  }
-
-  @Get('/:accountId/:marketId/:orderId')
-  @ApiOperation({ summary: 'Fetch a single order' })
-  @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   @ApiParam({
     name: 'marketId',
     required: true,
-    description: 'The ID of the trading symbol to filter orders (e.g., BTCUSDT)'
+    description: 'The ID of the market symbol to filter orders (e.g., BTCUSDT)'
   })
   @ApiParam({ name: 'orderId', required: true, description: 'The ID of the order to retrieve' })
   async getAccountOrderById(
@@ -94,15 +86,48 @@ export class OrderController extends BaseController {
     @Param('marketId') marketId: string,
     @Param('orderId') orderId: string
   ): Promise<OrderReadResponseDto> {
-    const order = await this.orderService.getAccountOrderById(accountId, marketId, orderId);
-
-    if (!order) {
-      throw new NotFoundException(`Order with ID ${orderId} not found for account ${accountId}`);
-    }
-
-    return new OrderReadResponseDto(order);
+    return new OrderReadResponseDto(await this.orderService.getAccountOrderById(accountId, marketId, orderId));
   }
 
-  // TODO add order update
-  // TODO add order cancel
+  @Delete('/:accountId/:marketId/:orderId')
+  @ApiOperation({ summary: 'Cancel an order' })
+  @ApiParam({
+    name: 'accountId',
+    required: true,
+    description: 'The ID of the account for which the order will be canceled'
+  })
+  @ApiParam({
+    name: 'marketId',
+    required: true,
+    description: 'The ID of the market symbol to filter orders (e.g., BTCUSDT)'
+  })
+  @ApiParam({ name: 'orderId', required: true, description: 'The ID of the order to cancel' })
+  async cancelOrder(
+    @Param('accountId') accountId: string,
+    @Param('marketId') marketId: string,
+    @Param('orderId') orderId: string
+  ): Promise<OrderDeleteResponseDto> {
+    return new OrderDeleteResponseDto(await this.orderService.cancelOrder(accountId, marketId, orderId));
+  }
+
+  @Delete('/:accountId/:marketId')
+  @ApiOperation({ summary: 'Cancel multiple orders' })
+  @ApiParam({
+    name: 'accountId',
+    required: true,
+    description: 'The ID of the account for which the order will be canceled'
+  })
+  @ApiParam({
+    name: 'marketId',
+    required: true,
+    description: 'The ID of the market symbol to filter orders (e.g., BTCUSDT)'
+  })
+  async cancelOrders(
+    @Param('accountId') accountId: string,
+    @Param('marketId') marketId: string
+  ): Promise<OrderDeleteResponseDto[]> {
+    return (await this.orderService.cancelOrders(accountId, marketId)).map(
+      (order) => new OrderDeleteResponseDto(order)
+    );
+  }
 }

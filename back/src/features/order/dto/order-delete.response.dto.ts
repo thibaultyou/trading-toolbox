@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Order } from 'ccxt';
 
-export class OrderCreateResponseDto {
+export class OrderDeleteResponseDto {
   @ApiProperty({
     description: 'Unique identifier for the order',
     example: '3f309063-cfd1-4ce8-ad74-77c94b01563f'

@@ -10,6 +10,7 @@ import { ExchangeService } from '../exchange/exchange.service';
 import { OrderCreateRequestDto } from './dto/order-create.request.dto';
 import { OrdersUpdatedEvent } from './events/orders-updated.event';
 import { OrdersUpdateAggregatedException } from './exceptions/orders.exceptions';
+import { OrderSide } from './order.types';
 
 @Injectable()
 export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresher<Order[]> {
@@ -51,6 +52,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       return await this.exchangeService.getOrders(accountId, marketId);
     } catch (error) {
       this.logger.error(`Orders - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      // TODO improve
       throw error;
     }
   }
@@ -83,32 +85,68 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         `Order - Fetch Failed - AccountID: ${accountId}, MarketID: ${marketId}, OrderID: ${orderId}, Error: ${error.message}`,
         error.stack
       );
+      // TODO improve
       throw error;
     }
   }
 
-  async createOrder(accountId: string, dto: OrderCreateRequestDto): Promise<Order[]> {
+  async createOrder(accountId: string, dto: OrderCreateRequestDto): Promise<Order> {
     this.logger.log(`Order - Create Initiated - AccountID: ${accountId}, MarketID: ${dto.marketId}`);
 
     try {
-      // NOTE multiple orders may be returned (core, tp, sl)
-      const orders = await this.exchangeService.openOrder(
+      const order = await this.exchangeService.openOrder(
         accountId,
         dto.marketId,
         dto.side,
         dto.volume,
         dto.price,
         dto.stopLossPrice,
-        dto.takeProfitPrice
+        dto.takeProfitPrice,
+        // NOTE see https://bybit-exchange.github.io/docs/v5/order/create-order#request-parameters for reference
+        { tpslMode: 'Partial', positionIdx: dto.side === OrderSide.Buy ? 1 : 2 }
       );
 
-      this.logger.log(`Order - Created - AccountID: ${accountId}, Details: ${JSON.stringify(orders)}`);
+      this.logger.log(`Order - Created - AccountID: ${accountId}, Details: ${JSON.stringify(order)}`);
 
-      return orders;
+      return order;
     } catch (error) {
       this.logger.error(`Order - Creation Failed - AccountID: ${accountId}`, error.stack);
       // TODO custom exception
-      throw new Error(`OrderService Error: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // TODO replace by an event ?
+  async cancelOrder(accountId: string, marketId: string, orderId: string): Promise<Order> {
+    this.logger.log(`Order - Cancel Initiated - AccountID: ${accountId}, MarketID: ${marketId}, OrderID: ${orderId}`);
+
+    try {
+      const order = await this.exchangeService.cancelOrder(accountId, orderId, marketId);
+
+      this.logger.log(`Order - Cancelled - AccountID: ${accountId}, MarketID: ${marketId}, OrderID: ${orderId}`);
+
+      return order;
+    } catch (error) {
+      this.logger.error(`Order - Cancellation Failed - AccountID: ${accountId}, OrderID: ${orderId}`, error.stack);
+      // TODO custom exception
+      throw error;
+    }
+  }
+
+  // TODO replace by an event ?
+  async cancelOrders(accountId: string, marketId: string): Promise<Order[]> {
+    this.logger.log(`Orders - Cancel Initiated - AccountID: ${accountId}, MarketID: ${marketId}`);
+
+    try {
+      const orders = await this.exchangeService.cancelOrders(accountId, marketId);
+
+      this.logger.log(`Orders - Cancelled - AccountID: ${accountId}, MarketID: ${marketId}, Count: ${orders.length}`);
+
+      return orders;
+    } catch (error) {
+      this.logger.error(`Orders - Cancellation Failed - AccountID: ${accountId}`, error.stack);
+      // TODO custom exception
+      throw error;
     }
   }
 

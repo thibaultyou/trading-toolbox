@@ -13,7 +13,7 @@ export class OrderCreateRequestDto {
   marketId: string;
 
   @ApiProperty({
-    description: 'The order side (BUY or SELL).',
+    description: 'The order side (buy or sell).',
     enum: OrderSide,
     example: OrderSide.Buy
   })

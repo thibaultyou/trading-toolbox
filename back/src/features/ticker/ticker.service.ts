@@ -167,7 +167,7 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
   }
 
   async refreshAll(): Promise<void> {
-    this.logger.log(`All Tracked Tickers - Refresh Initiated`);
+    this.logger.log(`All Tickers - Refresh Initiated`);
     const accountIds = new Set([...this.ordersTickers.keys(), ...this.positionsTickers.keys()]);
 
     accountIds.forEach((accountId) => this.refreshOne(accountId));

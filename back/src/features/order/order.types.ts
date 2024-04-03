@@ -4,6 +4,6 @@ export enum OrderSide {
 }
 
 export enum OrderType {
-  Limit = 'limit',
-  Market = 'market'
+  Limit = 'Limit',
+  Market = 'Market'
 }
