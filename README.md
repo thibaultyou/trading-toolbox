@@ -1,6 +1,6 @@
 # Trading Toolbox
 
-Trading Toolbox is a comprehensive application designed for executing trading operations on exchanges. It leverages state-of-the-art technologies to monitor trades, execute actions based on predefined conditions, and apply sophisticated trading strategies.
+Trading Toolbox is a comprehensive application designed for executing trading operations on exchanges. It leverages state-of-the-art technologies to monitor trades, execute actions based on predefined conditions, and apply sophisticated trading strategies. **Please note that the frontend part of this application is currently deactivated, and any files or directories starting with a `_` prefix are flagged for review.**
 
 ## Getting Started
 
@@ -72,12 +72,11 @@ This command launches the application in a development environment, enabling dev
 
 After the application is running, you can access its various components locally using the URLs below:
 
-- **Client Application**: Accessible at `http://localhost:1234`
 - **API Server**: Available at `http://localhost:1234/api`
 - **Adminer (Database Management)**: Visit `http://localhost:8080/adminer`
 - **Swagger Documentation**: API documentation can be found by navigating to `http://localhost:1234/api/docs`
 
-Note: Accessing the application in a production setting may vary depending on the deployment configuration, which is not covered in this guide.
+Please note, with the frontend part deactivated, direct access to a client application through the previously mentioned URL is not available. Ensure to interact with the application through the API and other available interfaces.
 
 ### Stopping the Application
 
