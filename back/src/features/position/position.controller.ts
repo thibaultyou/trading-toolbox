@@ -1,5 +1,5 @@
-import { Controller, Delete, Get, Param } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { Controller, Delete, Get, Param, Query } from '@nestjs/common';
+import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../../common/base/base.controller';
 import { OrderReadResponseDto } from '../order/dto/order-read.response.dto';
@@ -15,19 +15,31 @@ export class PositionController extends BaseController {
   }
 
   @Get('/:accountId')
-  @ApiOperation({ summary: 'Fetch open positions' })
+  @ApiOperation({ summary: 'Fetch open positions for a specific account, optionally filtered by symbol and/or side' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
-  getAccountPositions(@Param('accountId') accountId: string): PositionReadResponseDto[] {
-    return this.positionService.getAccountOpenPositions(accountId).map((p) => new PositionReadResponseDto(p));
+  @ApiQuery({
+    name: 'symbol',
+    required: false,
+    description: 'Optional trading symbol to filter positions (e.g., BTCUSDT)'
+  })
+  @ApiQuery({ name: 'side', required: false, description: 'Optional side to filter positions (e.g., buy or sell)' })
+  getAccountOpenPositions(
+    @Param('accountId') accountId: string,
+    @Query('symbol') symbol?: string,
+    @Query('side') side?: OrderSide
+  ): PositionReadResponseDto[] {
+    return this.positionService
+      .getAccountOpenPositions(accountId, symbol, side)
+      .map((p) => new PositionReadResponseDto(p));
   }
 
-  @Delete('/:accountId/:symbol/:side')
+  @Delete('/:accountId/:marketId/:side')
   @ApiOperation({ summary: 'Close a position' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   @ApiParam({
     name: 'marketId',
     required: true,
-    description: 'The trading symbol of the position to close (e.g., BTCUSDT)'
+    description: 'The ID of the market symbol to filter orders (e.g., BTCUSDT)'
   })
   @ApiParam({ name: 'side', required: true, description: 'The side of the position to close (e.g., buy or sell)' })
   async closePosition(

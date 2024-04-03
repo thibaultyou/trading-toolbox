@@ -26,11 +26,6 @@ export interface IExchangeService {
   cancelOrder(orderId: string, symbol: string): Promise<Order>;
   clean(): Promise<void>;
 
-  // openMarketLongOrder(symbol: string, size: number): Promise<Order>;
-  // openMarketShortOrder(symbol: string, size: number): Promise<Order>;
-  // openLimitLongOrder(symbol: string, size: number, price: number): Promise<Order>;
-  // openLimitShortOrder(symbol: string, size: number, price: number): Promise<Order>;
   // updateStopLoss(orderId: string, symbol: string, amount: number, stopLossPrice: number): Promise<Order>;
   // updateTakeProfit(orderId: string, symbol: string, amount: number, takeProfitPrice: number): Promise<Order>;
-  // closeOrdersWithSymbol(symbol: string): Promise<boolean>;
 }

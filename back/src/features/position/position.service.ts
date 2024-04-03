@@ -45,16 +45,30 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
     }
   }
 
-  getAccountOpenPositions(accountId: string): Position[] {
-    this.logger.log(`Open Positions - Fetch Initiated - AccountID: ${accountId}`);
+  getAccountOpenPositions(accountId: string, marketId?: string, side?: OrderSide): Position[] {
+    this.logger.log(
+      `Open Positions - Fetch Initiated - AccountID: ${accountId}${marketId ? `, MarketID: ${marketId}` : ''}${side ? `, Side: ${side}` : ''}`
+    );
 
     if (!this.positions.has(accountId)) {
-      this.logger.error(`Open Positions - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.error(
+        `Open Positions - Fetch Failed - AccountID: ${accountId}${marketId ? `, MarketID: ${marketId}` : ''}${side ? `, Side: ${side}` : ''}, Reason: Account not found`
+      );
 
       throw new AccountNotFoundException(accountId);
     }
 
-    return this.positions.get(accountId);
+    let positions = this.positions.get(accountId);
+
+    if (marketId) {
+      positions = positions.filter((position) => position.info.symbol === marketId.toUpperCase());
+    }
+
+    if (side) {
+      positions = positions.filter((position) => position.info.side.toLowerCase() === side.toLowerCase());
+    }
+
+    return positions;
   }
 
   async closePosition(accountId: string, marketId: string, side: OrderSide): Promise<Order> {
@@ -64,7 +78,7 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
     );
 
     const position = this.getAccountOpenPositions(accountId).find(
-      (p) => p.info.symbol === marketId && p.info.side.toLowerCase() === side
+      (p) => p.info.symbol === marketId.toUpperCase() && p.info.side.toLowerCase() === side.toLowerCase()
     );
 
     if (!position) {
