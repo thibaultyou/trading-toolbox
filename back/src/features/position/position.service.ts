@@ -46,10 +46,10 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
   }
 
   getAccountOpenPositions(accountId: string): Position[] {
-    this.logger.log(`Fetch Open Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Open Positions - Fetch Initiated - AccountID: ${accountId}`);
 
     if (!this.positions.has(accountId)) {
-      this.logger.error(`Fetch Open Failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.error(`Open Positions - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
 
       throw new AccountNotFoundException(accountId);
     }
@@ -59,7 +59,7 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
 
   async closePosition(accountId: string, marketId: string, side: OrderSide): Promise<Order> {
     this.logger.log(
-      `Close Initiated - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}`,
+      `Open Position - Close Initiated - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}`,
       this.positions.get(accountId)
     );
 
@@ -69,7 +69,7 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
 
     if (!position) {
       this.logger.error(
-        `Close Failed - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}, Reason: Position not found`
+        `Open Position - Close Failed - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}, Reason: Position not found`
       );
       throw new PositionNotFoundException(accountId, marketId);
     }
@@ -81,12 +81,12 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
       const order = await this.exchangeService.closePosition(accountId, marketId, side, position.contracts);
 
       this.eventEmitter.emit(Events.POSITION_CLOSED, new PositionsClosedEvent(accountId, order));
-      this.logger.log(`Close Succeeded - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
+      this.logger.log(`Open Position - Close Succeeded - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
 
       return order;
     } catch (error) {
       this.logger.error(
-        `Close Failed - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}, Error: ${error.message}`
+        `Open Position - Close Failed - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}, Error: ${error.message}`
       );
       throw error;
       // FIXME
@@ -95,24 +95,27 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
   }
 
   async refreshOne(accountId: string): Promise<Position[]> {
-    this.logger.log(`Refresh Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Open Positions - Refresh Initiated - AccountID: ${accountId}`);
 
     try {
       const positions = await this.exchangeService.getOpenPositions(accountId);
 
       this.positions.set(accountId, positions);
       this.eventEmitter.emit(Events.POSITIONS_UPDATED, new PositionsUpdatedEvent(accountId, positions));
-      this.logger.log(`Updated - AccountID: ${accountId}, Count: ${positions.length}`);
+      this.logger.log(`Open Positions - Updated - AccountID: ${accountId}, Count: ${positions.length}`);
 
       return positions;
     } catch (error) {
-      this.logger.error(`Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      this.logger.error(
+        `Open Positions - Update Failed - AccountID: ${accountId}, Error: ${error.message}`,
+        error.stack
+      );
       throw error;
     }
   }
 
   async refreshAll(): Promise<void> {
-    this.logger.log(`Refresh All Initiated`);
+    this.logger.log(`All Open Positions - Refresh Initiated`);
     const accountIds = Array.from(this.positions.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
 

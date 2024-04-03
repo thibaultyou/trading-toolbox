@@ -45,21 +45,21 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
   }
 
   async getAccountOrders(accountId: string, marketId?: string): Promise<Order[]> {
-    this.logger.log(`Fetch Orders Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Orders - Fetch Initiated - AccountID: ${accountId}`);
 
     try {
       return await this.exchangeService.getOrders(accountId, marketId);
     } catch (error) {
-      this.logger.error(`Update Orders Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      this.logger.error(`Orders - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw error;
     }
   }
 
   getAccountOpenOrders(accountId: string, marketId?: string): Order[] {
-    this.logger.log(`Fetch Open Orders Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Open Orders - Fetch Initiated - AccountID: ${accountId}`);
 
     if (!this.openOrders.has(accountId)) {
-      this.logger.error(`Fetch Open Orders Failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.error(`Open Orders - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
 
       throw new AccountNotFoundException(accountId);
     }
@@ -74,23 +74,46 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
   }
 
   async getAccountOrderById(accountId: string, marketId: string, orderId: string): Promise<Order> {
-    this.logger.log(
-      `Fetch Order By Id Initiated - AccountID: ${accountId}, MarketID: ${marketId}, OrderID: ${orderId}`
-    );
+    this.logger.log(`Order - Fetch Initiated - AccountID: ${accountId}, MarketID: ${marketId}, OrderID: ${orderId}`);
 
     try {
       return await this.exchangeService.getOrder(accountId, marketId, orderId);
     } catch (error) {
       this.logger.error(
-        `Fetch Order By Id Failed - AccountID: ${accountId}, MarketID: ${marketId}, OrderID: ${orderId}, Error: ${error.message}`,
+        `Order - Fetch Failed - AccountID: ${accountId}, MarketID: ${marketId}, OrderID: ${orderId}, Error: ${error.message}`,
         error.stack
       );
       throw error;
     }
   }
 
+  async createOrder(accountId: string, dto: OrderCreateRequestDto): Promise<Order[]> {
+    this.logger.log(`Order - Create Initiated - AccountID: ${accountId}, MarketID: ${dto.marketId}`);
+
+    try {
+      // NOTE multiple orders may be returned (core, tp, sl)
+      const orders = await this.exchangeService.openOrder(
+        accountId,
+        dto.marketId,
+        dto.side,
+        dto.volume,
+        dto.price,
+        dto.stopLossPrice,
+        dto.takeProfitPrice
+      );
+
+      this.logger.log(`Order - Created - AccountID: ${accountId}, Details: ${JSON.stringify(orders)}`);
+
+      return orders;
+    } catch (error) {
+      this.logger.error(`Order - Creation Failed - AccountID: ${accountId}`, error.stack);
+      // TODO custom exception
+      throw new Error(`OrderService Error: ${error.message}`);
+    }
+  }
+
   async refreshOne(accountId: string): Promise<Order[]> {
-    this.logger.log(`Refresh Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Open Orders - Refresh Initiated - AccountID: ${accountId}`);
 
     try {
       const newOrders = await this.exchangeService.getOpenOrders(accountId);
@@ -100,20 +123,20 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       if (haveOrdersChanged) {
         this.openOrders.set(accountId, newOrders);
         this.eventEmitter.emit(Events.ORDERS_UPDATED, new OrdersUpdatedEvent(accountId, newOrders));
-        this.logger.log(`Updated - AccountID: ${accountId}, Count: ${newOrders.length}`);
+        this.logger.log(`Open Orders - Updated - AccountID: ${accountId}, Count: ${newOrders.length}`);
       } else {
-        this.logger.debug(`Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
+        this.logger.debug(`Open Orders - Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
       }
 
       return newOrders;
     } catch (error) {
-      this.logger.error(`Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      this.logger.error(`Open Orders - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw error;
     }
   }
 
   async refreshAll(): Promise<void> {
-    this.logger.log(`Refresh All Initiated`);
+    this.logger.log(`All Open Orders - Refresh Initiated`);
     const accountIds = Array.from(this.openOrders.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
 
@@ -128,7 +151,10 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     if (errors.length > 0) {
       const aggregatedError = new OrdersUpdateAggregatedException(errors);
 
-      this.logger.error(`Multiple Updates Failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
+      this.logger.error(
+        `All Open Orders - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
+        aggregatedError.stack
+      );
       // NOTE Avoid interrupting the loop by not throwing an exception
     }
   }
@@ -147,30 +173,5 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     }
 
     return false;
-  }
-
-  async createOrder(accountId: string, dto: OrderCreateRequestDto): Promise<Order[]> {
-    this.logger.log(`Opening Order - AccountID: ${accountId}, MarketID: ${dto.marketId}`);
-
-    try {
-      // NOTE multiple orders may be returned (core, tp, sl)
-      const orders = await this.exchangeService.openOrder(
-        accountId,
-        dto.marketId,
-        dto.side,
-        dto.volume,
-        dto.price,
-        dto.stopLossPrice,
-        dto.takeProfitPrice
-      );
-
-      this.logger.log(`Order Created - AccountID: ${accountId}, Details: ${JSON.stringify(orders)}`);
-
-      return orders;
-    } catch (error) {
-      this.logger.error(`Failed to create order for AccountID: ${accountId}`, error.stack);
-      // TODO custom exception
-      throw new Error(`OrderService Error: ${error.message}`);
-    }
   }
 }

@@ -27,6 +27,44 @@ export class OrderController extends BaseController {
     );
   }
 
+  @Post('/:accountId')
+  @ApiOperation({ summary: 'Create an order for a specific account' })
+  @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
+  @ApiBody({
+    description: 'Order creation details',
+    type: OrderCreateRequestDto,
+    examples: {
+      aLimitOrder: {
+        summary: 'Limit Order',
+        value: {
+          symbol: 'FTMUSDT',
+          side: 'buy',
+          volume: 1,
+          price: 0.9666,
+          stopLossPrice: 0.95,
+          takeProfitPrice: 1.06
+        }
+      },
+      aMarketOrder: {
+        summary: 'Market Order',
+        value: {
+          symbol: 'FTMUSDT',
+          side: 'sell',
+          volume: 1
+        }
+      }
+    }
+  })
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async createOrder(
+    @Param('accountId') accountId: string,
+    @Body() createOrderRequestDto: OrderCreateRequestDto
+  ): Promise<OrderCreateResponseDto[]> {
+    return (await this.orderService.createOrder(accountId, createOrderRequestDto)).map(
+      (o) => new OrderCreateResponseDto(o)
+    );
+  }
+
   @Get('/:accountId/open')
   @ApiOperation({ summary: 'Fetch all open orders' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
@@ -65,41 +103,6 @@ export class OrderController extends BaseController {
     return new OrderReadResponseDto(order);
   }
 
-  @Post('/:accountId')
-  @ApiOperation({ summary: 'Create an order for a specific account' })
-  @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
-  @ApiBody({
-    description: 'Order creation details',
-    type: OrderCreateRequestDto,
-    examples: {
-      aLimitOrder: {
-        summary: 'Limit Order',
-        value: {
-          symbol: 'FTMUSDT',
-          side: 'buy',
-          volume: 1,
-          price: 0.9666,
-          stopLossPrice: 0.95,
-          takeProfitPrice: 1.06
-        }
-      },
-      aMarketOrder: {
-        summary: 'Market Order',
-        value: {
-          symbol: 'FTMUSDT',
-          side: 'sell',
-          volume: 1
-        }
-      }
-    }
-  })
-  @UsePipes(new ValidationPipe({ transform: true }))
-  async createOrder(
-    @Param('accountId') accountId: string,
-    @Body() createOrderRequestDto: OrderCreateRequestDto
-  ): Promise<OrderCreateResponseDto[]> {
-    return (await this.orderService.createOrder(accountId, createOrderRequestDto)).map(
-      (o) => new OrderCreateResponseDto(o)
-    );
-  }
+  // TODO add order update
+  // TODO add order cancel
 }

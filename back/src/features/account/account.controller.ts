@@ -6,7 +6,6 @@ import { AccountService } from './account.service';
 import { AccountCreateRequestDto } from './dto/account-create.request.dto';
 import { AccountReadResponseDto } from './dto/account-read.response.dto';
 import { AccountUpdateRequestDto } from './dto/account-update.request.dto';
-import { Account } from './entities/account.entity';
 import { AccountNotFoundException } from './exceptions/account.exceptions';
 
 @ApiTags('Accounts')

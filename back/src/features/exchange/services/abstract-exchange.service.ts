@@ -149,7 +149,7 @@ export abstract class AbstractExchangeService implements IExchangeService {
       // Create the primary order
       primaryOrder = await this.exchange.createOrder(symbol, orderType, side, volume, price, params);
       this.logger.log(
-        `${orderType} Order Opened - ID: ${primaryOrder.id}, Side: ${side}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}`
+        `${orderType} Order Opened - OrderID: ${primaryOrder.id}, Side: ${side}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}`
       );
 
       // Handle stop loss and take profit
@@ -199,13 +199,13 @@ export abstract class AbstractExchangeService implements IExchangeService {
 
       // Log additional orders
       additionalOrders.forEach((order) =>
-        this.logger.log(`Additional Order Created - ID: ${order.id}, Type: ${order.type}`)
+        this.logger.log(`Additional Order Created - OrderID: ${order.id}, Type: ${order.type}`)
       );
 
       return [{ ...primaryOrder, symbol }, ...additionalOrders];
     } catch (error) {
       this.logger.error(
-        `Failed to open ${orderType} order - Side: ${side}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}. Error: ${error.message}`,
+        `Failed to Open ${orderType} Order - Side: ${side}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}. Error: ${error.message}`,
         error.stack
       );
       throw new ExchangeOperationFailedException('opening order', error.message);

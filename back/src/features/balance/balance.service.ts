@@ -8,9 +8,8 @@ import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
 import { ExchangeService } from '../exchange/exchange.service';
 import { BalanceGateway } from './balance.gateway';
-import { USDTBalance } from './balance.types';
 import { BalancesUpdatedEvent } from './events/balances-updated.event';
-import { BalancesUpdateAggregatedException, USDTBalanceNotFoundException } from './exceptions/balance.exceptions';
+import { BalancesUpdateAggregatedException } from './exceptions/balance.exceptions';
 import { extractUSDTEquity } from './utils/usdt-equity.util';
 
 @Injectable()
@@ -48,10 +47,10 @@ export class BalanceService implements OnModuleInit, IAccountTracker, IDataRefre
   }
 
   getAccountBalances(accountId: string): Balances {
-    this.logger.log(`Fetch Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Balances - Fetch Initiated - AccountID: ${accountId}`);
 
     if (!this.balances.has(accountId)) {
-      this.logger.error(`Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.error(`Balances - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
 
       throw new AccountNotFoundException(accountId);
     }
@@ -59,27 +58,27 @@ export class BalanceService implements OnModuleInit, IAccountTracker, IDataRefre
     return this.balances.get(accountId);
   }
 
-  getAccountUSDTBalance(accountId: string): USDTBalance {
-    this.logger.log(`Balance (USDT) - Fetch Initiated - AccountID: ${accountId}`);
+  // getAccountUSDTEquity(accountId: string): USDTBalance {
+  //   this.logger.log(`Account Equity (USDT) Fetch Initiated - AccountID: ${accountId}`);
 
-    const balances = this.getAccountBalances(accountId);
+  //   const balances = this.getAccountBalances(accountId);
 
-    if (!balances || !balances.USDT) {
-      this.logger.error(`Balance (USDT) - Fetch Failed - AccountID: ${accountId}, Reason: USDT Field Not Found`);
-      throw new USDTBalanceNotFoundException(accountId);
-    }
+  //   if (!balances || !balances.USDT) {
+  //     this.logger.error(`Account Equity (USDT) Fetch Failed - AccountID: ${accountId}, Reason: USDT Field Not Found`);
+  //     throw new USDTBalanceNotFoundException(accountId);
+  //   }
 
-    const usdtEquity = extractUSDTEquity(balances, this.logger);
-    const usdtBalance = balances.USDT;
+  //   const usdtEquity = extractUSDTEquity(balances, this.logger);
+  //   const usdtBalance = balances.USDT;
 
-    return {
-      equity: usdtEquity,
-      balance: usdtBalance
-    };
-  }
+  //   return {
+  //     equity: usdtEquity,
+  //     balance: usdtBalance
+  //   };
+  // }
 
   async refreshOne(accountId: string): Promise<Balances> {
-    this.logger.log(`Refresh Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Balances - Refresh Initiated - AccountID: ${accountId}`);
 
     try {
       const newBalances = await this.exchangeService.getBalances(accountId);
@@ -91,21 +90,21 @@ export class BalanceService implements OnModuleInit, IAccountTracker, IDataRefre
         this.balanceGateway.sendBalancesUpdate(accountId, newBalances);
         this.eventEmitter.emit(Events.BALANCES_UPDATED, new BalancesUpdatedEvent(accountId, newBalances));
         this.logger.log(
-          `Updated - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(newBalances, this.logger).toFixed(2)} $`
+          `Balances - Updated - AccountID: ${accountId}, Balance (USDT): ${extractUSDTEquity(newBalances, this.logger).toFixed(2)} $`
         );
       } else {
-        this.logger.debug(`Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
+        this.logger.debug(`Balances - Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
       }
 
       return newBalances;
     } catch (error) {
-      this.logger.error(`Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      this.logger.error(`Balances - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw error;
     }
   }
 
   async refreshAll(): Promise<void> {
-    this.logger.log(`Refresh All Initiated`);
+    this.logger.log(`All Balances - Refresh Initiated`);
     const accountIds = Array.from(this.balances.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
 
@@ -120,7 +119,10 @@ export class BalanceService implements OnModuleInit, IAccountTracker, IDataRefre
     if (errors.length > 0) {
       const aggregatedError = new BalancesUpdateAggregatedException(errors);
 
-      this.logger.error(`Multiple Updates Failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
+      this.logger.error(
+        `All Balances - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
+        aggregatedError.stack
+      );
       // NOTE Avoid interrupting the loop by not throwing an exception
     }
   }

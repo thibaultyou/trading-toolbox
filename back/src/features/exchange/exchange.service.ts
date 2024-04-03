@@ -25,7 +25,7 @@ export class ExchangeService {
     this.logger.log(`Initialization Initiated - AccountID: ${account.id}`);
 
     if (!account) {
-      this.logger.error(`Initialization Skipped - Account: ${account.name}, Reason: Missing account`);
+      this.logger.error(`Initialization Skipped - AccountID: ${account.id}, Reason: Missing account`);
 
       return;
     }
@@ -71,7 +71,7 @@ export class ExchangeService {
   }
 
   private getExchange(accountId: string): IExchangeService {
-    this.logger.log(`Balances Fetch Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Exchange Fetch Initiated - AccountID: ${accountId}`);
     const exchange = this.exchanges.get(accountId);
 
     if (!exchange) {

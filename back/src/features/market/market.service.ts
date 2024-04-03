@@ -48,7 +48,7 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
     this.logger.log(`Markets - Fetch Initiated - AccountID: ${accountId}`);
 
     if (!this.markets.has(accountId)) {
-      this.logger.error(`Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.error(`Markets - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
       throw new AccountNotFoundException(accountId);
     }
 
@@ -63,7 +63,7 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
   }
 
   findAccountContractMarketIds(accountId: string, quoteCurrency: string = 'USDT'): string[] {
-    this.logger.log(`Market Contract - Fetch Initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`);
+    this.logger.log(`Market Contract IDs - Fetch Initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`);
     const markets = this.getAccountMarkets(accountId);
 
     return markets
@@ -74,12 +74,14 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
   // TODO add other market types ? spot, future, option, index ...
 
   findAccountContractMarketById(accountId: string, marketId: string): Market {
-    this.logger.log(`Fetch Initiated - AccountID: ${accountId}, MarketID: ${marketId}`);
+    this.logger.log(`Market Contract ID - Fetch Initiated - AccountID: ${accountId}, MarketID: ${marketId}`);
     const markets = this.getAccountMarkets(accountId);
     const specificMarket = markets.find((market) => market.id === marketId && market.active && market.contract);
 
     if (!specificMarket) {
-      this.logger.error(`Fetch Failed - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Market not found`);
+      this.logger.error(
+        `Market Contract ID - Fetch Failed - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Market not found`
+      );
       throw new MarketNotFoundException(accountId, marketId);
     }
 
@@ -87,7 +89,7 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
   }
 
   async refreshOne(accountId: string): Promise<Market[]> {
-    this.logger.log(`Refresh Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Markets - Refresh Initiated - AccountID: ${accountId}`);
 
     try {
       const markets = await this.exchangeService.getMarkets(accountId);
@@ -97,17 +99,17 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
         markets.sort((a, b) => a.id.localeCompare(b.id))
       );
       this.eventEmitter.emit(Events.MARKETS_UPDATED, new MarketsUpdatedEvent(accountId, markets));
-      this.logger.log(`Updated - AccountID: ${accountId}, Count: ${markets.length}`);
+      this.logger.log(`Markets - Updated - AccountID: ${accountId}, Count: ${markets.length}`);
 
       return markets;
     } catch (error) {
-      this.logger.error(`Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      this.logger.error(`Markets - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw error;
     }
   }
 
   async refreshAll(): Promise<void> {
-    this.logger.log(`Markets - Refresh Initiated`);
+    this.logger.log(`All Markets - Refresh Initiated`);
     const accountIds = Array.from(this.markets.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
     const marketsPromises = accountIds.map((accountId) =>
@@ -122,7 +124,7 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
       const aggregatedError = new MarketsUpdateAggregatedException(errors);
 
       this.logger.error(
-        `Markets - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
+        `All Markets - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
         aggregatedError.stack
       );
       // NOTE Avoid interrupting the loop by not throwing an exception
