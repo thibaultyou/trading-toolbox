@@ -14,11 +14,11 @@ import { WebsocketManagerService } from './services/websocket-manager.service';
   imports: [AccountModule, ExchangeModule],
   providers: [
     CoreService,
-    WebsocketManagerService,
     CoreModuleExchangeInitializedEventHandler,
     CoreModuleExchangeTerminatedEventHandler,
     CoreModuleWebSocketSubscribeEventEventHandler,
-    CoreModuleWebSocketUnsubscribeEventEventHandler
+    CoreModuleWebSocketUnsubscribeEventEventHandler,
+    WebsocketManagerService
   ]
 })
 export class CoreModule {}

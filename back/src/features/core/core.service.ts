@@ -1,12 +1,10 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 
 import { AccountService } from '../account/account.service';
 import { ExchangeService } from '../exchange/exchange.service';
 
 @Injectable()
 export class CoreService implements OnModuleInit {
-  private logger = new Logger(CoreService.name);
-
   constructor(
     private accountService: AccountService,
     private exchangeService: ExchangeService

@@ -5,7 +5,9 @@ export class PositionsClosedEvent {
   @ApiProperty()
   public readonly accountId: string;
 
-  @ApiProperty({ type: () => Object })
+  @ApiProperty({
+    type: () => Object
+  })
   public readonly order: Order;
 
   constructor(accountId: string, order: Order) {

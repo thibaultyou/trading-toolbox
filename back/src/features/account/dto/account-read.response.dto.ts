@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { maskString } from '../../../utils/string.util';
+import { maskString } from '../../../common/utils/string.util';
 import { ExchangeType } from '../../exchange/exchange.types';
 import { Account } from '../entities/account.entity';
 

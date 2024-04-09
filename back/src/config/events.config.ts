@@ -1,38 +1,38 @@
 export const Events = {
   // Account module
-  ACCOUNT_CREATED: 'account.created',
-  ACCOUNT_UPDATED: 'account.updated',
-  ACCOUNT_DELETED: 'account.deleted',
+  ACCOUNT_CREATED: 'ACCOUNT.CREATED',
+  ACCOUNT_UPDATED: 'ACCOUNT.UPDATED',
+  ACCOUNT_DELETED: 'ACCOUNT.DELETED',
 
   // Balance module
-  BALANCES_UPDATED: 'balances.updated',
+  BALANCES_UPDATED: 'BALANCES.UPDATED',
 
   // Exchange module
-  EXCHANGE_INITIALIZED: 'exchange.initialized',
-  EXCHANGE_TERMINATED: 'exchange.terminated',
+  EXCHANGE_INITIALIZED: 'EXCHANGE.INITIALIZED',
+  EXCHANGE_TERMINATED: 'EXCHANGE.TERMINATED',
 
   // Market module
-  MARKETS_UPDATED: 'markets.updated',
+  MARKETS_UPDATED: 'MARKETS.UPDATED',
 
   // Order module
-  ORDERS_UPDATED: 'orders.updated',
-  // ORDER_CREATED: 'order.created',
-  // ORDER_UPDATED: 'order.updated',
-  // ORDER_TRIGGERED: 'order.triggered',
-  // ORDER_CANCELLED: 'order.cancelled',
+  ORDERS_UPDATED: 'ORDERS.UPDATED',
+  // ORDER_CREATED: 'ORDER.CREATED',
+  ORDER_UPDATED: 'ORDER.UPDATED',
+  // ORDER_TRIGGERED: 'ORDER.TRIGGERED',
+  // ORDER_CANCELLED: 'ORDER.CANCELLED',
 
   // Position module
-  POSITIONS_UPDATED: 'positions.updated',
-  // POSITION_CREATED: 'position.created',
-  // POSITION_UPDATED: 'position.updated',
-  POSITION_CLOSED: 'position.closed',
+  POSITIONS_UPDATED: 'POSITIONS.UPDATED',
+  // POSITION_CREATED: 'POSITION.CREATED',
+  // POSITION_UPDATED: 'POSITION.UPDATED',
+  POSITION_CLOSED: 'POSITION.CLOSED',
 
   // Ticker module
-  // TICKERS_UPDATED: 'tickers.updated',
-  TICKER_PRICE_UPDATED: 'ticker.price.updated',
+  // TICKERS_UPDATED: 'TICKERS.UPDATED',
+  TICKER_PRICE_UPDATED: 'TICKER.PRICE.UPDATED',
 
   // Core module
-  TICKER_DATA_UPDATED: 'ticker.data.updated',
-  SUBSCRIBE_WEBSOCKET: 'websocket.subscribe',
-  UNSUBSCRIBE_WEBSOCKET: 'websocket.unsubscribe'
+  TICKER_DATA_UPDATED: 'TICKER.DATA.UPDATED',
+  SUBSCRIBE_WEBSOCKET: 'SUBSCRIBE.WEBSOCKET',
+  UNSUBSCRIBE_WEBSOCKET: 'UNSUBSCRIBE.WEBSOCKET'
 };

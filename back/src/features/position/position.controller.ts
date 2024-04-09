@@ -14,7 +14,7 @@ export class PositionController extends BaseController {
     super('Positions');
   }
 
-  @Get('/:accountId')
+  @Get('/accounts/:accountId/positions')
   @ApiOperation({ summary: 'Fetch open positions for a specific account, optionally filtered by symbol and/or side' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   @ApiQuery({
@@ -33,7 +33,7 @@ export class PositionController extends BaseController {
       .map((p) => new PositionReadResponseDto(p));
   }
 
-  @Delete('/:accountId/:marketId/:side')
+  @Delete('/accounts/:accountId/positions/:marketId/:side')
   @ApiOperation({ summary: 'Close a position' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   @ApiParam({

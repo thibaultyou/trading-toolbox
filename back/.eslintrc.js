@@ -21,7 +21,7 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-unused-vars': 'off', // Turn off in favor of unused-imports/no-unused-vars
+    '@typescript-eslint/no-unused-vars': 'off',
     'unused-imports/no-unused-imports': 'warn',
     'unused-imports/no-unused-vars': [
       'warn',
@@ -29,7 +29,7 @@ module.exports = {
     ],
     'simple-import-sort/imports': 'warn',
     'simple-import-sort/exports': 'warn',
-    'import/order': 'off', // Turn off in favor of simple-import-sort/imports
+    'import/order': 'off',
     'padding-line-between-statements': [
       'warn',
       { blankLine: 'always', prev: '*', next: 'return' },
@@ -38,5 +38,7 @@ module.exports = {
       { blankLine: 'always', prev: '*', next: ['if', 'try', 'class', 'function', 'export'] },
       { blankLine: 'always', prev: ['if', 'try', 'class', 'function', 'export'], next: '*' }
     ],
+    'arrow-body-style': ['error', 'as-needed'],
+    'prefer-arrow-callback': 'error'
   },
 };

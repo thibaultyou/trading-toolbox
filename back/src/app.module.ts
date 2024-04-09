@@ -9,6 +9,7 @@ import { BalanceModule } from './features/balance/balance.module';
 import { CoreModule } from './features/core/core.module';
 import { ExchangeModule } from './features/exchange/exchange.module';
 import { HealthModule } from './features/health/health.module';
+import { LoggerModule } from './features/logger/logger.module';
 import { MarketModule } from './features/market/market.module';
 import { OrderModule } from './features/order/order.module';
 import { PositionModule } from './features/position/position.module';
@@ -16,6 +17,7 @@ import { TickerModule } from './features/ticker/ticker.module';
 
 @Module({
   imports: [
+    LoggerModule, // Global
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: databaseConfig.DATABASE_HOST,

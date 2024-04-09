@@ -1,19 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { Events } from '../../../config';
+import { EventHandlersContext, Events } from '../../../config';
 import { AccountDeletedEvent } from '../../account/events/account-deleted.event';
 import { ExchangeService } from '../exchange.service';
 
 @Injectable()
 export class ExchangeAccountDeletedEventHandler {
-  private logger = new Logger(ExchangeAccountDeletedEventHandler.name);
+  private logger = new Logger(EventHandlersContext.ExchangeModuleEventHandler);
 
   constructor(private exchangeService: ExchangeService) {}
 
-  @OnEvent(Events.ACCOUNT_DELETED)
+  @OnEvent(Events.ACCOUNT_CREATED)
   async handle(event: AccountDeletedEvent) {
-    const actionContext = `Event: ACCOUNT_DELETED - AccountID: ${event.account.id}`;
+    const actionContext = `Event: ${Events.ACCOUNT_CREATED} - AccountID: ${event.account.id}`;
 
     try {
       await this.exchangeService.cleanResources(event.account.id);

@@ -1,19 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { Events } from '../../../config';
+import { EventHandlersContext, Events } from '../../../config';
 import { TickerDataUpdatedEvent } from '../events/ticker-data-updated.event';
 import { TickerService } from '../ticker.service';
 
 @Injectable()
 export class TickerModuleTickerUpdatedEventHandler {
-  private logger = new Logger(TickerModuleTickerUpdatedEventHandler.name);
+  private logger = new Logger(EventHandlersContext.TickerModuleEventHandler);
 
   constructor(private tickerService: TickerService) {}
 
   @OnEvent(Events.TICKER_DATA_UPDATED)
   handle(event: TickerDataUpdatedEvent) {
-    const actionContext = `Event: TICKER_DATA_UPDATED - AccountID: ${event.accountId}`;
+    const actionContext = `Event: ${Events.TICKER_DATA_UPDATED} - AccountID: ${event.accountId}`;
 
     try {
       this.tickerService.updateTickerData(event.accountId, event.marketId, event.data);

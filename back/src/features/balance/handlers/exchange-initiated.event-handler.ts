@@ -1,19 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { Events } from '../../../config';
+import { EventHandlersContext, Events } from '../../../config';
 import { ExchangeInitializedEvent } from '../../exchange/events/exchange-initialized.event';
 import { BalanceService } from '../balance.service';
 
 @Injectable()
 export class BalanceModuleExchangeInitializedEventHandler {
-  private logger = new Logger(BalanceModuleExchangeInitializedEventHandler.name);
+  private logger = new Logger(EventHandlersContext.BalanceModuleEventHandler);
 
   constructor(private balanceService: BalanceService) {}
 
   @OnEvent(Events.EXCHANGE_INITIALIZED)
-  async handle(event: ExchangeInitializedEvent) {
-    const actionContext = `Event: EXCHANGE_INITIALIZED - AccountID: ${event.accountId}`;
+  async handle(event: ExchangeInitializedEvent): Promise<void> {
+    const actionContext = `Event: ${Events.EXCHANGE_INITIALIZED} - AccountID: ${event.accountId}`;
 
     try {
       await this.balanceService.startTrackingAccount(event.accountId);

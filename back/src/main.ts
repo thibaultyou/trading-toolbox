@@ -6,14 +6,15 @@ import { AppModule } from './app.module';
 import { Urls } from './config';
 import { AccountExceptionsFilter } from './features/account/exceptions/account.exceptions.filter';
 import { BalanceExceptionsFilter } from './features/balance/exceptions/balance.exceptions.filter';
+import { AppLogger } from './features/logger/logger.service';
 import { MarketExceptionsFilter } from './features/market/exceptions/market-exceptions.filter';
 import { PositionExceptionsFilter } from './features/position/exceptions/position-exceptions.filter';
 import { TickerExceptionsFilter } from './features/ticker/exceptions/ticker-exceptions.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'log']
-  });
+  const app = await NestFactory.create(AppModule);
+
+  app.useLogger(new AppLogger());
 
   const options = new DocumentBuilder().setTitle('Trading toolbox').setVersion('1.0').build();
 

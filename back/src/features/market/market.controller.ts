@@ -12,7 +12,7 @@ export class MarketController extends BaseController {
     super('Markets');
   }
 
-  @Get('/:accountId/contract/all')
+  @Get('/accounts/:accountId/markets/contracts/all')
   @ApiOperation({
     summary: 'Fetch all contract market IDs'
   })
@@ -31,7 +31,7 @@ export class MarketController extends BaseController {
     return this.marketService.findAccountContractMarketIds(accountId, quoteCurrency);
   }
 
-  @Get('/:accountId/contract/:marketId')
+  @Get('/accounts/:accountId/markets/contracts/:marketId')
   @ApiOperation({
     summary: 'Fetch a single contract market'
   })

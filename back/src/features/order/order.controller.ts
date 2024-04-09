@@ -1,14 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../../common/base/base.controller';
 import { OrderCreateRequestDto } from './dto/order-create.request.dto';
 import { OrderCreateResponseDto } from './dto/order-create.response.dto';
+import { OrderUpdateResponseDto } from './dto/order-update.response.dto';
 import { OrderDeleteResponseDto } from './dto/order-delete.response.dto';
 import { OrderReadResponseDto } from './dto/order-read.response.dto';
+import { OrderUpdateRequestDto } from './dto/order-update.request.dto';
 import { OrderService } from './order.service';
 
-// TODO add order update
 // TODO add create many
 // TODO add cancel many
 
@@ -19,7 +20,7 @@ export class OrderController extends BaseController {
     super('Orders');
   }
 
-  @Get('/:accountId')
+  @Get('/accounts/:accountId/orders')
   @ApiOperation({ summary: 'Fetch all orders' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   @ApiQuery({
@@ -36,7 +37,24 @@ export class OrderController extends BaseController {
     );
   }
 
-  @Post('/:accountId')
+  @Get('/accounts/:accountId/orders/open')
+  @ApiOperation({ summary: 'Fetch all open orders' })
+  @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
+  @ApiQuery({
+    name: 'marketId',
+    required: false,
+    description: 'Optional ID of the market symbol to filter orders (e.g., BTCUSDT)'
+  })
+  async getAccountOpenOrders(
+    @Param('accountId') accountId: string,
+    @Query('marketId') marketId?: string
+  ): Promise<OrderReadResponseDto[]> {
+    return (await this.orderService.getAccountOpenOrders(accountId, marketId)).map(
+      (order) => new OrderReadResponseDto(order)
+    );
+  }
+
+  @Post('/accounts/:accountId/orders')
   @ApiOperation({ summary: 'Create an order' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   @ApiBody({
@@ -72,46 +90,53 @@ export class OrderController extends BaseController {
     return new OrderCreateResponseDto(await this.orderService.createOrder(accountId, createOrderRequestDto));
   }
 
-  @Get('/:accountId/open')
-  @ApiOperation({ summary: 'Fetch all open orders' })
+  @Get('/accounts/:accountId/orders/:orderId')
+  @ApiOperation({ summary: 'Fetch an Order by ID' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
-  @ApiParam({
-    name: 'marketId',
-    required: true,
-    description: 'The ID of the market symbol to filter orders (e.g., BTCUSDT)'
-  })
   @ApiParam({ name: 'orderId', required: true, description: 'The ID of the order to retrieve' })
   async getAccountOrderById(
     @Param('accountId') accountId: string,
-    @Param('marketId') marketId: string,
     @Param('orderId') orderId: string
   ): Promise<OrderReadResponseDto> {
-    return new OrderReadResponseDto(await this.orderService.getAccountOrderById(accountId, marketId, orderId));
+    return new OrderReadResponseDto(await this.orderService.getAccountOrderById(accountId, orderId));
   }
 
-  @Delete('/:accountId/:marketId/:orderId')
+  @Patch('/accounts/:accountId/orders/:orderId')
+  @ApiOperation({ summary: 'Update an order' })
+  @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
+  @ApiParam({ name: 'orderId', required: true, description: 'The ID of the order to update' })
+  @ApiBody({
+    description: 'Order update details',
+    type: OrderUpdateRequestDto
+  })
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async updateOrder(
+    @Param('accountId') accountId: string,
+    @Param('orderId') orderId: string,
+    @Body() updateOrderDto: OrderUpdateRequestDto
+  ): Promise<OrderUpdateResponseDto> {
+    const order = await this.orderService.updateOrder(accountId, orderId, updateOrderDto);
+
+    return new OrderUpdateResponseDto(order);
+  }
+
+  @Delete('/accounts/:accountId/orders/:orderId')
   @ApiOperation({ summary: 'Cancel an order' })
   @ApiParam({
     name: 'accountId',
     required: true,
     description: 'The ID of the account for which the order will be canceled'
   })
-  @ApiParam({
-    name: 'marketId',
-    required: true,
-    description: 'The ID of the market symbol to filter orders (e.g., BTCUSDT)'
-  })
   @ApiParam({ name: 'orderId', required: true, description: 'The ID of the order to cancel' })
   async cancelOrder(
     @Param('accountId') accountId: string,
-    @Param('marketId') marketId: string,
     @Param('orderId') orderId: string
   ): Promise<OrderDeleteResponseDto> {
-    return new OrderDeleteResponseDto(await this.orderService.cancelOrder(accountId, marketId, orderId));
+    return new OrderDeleteResponseDto(await this.orderService.cancelOrder(accountId, orderId));
   }
 
-  @Delete('/:accountId/:marketId')
-  @ApiOperation({ summary: 'Cancel multiple orders' })
+  @Delete('/accounts/:accountId/ordersByMarket/:marketId')
+  @ApiOperation({ summary: 'Cancel multiple orders by market ID' })
   @ApiParam({
     name: 'accountId',
     required: true,
@@ -122,11 +147,11 @@ export class OrderController extends BaseController {
     required: true,
     description: 'The ID of the market symbol to filter orders (e.g., BTCUSDT)'
   })
-  async cancelOrders(
+  async cancelOrdersByMarket(
     @Param('accountId') accountId: string,
     @Param('marketId') marketId: string
   ): Promise<OrderDeleteResponseDto[]> {
-    return (await this.orderService.cancelOrders(accountId, marketId)).map(
+    return (await this.orderService.cancelOrdersByMarket(accountId, marketId)).map(
       (order) => new OrderDeleteResponseDto(order)
     );
   }

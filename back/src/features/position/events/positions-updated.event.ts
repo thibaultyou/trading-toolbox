@@ -5,7 +5,9 @@ export class PositionsUpdatedEvent {
   @ApiProperty()
   public readonly accountId: string;
 
-  @ApiProperty({ type: () => [Object] })
+  @ApiProperty({
+    type: () => [Object]
+  })
   public readonly positions: Position[];
 
   constructor(accountId: string, positions: Position[]) {

@@ -1,19 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { Events } from '../../../config';
+import { EventHandlersContext, Events } from '../../../config';
 import { ExchangeTerminatedEvent } from '../../exchange/events/exchange-terminated.event';
 import { TickerService } from '../ticker.service';
 
 @Injectable()
 export class TickerModuleExchangeTerminatedEventHandler {
-  private logger = new Logger(TickerModuleExchangeTerminatedEventHandler.name);
+  private logger = new Logger(EventHandlersContext.TickerModuleEventHandler);
 
   constructor(private tickerService: TickerService) {}
 
   @OnEvent(Events.EXCHANGE_TERMINATED)
   handle(event: ExchangeTerminatedEvent) {
-    const actionContext = `Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
+    const actionContext = `Event: ${Events.EXCHANGE_TERMINATED} - AccountID: ${event.accountId}`;
 
     try {
       this.tickerService.stopTrackingAccount(event.accountId);

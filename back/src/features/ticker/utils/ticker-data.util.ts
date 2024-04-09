@@ -10,6 +10,5 @@ export const getPriceFromTickerData = (data: TickerData): number | null => {
   return null;
 };
 
-export const hasTickerDataChanged = (existingData: TickerData, newData: TickerData): boolean => {
-  return Object.entries(newData).some(([key, value]) => existingData[key] !== value);
-};
+export const hasTickerDataChanged = (existingData: TickerData, newData: TickerData): boolean =>
+  Object.entries(newData).some(([key, value]) => existingData[key] !== value);

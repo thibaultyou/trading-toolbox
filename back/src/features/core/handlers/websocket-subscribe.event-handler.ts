@@ -1,19 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { Events } from '../../../config';
+import { EventHandlersContext, Events } from '../../../config';
 import { WebSocketSubscribeEvent } from '../events/websocket-subscribe.event';
 import { WebsocketManagerService } from '../services/websocket-manager.service';
 
 @Injectable()
 export class CoreModuleWebSocketSubscribeEventEventHandler {
-  private logger = new Logger(CoreModuleWebSocketSubscribeEventEventHandler.name);
+  private logger = new Logger(EventHandlersContext.CoreModuleEventHandler);
 
   constructor(private websocketManagerService: WebsocketManagerService) {}
 
   @OnEvent(Events.SUBSCRIBE_WEBSOCKET)
   async handle(event: WebSocketSubscribeEvent) {
-    const actionContext = `Event: SUBSCRIBE_WEBSOCKET - AccountID: ${event.accountId}`;
+    const actionContext = `Event: ${Events.SUBSCRIBE_WEBSOCKET} - AccountID: ${event.accountId}`;
 
     try {
       await this.websocketManagerService.subscribe(event.accountId, event.topics);
