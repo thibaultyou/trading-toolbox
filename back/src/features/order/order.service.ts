@@ -9,10 +9,10 @@ import { AccountNotFoundException } from '../account/exceptions/account.exceptio
 import { ExchangeService } from '../exchange/exchange.service';
 import { OrderCreateRequestDto } from './dto/order-create.request.dto';
 import { OrderUpdateRequestDto } from './dto/order-update.request.dto';
+import { OrderUpdatedEvent } from './events/order-updated.event';
 import { OrdersUpdatedEvent } from './events/orders-updated.event';
 import { OrdersUpdateAggregatedException } from './exceptions/orders.exceptions';
 import { OrderSide } from './order.types';
-import { OrderUpdatedEvent } from './events/order-updated.event';
 
 @Injectable()
 export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresher<Order[]> {
@@ -216,8 +216,12 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         {}
       );
 
-      this.eventEmitter.emit(Events.ORDER_UPDATED, new OrderUpdatedEvent(accountId, order.info.orderId, order.info.orderLinkId));
+      this.eventEmitter.emit(
+        Events.ORDER_UPDATED,
+        new OrderUpdatedEvent(accountId, order.info.orderId, order.info.orderLinkId)
+      );
       this.logger.log(`Order - Updated - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
+
       return order;
     } catch (error) {
       this.logger.error(`Order - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);

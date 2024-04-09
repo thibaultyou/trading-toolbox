@@ -49,7 +49,10 @@ export class ExchangeService {
       this.logger.log(`Exchange - Initialized Successfully - AccountID: ${account.id}`);
       this.eventEmitter.emit(Events.EXCHANGE_INITIALIZED, new ExchangeInitializedEvent(account.id));
     } catch (error) {
-      this.logger.error(`Exchange - Initialization Failed - AccountID: ${account.id}, Error: ${error.message}`, error.stack);
+      this.logger.error(
+        `Exchange - Initialization Failed - AccountID: ${account.id}, Error: ${error.message}`,
+        error.stack
+      );
     }
   }
 
@@ -58,7 +61,9 @@ export class ExchangeService {
     const exchange = this.exchanges.get(accountId);
 
     if (!exchange) {
-      this.logger.error(`Exchange - Not Found - AccountID: ${accountId}, Reason: Exchange service for account not initialized`);
+      this.logger.error(
+        `Exchange - Not Found - AccountID: ${accountId}, Reason: Exchange service for account not initialized`
+      );
       throw new ExchangeNotFoundException(accountId);
     }
 
@@ -182,7 +187,10 @@ export class ExchangeService {
 
       return positions;
     } catch (error) {
-      this.logger.error(`Open Positions - Fetch Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      this.logger.error(
+        `Open Positions - Fetch Failed - AccountID: ${accountId}, Error: ${error.message}`,
+        error.stack
+      );
       throw new ExchangeOperationFailedException('getOpenPositions', error);
     }
   }
