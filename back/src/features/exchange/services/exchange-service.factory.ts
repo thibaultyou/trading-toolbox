@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { Account } from '../../account/entities/account.entity';
 import { UnsupportedExchangeException } from '../exceptions/exchange.exceptions';
@@ -8,8 +8,6 @@ import { BybitExchangeService } from './bybit-exchange.service';
 
 @Injectable()
 export class ExchangeFactory {
-  protected readonly logger = new Logger(ExchangeFactory.name);
-
   public async createExchange(account: Account): Promise<IExchangeService> {
     let exchange: IExchangeService;
 

@@ -1,7 +1,11 @@
 import { Logger } from '@nestjs/common';
-import ccxt, { Balances, Exchange, Market, Order, Position } from 'ccxt';
+import { Balances, Exchange, Market, Order, Position } from 'ccxt';
+import { pipe } from 'fp-ts/function';
+import { toError } from 'fp-ts/lib/Either';
+import * as TE from 'fp-ts/TaskEither';
 
 import { Account } from '../../account/entities/account.entity';
+import { logEffect, logError } from '../../logger/logger.utils';
 import { OrderSide, OrderType } from '../../order/order.types';
 import {
   ExchangeOperationFailedException,
@@ -10,7 +14,6 @@ import {
 import { IExchangeService } from '../exchange.interfaces';
 
 // TODO improve logging, error handling, custom exceptions
-
 export abstract class AbstractExchangeService implements IExchangeService {
   protected readonly logger = new Logger(AbstractExchangeService.name);
   protected exchange: Exchange;
@@ -22,34 +25,13 @@ export abstract class AbstractExchangeService implements IExchangeService {
 
   abstract initialize(): Promise<boolean>;
 
-  async testCredentials(): Promise<void> {
-    try {
-      await this.exchange.fetchBalance();
-    } catch (error) {
-      const errMsg = `Credentials Verification Failed - Account: ${this.account.name}, Error: ${error.message}`;
-
-      this.logger.error(errMsg, error.stack);
-
-      if (error instanceof ccxt.AuthenticationError) {
-        throw new ExchangeOperationFailedException('verifying credentials', errMsg);
-      }
-
-      throw new ExchangeOperationFailedException('verifying credentials', error.message);
-    }
-  }
-
-  async getBalances(): Promise<Balances> {
-    try {
-      const balances = await this.exchange.fetchBalance();
-
-      this.logger.log(`Fetched Balances Successfully - AccountID: ${this.account.id}`);
-
-      return balances;
-    } catch (error) {
-      this.logger.error(`Failed to Fetch Balances - AccountID: ${this.account.id}, Error: ${error.message}`);
-      throw new ExchangeOperationFailedException('fetching balances', error.message);
-    }
-  }
+  getBalances = (): TE.TaskEither<Error, Balances> =>
+    pipe(
+      TE.tryCatch(() => this.exchange.fetchBalance(), toError),
+      TE.tap(logEffect(this.logger, `Exchange - Fetched Balances Successfully - AccountID: ${this.account.id}`)),
+      // TE.mapError((error) => new ExchangeOperationFailedException('fetching balances', String(error))),
+      TE.tapError(logError(this.logger, `Exchange - Failed to Fetch Balances - AccountID: ${this.account.id}`))
+    );
 
   async getMarkets(): Promise<Market[]> {
     try {
@@ -163,6 +145,31 @@ export abstract class AbstractExchangeService implements IExchangeService {
     }
   }
 
+  async updateOrder(
+    orderId: string,
+    symbol: string,
+    type: string,
+    side: OrderSide,
+    volume?: number,
+    price?: number,
+    params?: Record<string, any>
+  ): Promise<Order> {
+    try {
+      const order = await this.exchange.editOrder(orderId, symbol, type, side, volume, price, params);
+
+      this.logger.log(
+        `Order Updated - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}`
+      );
+
+      return order;
+    } catch (error) {
+      this.logger.error(
+        `Failed to Edit Order - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}, Error: ${error.message}`
+      );
+      throw new ExchangeOperationFailedException('editing order', error.message);
+    }
+  }
+
   async closePosition(symbol: string, side: OrderSide): Promise<Order> {
     try {
       const order = await this.exchange.closePosition(symbol, side);
@@ -175,75 +182,6 @@ export abstract class AbstractExchangeService implements IExchangeService {
       throw new ExchangeOperationFailedException('close position', error.message);
     }
   }
-
-  // async updateStopLoss(orderId: string, symbol: string, amount: number, stopLossPrice: number): Promise<Order> {
-  //   try {
-  //     const updatedOrder = await this.editOrder(
-  //       orderId,
-  //       symbol,
-  //       'stop_loss',
-  //       'sell',
-  //       amount,
-  //       stopLossPrice,
-  //       'updating stop loss'
-  //     );
-
-  //     this.logger.log(
-  //       `Stop Loss Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`
-  //     );
-
-  //     return updatedOrder;
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
-
-  // async updateTakeProfit(orderId: string, symbol: string, amount: number, takeProfitPrice: number): Promise<Order> {
-  //   try {
-  //     const updatedOrder = await this.editOrder(
-  //       orderId,
-  //       symbol,
-  //       'take_profit',
-  //       'sell',
-  //       amount,
-  //       takeProfitPrice,
-  //       'updating take profit'
-  //     );
-
-  //     this.logger.log(
-  //       `Take Profit Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`
-  //     );
-
-  //     return updatedOrder;
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
-
-  // private async editOrder(
-  //   orderId: string,
-  //   symbol: string,
-  //   type: string,
-  //   side: string,
-  //   amount: number,
-  //   price: number,
-  //   actionDescription: string
-  // ): Promise<Order> {
-  //   try {
-  //     const order = await this.exchange.editOrder(orderId, symbol, type, side, amount, price);
-
-  //     this.logger.log(
-  //       `Order Edited - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Price: ${price}`
-  //     );
-
-  //     return order;
-  //   } catch (error) {
-  //     this.logger.error(
-  //       `Failed to Edit Order - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Price: ${price}, Error: ${error.message}`
-  //     );
-  //     throw new ExchangeOperationFailedException(actionDescription, error.message);
-  //   }
-  // }
 
   async cancelOrders(symbol: string, params?: Record<string, any>): Promise<Order[]> {
     try {
@@ -287,3 +225,47 @@ export abstract class AbstractExchangeService implements IExchangeService {
     }
   }
 }
+
+// async updateStopLoss(orderId: string, symbol: string, amount: number, stopLossPrice: number): Promise<Order> {
+//   try {
+//     const updatedOrder = await this.editOrder(
+//       orderId,
+//       symbol,
+//       'stop_loss',
+//       'sell',
+//       amount,
+//       stopLossPrice,
+//       'updating stop loss'
+//     );
+
+//     this.logger.log(
+//       `Stop Loss Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`
+//     );
+
+//     return updatedOrder;
+//   } catch (error) {
+//     throw error;
+//   }
+// }
+
+// async updateTakeProfit(orderId: string, symbol: string, amount: number, takeProfitPrice: number): Promise<Order> {
+//   try {
+//     const updatedOrder = await this.editOrder(
+//       orderId,
+//       symbol,
+//       'take_profit',
+//       'sell',
+//       amount,
+//       takeProfitPrice,
+//       'updating take profit'
+//     );
+
+//     this.logger.log(
+//       `Take Profit Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`
+//     );
+
+//     return updatedOrder;
+//   } catch (error) {
+//     throw error;
+//   }
+// }

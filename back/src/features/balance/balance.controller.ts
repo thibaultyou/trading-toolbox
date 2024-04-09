@@ -12,7 +12,7 @@ export class BalanceController extends BaseController {
     super('Balances');
   }
 
-  @Get('/:accountId')
+  @Get('/accounts/:accountId/balances')
   @ApiOperation({ summary: 'Fetch balances' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   getAccountBalances(@Param('accountId') accountId: string): BalanceReadResponseDto {
