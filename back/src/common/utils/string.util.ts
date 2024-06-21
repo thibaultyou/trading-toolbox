@@ -5,6 +5,5 @@ export function maskString(str: string, visibleLength = 4): string {
     masked = '*'.repeat(str.length - visibleLength);
     masked += str.substr(str.length - visibleLength);
   }
-
   return masked;
 }

@@ -56,7 +56,6 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
       this.logger.error(
         `Open Positions - Fetch Failed - AccountID: ${accountId}${marketId ? `, MarketID: ${marketId}` : ''}${side ? `, Side: ${side}` : ''}, Reason: Account not found`
       );
-
       throw new AccountNotFoundException(accountId);
     }
 
@@ -69,7 +68,6 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
     if (side) {
       positions = positions.filter((position) => position.info.side.toLowerCase() === side.toLowerCase());
     }
-
     return positions;
   }
 
@@ -95,10 +93,8 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
       this.logger.error(position);
       //
       const order = await this.exchangeService.closePosition(accountId, marketId, side, position.contracts);
-
       this.eventEmitter.emit(Events.POSITION_CLOSED, new PositionsClosedEvent(accountId, order));
       this.logger.log(`Open Position - Close Succeeded - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
-
       return order;
     } catch (error) {
       this.logger.error(
@@ -115,11 +111,9 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
 
     try {
       const positions = await this.exchangeService.getOpenPositions(accountId);
-
       this.positions.set(accountId, positions);
       this.eventEmitter.emit(Events.POSITIONS_UPDATED, new PositionsUpdatedEvent(accountId, positions));
       this.logger.log(`Open Positions - Updated - AccountID: ${accountId}, Count: ${positions.length}`);
-
       return positions;
     } catch (error) {
       this.logger.error(
@@ -134,18 +128,15 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
     this.logger.log(`All Open Positions - Refresh Initiated`);
     const accountIds = Array.from(this.positions.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
-
     const positionsPromises = accountIds.map((accountId) =>
       this.refreshOne(accountId).catch((error) => {
         errors.push({ accountId, error });
       })
     );
-
     await Promise.all(positionsPromises);
 
     if (errors.length > 0) {
       const aggregatedError = new PositionsUpdateAggregatedException(errors);
-
       this.logger.error(`Multiple Updates Failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
       // NOTE Avoid interrupting the loop by not throwing an exception
     }

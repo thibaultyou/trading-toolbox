@@ -9,11 +9,8 @@ describe('AccountResponseDto', () => {
     const key = 'testKey';
     const secret = 'testSecret';
     const exchange = ExchangeType.Bybit;
-
     const account = new Account(name, key, secret, exchange);
-
     const dto = new AccountResponseDto(account);
-
     expect(dto.name).toBe(account.name);
     expect(dto.key).toBe(maskString(account.key));
     expect(dto.secret).toBe('********');

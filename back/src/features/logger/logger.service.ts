@@ -20,13 +20,11 @@ export class AppLogger implements LoggerService {
         format.timestamp({ format: 'YYYY/MM/DD,HH:mm:ss' }),
         format.printf((info) => {
           const ctx = this.context ? `[${this.context}]` : '';
-
           return `${info.timestamp} [${info.level}]${ctx} | ${info.message}`;
         })
       ),
       transports: [new transports.Console()]
     });
-
     return {
       setContext: (context: string) => {
         this.context = context;

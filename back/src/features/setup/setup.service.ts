@@ -80,7 +80,6 @@ export class SetupService implements OnModuleInit, IAccountTracker {
     // TODO save as entity
 
     const setups = this.trackedSetups.get(accountId) || [];
-
     setups.push(setupData);
     this.trackedSetups.set(accountId, setups);
 
@@ -88,7 +87,6 @@ export class SetupService implements OnModuleInit, IAccountTracker {
     this.logger.warn(
       `Setup - Created - AccountID: ${accountId}, SetupID: ${setupData.id}, Details: ${JSON.stringify(setupData)}`
     );
-
     return setupData;
   }
 
@@ -117,17 +115,14 @@ export class SetupService implements OnModuleInit, IAccountTracker {
     if (!setups.length) {
       throw new AccountNotFoundException(`No setups found for account ID: ${accountId}`);
     }
-
     return setups;
   }
 
   async refreshAll(): Promise<void> {
     this.logger.log(`All Setups - Refresh Initiated`);
     const accountIds = Array.from(this.trackedSetups.keys());
-
     for (const accountId of accountIds) {
       const setups = this.trackedSetups.get(accountId);
-
       setups.forEach(async (setup) => {
         try {
           switch (setup.status) {

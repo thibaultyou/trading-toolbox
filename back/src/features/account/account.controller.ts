@@ -19,7 +19,6 @@ export class AccountController extends BaseController {
   @ApiOperation({ summary: 'Fetch all accounts' })
   async getAllAccounts(): Promise<AccountReadResponseDto[]> {
     const accounts = await this.accountService.getAllAccounts();
-
     return accounts.map((account) => new AccountReadResponseDto(account));
   }
 
@@ -29,10 +28,7 @@ export class AccountController extends BaseController {
   async getAccountById(@Param('id') id: string): Promise<AccountReadResponseDto> {
     const account = await this.accountService.getAccountById(id);
 
-    if (!account) {
-      throw new AccountNotFoundException(id);
-    }
-
+    if (!account) throw new AccountNotFoundException(id);
     return new AccountReadResponseDto(account);
   }
 
@@ -72,7 +68,6 @@ export class AccountController extends BaseController {
     if (!account) {
       throw new AccountNotFoundException(id);
     }
-
     return new AccountReadResponseDto(account);
   }
 

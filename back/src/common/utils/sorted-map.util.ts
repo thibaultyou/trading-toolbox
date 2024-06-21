@@ -24,18 +24,15 @@ class SortedMap {
     for (const [key, val] of this.map.entries()) {
       if (val === value) return key;
     }
-
     return undefined;
   }
 
   getKeyByValueInRange(targetValue: number, range: number): string | undefined {
     const lowerBound = targetValue - range;
     const upperBound = targetValue + range;
-
     for (const [key, value] of this.map.entries()) {
       if (value >= lowerBound && value <= upperBound) return key;
     }
-
     return undefined;
   }
 
@@ -52,11 +49,9 @@ class SortedMap {
       if (idx !== -1) {
         this.values.splice(idx, 1);
         this.map.delete(key);
-
         return true;
       }
     }
-
     return false;
   }
 
@@ -89,7 +84,6 @@ class SortedMap {
     const firstKey = entry ? entry[0] : undefined;
 
     if (!firstKey) return undefined;
-
     return [firstKey, firstValue];
   }
 
@@ -101,7 +95,6 @@ class SortedMap {
     const lastKey = entry ? entry[0] : undefined;
 
     if (!lastKey) return undefined;
-
     return [lastKey, lastValue];
   }
 }

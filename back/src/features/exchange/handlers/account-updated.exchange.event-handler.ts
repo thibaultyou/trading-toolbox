@@ -17,10 +17,16 @@ export class ExchangeAccountUpdatedEventHandler {
 
     try {
       await this.exchangeService.cleanResources(event.account.id);
-      await this.exchangeService.initializeExchange(event.account);
-      this.logger.log(actionContext);
+      this.logger.log(`${actionContext} - Successfully cleaned resources`);
     } catch (error) {
-      this.logger.error(`${actionContext} - Failed to updated exchange - Error: ${error.message}`, error.stack);
+      this.logger.error(`${actionContext} - Failed to clean resources - Error: ${error.message}`, error.stack);
+    }
+
+    try {
+      await this.exchangeService.initializeExchange(event.account);
+      this.logger.log(`${actionContext} - Successfully initialized exchange`);
+    } catch (error) {
+      this.logger.error(`${actionContext} - Failed to initialize exchange - Error: ${error.message}`, error.stack);
     }
   }
 }

@@ -13,13 +13,10 @@ import { TickerExceptionsFilter } from './features/ticker/exceptions/ticker-exce
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
   app.useLogger(new AppLogger());
 
   const options = new DocumentBuilder().setTitle('Trading toolbox').setVersion('1.0').build();
-
   const document = SwaggerModule.createDocument(app, options);
-
   SwaggerModule.setup(Urls.SWAGGER_DOCS, app, document);
 
   app.useGlobalFilters(

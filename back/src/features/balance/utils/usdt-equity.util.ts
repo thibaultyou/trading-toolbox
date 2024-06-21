@@ -16,6 +16,5 @@ export function extractUSDTEquity(balances: Balances, logger: Logger): number | 
   } else {
     logger.warn(`USDT equity not found or is undefined`);
   }
-
   return usdtEquity;
 }

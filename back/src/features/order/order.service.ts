@@ -68,7 +68,6 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
     if (!this.openOrders.has(accountId)) {
       this.logger.error(`Open Orders - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
-
       throw new AccountNotFoundException(accountId);
     }
 
@@ -77,7 +76,6 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     if (marketId) {
       orders = orders.filter((order) => order.info.symbol === marketId);
     }
-
     return orders;
   }
 
@@ -86,7 +84,6 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
     if (!this.openOrders.has(accountId)) {
       this.logger.error(`Order - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
-
       throw new AccountNotFoundException(accountId);
     }
 
@@ -98,11 +95,9 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
     try {
       const order = await this.exchangeService.getOrder(accountId, orderToFetch.info.symbol, orderId);
-
       this.logger.log(
         `Order - Fetched - AccountID: ${accountId}, OrderID: ${orderId}, Details: ${JSON.stringify(order)}`
       );
-
       return order;
     } catch (error) {
       this.logger.error(
@@ -125,11 +120,10 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         dto.quantity,
         dto.price,
         dto.takeProfitPrice,
-        dto.stopLossPrice
+        dto.stopLossPrice,
+        dto.params
       );
-
       this.logger.log(`Order - Created - AccountID: ${accountId}, Details: ${JSON.stringify(order)}`);
-
       return order;
     } catch (error) {
       this.logger.error(`Order - Creation Failed - AccountID: ${accountId}`, error.stack);
@@ -142,7 +136,6 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
     if (!this.openOrders.has(accountId)) {
       this.logger.error(`Order - Cancel Failed - AccountID: ${accountId}, Reason: Account not found`);
-
       throw new AccountNotFoundException(accountId);
     }
 
@@ -154,9 +147,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
     try {
       const order = await this.exchangeService.cancelOrder(accountId, orderId, orderToUpdate.info.symbol);
-
       this.logger.log(`Order - Cancelled - AccountID: ${accountId}, OrderID: ${orderId}`);
-
       return order;
     } catch (error) {
       this.logger.error(`Order - Cancellation Failed - AccountID: ${accountId}, OrderID: ${orderId}`, error.stack);
@@ -177,7 +168,6 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       } else {
         this.logger.log(`Orders - Cancelled - AccountID: ${accountId}, MarketID: ${marketId}, Count: ${orders.length}`);
       }
-
       return orders;
     } catch (error) {
       this.logger.error(`Orders - Cancellation Failed - AccountID: ${accountId}`, error.stack);
@@ -190,7 +180,6 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
     if (!this.openOrders.has(accountId)) {
       this.logger.error(`Open - Update Failed - AccountID: ${accountId}, Reason: Account not found`);
-
       throw new AccountNotFoundException(accountId);
     }
 
@@ -209,15 +198,13 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         OrderSide[orderToUpdate.side],
         dto.quantity,
         dto.price,
-        {}
+        {} // NOTE is that relevant ?
       );
-
       this.eventEmitter.emit(
         Events.ORDER_UPDATED,
         new OrderUpdatedEvent(accountId, order.info.orderId, order.info.orderLinkId)
       );
       this.logger.log(`Order - Updated - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
-
       return order;
     } catch (error) {
       this.logger.error(`Order - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
@@ -240,7 +227,6 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       } else {
         this.logger.debug(`Open Orders - Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
       }
-
       return newOrders;
     } catch (error) {
       this.logger.error(`Open Orders - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
@@ -252,18 +238,15 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     this.logger.log(`All Open Orders - Refresh Initiated`);
     const accountIds = Array.from(this.openOrders.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
-
     const ordersPromises = accountIds.map((accountId) =>
       this.refreshOne(accountId).catch((error) => {
         errors.push({ accountId, error });
       })
     );
-
     await Promise.all(ordersPromises);
 
     if (errors.length > 0) {
       const aggregatedError = new OrdersUpdateAggregatedException(errors);
-
       this.logger.error(
         `All Open Orders - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
         aggregatedError.stack
@@ -276,7 +259,6 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     if (currentOrders.length !== newOrders.length) return true;
 
     const orderMap = new Map(currentOrders.map((order) => [order.id, order]));
-
     for (const order of newOrders) {
       const currentOrder = orderMap.get(order.id);
 
@@ -284,7 +266,6 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         return true;
       }
     }
-
     return false;
   }
 }

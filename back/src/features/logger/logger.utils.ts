@@ -12,7 +12,6 @@ export const logEffect =
   (t: T) =>
     TE.rightIO(() => {
       log(logger, 'log', message)();
-
       return t;
     });
 
@@ -21,7 +20,6 @@ export const logError =
   (e: Error) =>
     TE.leftIO(() => {
       log(logger, 'error', `${message} - Error: ${e.message}`)();
-
       return e;
     });
 
@@ -30,7 +28,6 @@ export const logDebug =
   (t: T) =>
     TE.rightIO(() => {
       log(logger, 'debug', message)();
-
       return t;
     });
 
@@ -39,7 +36,6 @@ export const logWarn =
   (t: T) =>
     TE.rightIO(() => {
       log(logger, 'warn', message)();
-
       return t;
     });
 
@@ -48,7 +44,6 @@ export const logVerbose =
   (t: T) =>
     TE.rightIO(() => {
       log(logger, 'verbose', message)();
-
       return t;
     });
 
@@ -57,6 +52,5 @@ export const logFatal =
   (e: Error) =>
     TE.leftIO(() => {
       log(logger, 'fatal', `${message} - ${e.message}`)();
-
       return e;
     });

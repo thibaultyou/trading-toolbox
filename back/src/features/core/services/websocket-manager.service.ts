@@ -24,7 +24,6 @@ export class WebsocketManagerService implements IAccountTracker {
   async startTrackingAccount(accountId: string): Promise<void> {
     if (this.wsConnections.has(accountId)) {
       this.logger.warn(`Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
-
       return;
     }
 
@@ -46,7 +45,6 @@ export class WebsocketManagerService implements IAccountTracker {
 
     try {
       const ws = new WebsocketClient(options);
-
       ws.on('update', (message: any) => this.handleWsUpdate(accountId, message));
       this.wsConnections.set(accountId, ws);
       this.subscriptions.set(accountId, new Set());
@@ -79,7 +77,6 @@ export class WebsocketManagerService implements IAccountTracker {
 
     if (!ws) {
       this.logger.error(`Subscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`);
-
       return;
     }
 
@@ -106,13 +103,11 @@ export class WebsocketManagerService implements IAccountTracker {
 
     if (!ws) {
       this.logger.error(`Unsubscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`);
-
       return;
     }
 
     const topics = Array.isArray(wsTopics) ? wsTopics : [wsTopics];
     const subscriptions = this.subscriptions.get(accountId);
-
     topics.forEach((topic) => {
       if (subscriptions?.has(topic)) {
         try {
@@ -138,11 +133,9 @@ export class WebsocketManagerService implements IAccountTracker {
         // order: this.handleOrderUpdate,
         // wallet: this.handleWalletUpdate,
       };
-
       for (const [key, handler] of Object.entries(topicHandlerMapping)) {
         if (message.topic.startsWith(key)) {
           handler(accountId, message);
-
           return;
         }
       }
@@ -156,7 +149,6 @@ export class WebsocketManagerService implements IAccountTracker {
 
   private handleTickerUpdate(accountId: string, msg: any) {
     const marketId = msg.topic.substring('tickers.'.length);
-
     this.eventEmitter.emit(Events.TICKER_DATA_UPDATED, new TickerDataUpdatedEvent(accountId, marketId, msg.data));
   }
 

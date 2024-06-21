@@ -6,7 +6,6 @@ export const getPriceFromTickerData = (data: TickerData): number | null => {
   if (bid1Price && ask1Price) {
     return (parseFloat(bid1Price) + parseFloat(ask1Price)) / 2;
   }
-
   return null;
 };
 

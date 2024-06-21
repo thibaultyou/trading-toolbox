@@ -36,9 +36,7 @@ export abstract class AbstractExchangeService implements IExchangeService {
   async getMarkets(): Promise<Market[]> {
     try {
       const markets = await this.exchange.fetchMarkets();
-
       this.logger.log(`Fetched Markets Successfully - AccountID: ${this.account.id}`);
-
       return markets;
     } catch (error) {
       this.logger.error(`Failed to Fetch Markets - AccountID: ${this.account.id}, Error: ${error.message}`);
@@ -49,9 +47,7 @@ export abstract class AbstractExchangeService implements IExchangeService {
   async getOpenOrders(): Promise<Order[]> {
     try {
       const orders = await this.exchange.fetchOpenOrders();
-
       this.logger.log(`Fetched Open Orders Successfully - AccountID: ${this.account.id}`);
-
       return orders;
     } catch (error) {
       this.logger.error(`Failed to Fetch Open Orders - AccountID: ${this.account.id}, Error: ${error.message}`);
@@ -62,9 +58,7 @@ export abstract class AbstractExchangeService implements IExchangeService {
   async getOrders(symbol?: string): Promise<Order[]> {
     try {
       const orders = await this.exchange.fetchOrders(symbol, undefined, undefined, { orderIds: [] });
-
       this.logger.log(`Fetched Orders Successfully - AccountID: ${this.account.id}`);
-
       return orders;
     } catch (error) {
       this.logger.error(`Failed to Fetch Orders - AccountID: ${this.account.id}, Error: ${error.message}`);
@@ -75,11 +69,9 @@ export abstract class AbstractExchangeService implements IExchangeService {
   async getOrder(orderId: string, symbol: string): Promise<Order> {
     try {
       const order = await this.exchange.fetchOrder(orderId, symbol);
-
       this.logger.log(
         `Fetched Order Successfully - AccountID: ${this.account.id}, OrderID: ${orderId}, MarketID: ${symbol}`
       );
-
       return order;
     } catch (error) {
       this.logger.error(
@@ -92,9 +84,7 @@ export abstract class AbstractExchangeService implements IExchangeService {
   async getOpenPositions(): Promise<Position[]> {
     try {
       const positions = await this.exchange.fetchPositions();
-
       this.logger.log(`Fetched Open Positions Successfully - AccountID: ${this.account.id}`);
-
       return positions;
     } catch (error) {
       this.logger.error(`Failed to Fetch Open Positions - AccountID: ${this.account.id}, Error: ${error.message}`);
@@ -133,7 +123,6 @@ export abstract class AbstractExchangeService implements IExchangeService {
       this.logger.log(
         `${type} Order Opened - OrderID: ${order.id}, Side: ${side}, Symbol: ${symbol}, Quantity: ${quantity}, Price: ${price}`
       );
-
       return { ...order, symbol };
     } catch (error) {
       this.logger.error(
@@ -155,11 +144,9 @@ export abstract class AbstractExchangeService implements IExchangeService {
   ): Promise<Order> {
     try {
       const order = await this.exchange.editOrder(orderId, symbol, type, side, quantity, price, params);
-
       this.logger.log(
         `Order Updated - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Quantity: ${quantity}, Price: ${price}`
       );
-
       return order;
     } catch (error) {
       this.logger.error(
@@ -172,9 +159,7 @@ export abstract class AbstractExchangeService implements IExchangeService {
   async closePosition(symbol: string, side: OrderSide): Promise<Order> {
     try {
       const order = await this.exchange.closePosition(symbol, side);
-
       this.logger.log(`Position Closed - AccountID: ${this.account.id}, Order: ${JSON.stringify(order)}`);
-
       return order;
     } catch (error) {
       this.logger.error(`Failed to Close Position - AccountID: ${this.account.id}, Error: ${error.message}`);
@@ -185,11 +170,9 @@ export abstract class AbstractExchangeService implements IExchangeService {
   async cancelOrders(symbol: string, params?: Record<string, any>): Promise<Order[]> {
     try {
       const orders = (await this.exchange.cancelAllOrders(symbol, params)) as Order[];
-
       this.logger.log(
         `Orders Cancelled - AccountID: ${this.account.id}${symbol ? `, Symbol: ${symbol}` : ''}${params ? `, Details: ${params}` : ''}`
       );
-
       return orders.map((order) => ({ ...order, symbol }));
     } catch (error) {
       this.logger.error(
@@ -202,7 +185,6 @@ export abstract class AbstractExchangeService implements IExchangeService {
   async cancelOrder(orderId: string, symbol: string): Promise<Order> {
     try {
       const order = (await this.exchange.cancelOrder(orderId, symbol)) as Order;
-
       return { ...order, symbol };
     } catch (error) {
       this.logger.error(
@@ -218,7 +200,6 @@ export abstract class AbstractExchangeService implements IExchangeService {
       this.logger.log(`Termination Successful - AccountID: ${this.account.id}`);
     } catch (error) {
       const errMsg = `Termination Failed - AccountID: ${this.account.id}, Error: ${error.message}`;
-
       this.logger.error(errMsg);
       throw new ExchangeTerminationFailedException(this.account.id, errMsg);
     }

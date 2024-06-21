@@ -26,7 +26,6 @@ export class HealthController {
         async () => this.bybitHealthIndicator.isHealthy('bybit')
       ]);
       const statusCode = result.status === 'error' ? HttpStatus.SERVICE_UNAVAILABLE : HttpStatus.OK;
-
       response.status(statusCode).json(result);
     } catch (error) {
       response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ status: 'error', error: error.message });

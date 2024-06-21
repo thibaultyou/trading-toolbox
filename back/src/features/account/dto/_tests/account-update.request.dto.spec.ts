@@ -12,17 +12,13 @@ describe('AccountUpdateRequestDto', () => {
       secret: 'updatedSecret123',
       exchange: ExchangeType.Bybit
     });
-
     const errors = await validate(dto);
-
     expect(errors.length).toBe(0);
   });
 
   it('should validate successfully with no fields provided', async () => {
     const dto = plainToInstance(AccountUpdateRequestDto, {});
-
     const errors = await validate(dto);
-
     expect(errors.length).toBe(0);
   });
 
@@ -31,9 +27,7 @@ describe('AccountUpdateRequestDto', () => {
       name: 'Partially Updated Account',
       exchange: ExchangeType.MEXC
     });
-
     const errors = await validate(dto);
-
     expect(errors.length).toBe(0);
   });
 
@@ -41,9 +35,7 @@ describe('AccountUpdateRequestDto', () => {
     const dto = plainToInstance(AccountUpdateRequestDto, {
       exchange: 'InvalidExchange'
     });
-
     const errors = await validate(dto);
-
     expect(errors.length).toBe(1);
     expect(errors[0].property).toEqual('exchange');
   });

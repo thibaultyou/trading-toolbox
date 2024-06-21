@@ -8,7 +8,6 @@ describe('Account Exceptions', () => {
     it('should create an exception with the correct message and status for ID', () => {
       const identifier = '123';
       const exception = new AccountNotFoundException(identifier);
-
       expect(exception.message).toEqual(`Account not found - ID: ${identifier}`);
       expect(exception.getStatus()).toEqual(HttpStatus.NOT_FOUND);
     });
@@ -16,7 +15,6 @@ describe('Account Exceptions', () => {
     it('should create an exception with the correct message and status for name', () => {
       const identifier = 'testName';
       const exception = new AccountNotFoundException(identifier, true);
-
       expect(exception.message).toEqual(`Account not found - Name: ${identifier}`);
       expect(exception.getStatus()).toEqual(HttpStatus.NOT_FOUND);
     });
@@ -27,7 +25,6 @@ describe('Account Exceptions', () => {
       const accountName = 'testAccount';
       const key = 'testKey';
       const exception = new AccountAlreadyExistsException(accountName, key);
-
       expect(exception.message).toEqual(`Account already exists - Name: ${accountName}, Key: ${maskString(key)}`);
       expect(exception.getStatus()).toEqual(HttpStatus.CONFLICT);
     });

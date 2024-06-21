@@ -16,13 +16,11 @@ describe('AccountService', () => {
   let repository: Repository<Account>;
   let eventEmitter: EventEmitter2;
   let exchangeFactory: ExchangeFactory;
-
   const accountArray = [
     new Account('Test Account 1', 'key1', 'secret1', ExchangeType.Bybit),
     new Account('Test Account 2', 'key2', 'secret2', ExchangeType.MEXC)
   ];
   const account = new Account('Test Account', 'key', 'secret', ExchangeType.Bybit);
-
   account.id = '1';
 
   beforeEach(async () => {
@@ -60,7 +58,6 @@ describe('AccountService', () => {
         }
       ]
     }).compile();
-
     service = module.get<AccountService>(AccountService);
     repository = module.get<Repository<Account>>(getRepositoryToken(Account));
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
@@ -103,7 +100,6 @@ describe('AccountService', () => {
 
   describe('create', () => {
     const newAccount = new Account('New Account', 'newKey', 'newSecret', ExchangeType.Bybit);
-
     it('should successfully create an account', async () => {
       jest.spyOn(repository, 'findOne').mockResolvedValueOnce(null);
       await expect(service.create(account)).resolves.toEqual(account);
@@ -116,13 +112,11 @@ describe('AccountService', () => {
 
     it('should throw an AccountAlreadyExistsException if account with same name exists', async () => {
       const duplicateNameAccount = new Account('existingName', 'uniqueKey', 'secret', ExchangeType.Bybit);
-
       await expect(service.create(duplicateNameAccount)).rejects.toThrow(AccountAlreadyExistsException);
     });
 
     it('should throw an AccountAlreadyExistsException if account with same key exists', async () => {
       const duplicateKeyAccount = new Account('uniqueName', 'existingKey', 'secret', ExchangeType.Bybit);
-
       await expect(service.create(duplicateKeyAccount)).rejects.toThrow(AccountAlreadyExistsException);
     });
 
@@ -134,14 +128,12 @@ describe('AccountService', () => {
 
     it('should throw an error if ExchangeFactory validation fails', async () => {
       const invalidExchangeAccount = new Account('invalidExchange', 'key', 'secret', ExchangeType.Bybit);
-
       await expect(service.create(invalidExchangeAccount)).rejects.toThrow();
     });
   });
 
   describe('update', () => {
     const updatedAccountData = new Account('Updated Account', 'updatedKey', 'updatedSecret', ExchangeType.MEXC);
-
     updatedAccountData.id = '1';
 
     it('should successfully update an existing account', async () => {

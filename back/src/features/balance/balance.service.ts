@@ -55,10 +55,8 @@ export class BalanceService implements OnModuleInit, IAccountTracker {
 
     if (!this.balances.has(accountId)) {
       this.logger.error(`Balances - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
-
       throw new AccountNotFoundException(accountId);
     }
-
     return this.balances.get(accountId);
   }
 
@@ -117,7 +115,6 @@ export class BalanceService implements OnModuleInit, IAccountTracker {
 
         if (failures.length > 0) {
           const failedAccountIds = failures.map(({ accountId }) => accountId).join(', ');
-
           logWarn(
             this.logger,
             `Balances - Multiple Updates Failed - Count: ${failures.length}, AccountIDs: ${failedAccountIds}`
@@ -144,7 +141,6 @@ export class BalanceService implements OnModuleInit, IAccountTracker {
         return true;
       }
     }
-
     return false;
   }
 }

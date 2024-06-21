@@ -51,21 +51,18 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
       this.logger.error(`Markets - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
       throw new AccountNotFoundException(accountId);
     }
-
     return this.markets.get(accountId);
   }
 
   findAccountMarketIds(accountId: string): string[] {
     this.logger.log(`Market IDs - Fetch Initiated - AccountID: ${accountId}`);
     const markets = this.getAccountMarkets(accountId);
-
     return markets.map((market) => market.id);
   }
 
   findAccountContractMarketIds(accountId: string, quoteCurrency: string = 'USDT'): string[] {
     this.logger.log(`Market Contract IDs - Fetch Initiated - AccountID: ${accountId}, QuoteCurrency: ${quoteCurrency}`);
     const markets = this.getAccountMarkets(accountId);
-
     return markets
       .filter((market) => market.quote === quoteCurrency && market.active && market.contract)
       .map((market) => market.id);
@@ -84,7 +81,6 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
       );
       throw new MarketNotFoundException(accountId, marketId);
     }
-
     return specificMarket;
   }
 
@@ -93,14 +89,12 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
 
     try {
       const markets = await this.exchangeService.getMarkets(accountId);
-
       this.markets.set(
         accountId,
         markets.sort((a, b) => a.id.localeCompare(b.id))
       );
       this.eventEmitter.emit(Events.MARKETS_UPDATED, new MarketsUpdatedEvent(accountId, markets));
       this.logger.log(`Markets - Updated - AccountID: ${accountId}, Count: ${markets.length}`);
-
       return markets;
     } catch (error) {
       this.logger.error(`Markets - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
@@ -117,12 +111,10 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
         errors.push({ accountId, error });
       })
     );
-
     await Promise.all(marketsPromises);
 
     if (errors.length > 0) {
       const aggregatedError = new MarketsUpdateAggregatedException(errors);
-
       this.logger.error(
         `All Markets - Multiple Updates Failed - Errors: ${aggregatedError.message}`,
         aggregatedError.stack

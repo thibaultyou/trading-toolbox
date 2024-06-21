@@ -32,19 +32,16 @@ export class ExchangeService {
 
     if (!account) {
       this.logger.error(`Exchange - Initialization Skipped - AccountID: ${account.id}, Reason: Missing account`);
-
       return;
     }
 
     if (this.exchanges.has(account.id)) {
       this.logger.error(`Exchange - Initialization Skipped - AccountID: ${account.id}, Reason: Already initialized`);
-
       return;
     }
 
     try {
       const exchange = await this.exchangeFactory.createExchange(account);
-
       this.exchanges.set(account.id, exchange);
       this.logger.log(`Exchange - Initialized Successfully - AccountID: ${account.id}`);
       this.eventEmitter.emit(Events.EXCHANGE_INITIALIZED, new ExchangeInitializedEvent(account.id));
@@ -66,7 +63,6 @@ export class ExchangeService {
       );
       throw new ExchangeNotFoundException(accountId);
     }
-
     return exchange;
   }
 
@@ -115,9 +111,7 @@ export class ExchangeService {
 
     try {
       const markets = await exchange.getMarkets();
-
       this.logger.log(`Markets - Fetched - AccountID: '${accountId}', Count: ${markets.length}`);
-
       return markets;
     } catch (error) {
       this.logger.error(`Markets - Fetch Failed - AccountID: '${accountId}', Error: ${error.message}`, error.stack);
@@ -131,9 +125,7 @@ export class ExchangeService {
 
     try {
       const orders = await exchange.getOpenOrders();
-
       this.logger.log(`Open Orders - Fetched - AccountID: ${accountId}, Count: ${orders.length}`);
-
       return orders;
     } catch (error) {
       this.logger.error(`Open Orders - Fetch Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
@@ -147,9 +139,7 @@ export class ExchangeService {
 
     try {
       const orders = await exchange.getOrders(symbol);
-
       this.logger.log(`Orders - Fetched - AccountID: ${accountId}, Count: ${orders.length}`);
-
       return orders;
     } catch (error) {
       this.logger.error(`Orders - Fetch Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
@@ -163,9 +153,7 @@ export class ExchangeService {
 
     try {
       const order = await exchange.getOrder(orderId, symbol);
-
       this.logger.log(`Order - Fetched - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}`);
-
       return order;
     } catch (error) {
       this.logger.error(
@@ -182,9 +170,7 @@ export class ExchangeService {
 
     try {
       const positions = await exchange.getOpenPositions();
-
       this.logger.log(`Open Positions - Fetched - AccountID: ${accountId}, Count: ${positions.length}`);
-
       return positions;
     } catch (error) {
       this.logger.error(
@@ -222,9 +208,7 @@ export class ExchangeService {
         // NOTE see https://bybit-exchange.github.io/docs/v5/order/create-order#request-parameters for reference
         { tpslMode: 'Partial', ...params, positionIdx: side === OrderSide.BUY ? 1 : 2 }
       );
-
       this.logger.log(`Order - Created - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
-
       return order;
     } catch (error) {
       this.logger.error(`Order - Creation Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
@@ -247,9 +231,7 @@ export class ExchangeService {
 
     try {
       const order = await exchange.updateOrder(orderId, symbol, type, side, quantity, price, params);
-
       this.logger.log(`Order - Updated - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
-
       return order;
     } catch (error) {
       this.logger.error(`Order - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
@@ -272,9 +254,7 @@ export class ExchangeService {
         undefined,
         { positionIdx: side === OrderSide.BUY ? 1 : 2 } // NOTE needed for bybit hedge mode
       );
-
       this.logger.log(`Position - Closed - AccountID: ${accountId}, Symbol: ${symbol}, Side: ${side}`);
-
       return order;
     } catch (error) {
       this.logger.error(
@@ -299,7 +279,6 @@ export class ExchangeService {
       } else {
         this.logger.log(`Order - Cancelled - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}`);
       }
-
       return order;
     } catch (error) {
       this.logger.error(`Order Cancellation Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
@@ -320,7 +299,6 @@ export class ExchangeService {
       } else {
         this.logger.log(`Orders - Cancelled - AccountID: ${accountId}, Symbol: ${symbol}`);
       }
-
       return orders;
     } catch (error) {
       this.logger.error(`Orders - Cancellation Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
@@ -335,7 +313,6 @@ export class ExchangeService {
 
     if (!exchange) {
       this.logger.warn(`Exchange - Cleanup Skipped - AccountID: ${accountId}, Reason: No associated exchange`);
-
       return;
     }
 

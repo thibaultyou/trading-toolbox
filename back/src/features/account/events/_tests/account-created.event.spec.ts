@@ -5,11 +5,9 @@ import { AccountCreatedEvent } from '../account-created.event';
 describe('AccountCreatedEvent', () => {
   it('should correctly assign an Account upon instantiation', () => {
     const sampleAccount = new Account('Sample Name', 'SampleKey', 'SampleSecret', ExchangeType.Bybit);
-
     sampleAccount.id = 'sample-id';
 
     const event = new AccountCreatedEvent(sampleAccount);
-
     expect(event.account).toBeDefined();
     expect(event.account).toBeInstanceOf(Account);
     expect(event.account.id).toEqual(sampleAccount.id);

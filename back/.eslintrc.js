@@ -32,11 +32,12 @@ module.exports = {
     'import/order': 'off',
     'padding-line-between-statements': [
       'warn',
-      { blankLine: 'always', prev: '*', next: 'return' },
-      { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
-      { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
+      { blankLine: 'never', prev: '*', next: 'throw' },
+      { blankLine: 'never', prev: ['const', 'let', 'var'], next: '*' },
+      { blankLine: 'never', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
       { blankLine: 'always', prev: '*', next: ['if', 'try', 'class', 'function', 'export'] },
-      { blankLine: 'always', prev: ['if', 'try', 'class', 'function', 'export'], next: '*' }
+      { blankLine: 'always', prev: ['if', 'try', 'class', 'function', 'export'], next: '*' },
+      { blankLine: 'never', prev: '*', next: 'return' },
     ],
     'arrow-body-style': ['error', 'as-needed'],
     'prefer-arrow-callback': 'error'

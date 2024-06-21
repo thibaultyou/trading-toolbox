@@ -12,17 +12,13 @@ describe('AccountCreateRequestDto', () => {
       secret: 'testSecret',
       exchange: ExchangeType.Bybit
     });
-
     const errors = await validate(dto);
-
     expect(errors.length).toBe(0);
   });
 
   it('should fail validation if fields are missing', async () => {
     const dto = plainToInstance(AccountCreateRequestDto, {});
-
     const errors = await validate(dto);
-
     expect(errors.length).toBe(4);
   });
 
@@ -33,9 +29,7 @@ describe('AccountCreateRequestDto', () => {
       secret: 'testSecret',
       exchange: 'InvalidExchangeType'
     });
-
     const errors = await validate(dto);
-
     expect(errors.length).toBe(1);
     expect(errors[0].property).toEqual('exchange');
   });

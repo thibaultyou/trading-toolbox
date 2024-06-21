@@ -13,14 +13,11 @@ import { AccountNotFoundException } from './exceptions/account.exceptions';
 describe('AccountController', () => {
   let controller: AccountController;
   let service: AccountService;
-
   beforeEach(async () => {
     const existingAccount = new Account('Existing Account', 'existingKey', 'existingSecret', ExchangeType.Bybit);
-
     existingAccount.id = 'existing-id';
 
     const updatedAccount = new Account('Updated Account', 'updatedKey', 'updatedSecret', ExchangeType.MEXC);
-
     updatedAccount.id = 'existing-id';
 
     const module: TestingModule = await Test.createTestingModule({
@@ -40,7 +37,6 @@ describe('AccountController', () => {
         }
       ]
     }).compile();
-
     controller = module.get<AccountController>(AccountController);
     service = module.get<AccountService>(AccountService);
   });
@@ -53,7 +49,6 @@ describe('AccountController', () => {
   describe('findAll', () => {
     it('should return an empty array of accounts when no accounts exist', async () => {
       const result: AccountResponseDto[] = [];
-
       jest.spyOn(service, 'findAll').mockResolvedValue(result);
       expect(await controller.findAll()).toEqual(result);
     });
@@ -63,15 +58,12 @@ describe('AccountController', () => {
         new Account('Account 1', 'key1', 'secret1', ExchangeType.Bybit),
         new Account('Account 2', 'key2', 'secret2', ExchangeType.MEXC)
       ];
-
       accountEntities[0].id = 'uuid-1';
       accountEntities[1].id = 'uuid-2';
 
       const accountDtos = accountEntities.map((account) => new AccountResponseDto(account));
-
       jest.spyOn(service, 'findAll').mockResolvedValue(accountEntities);
       const response = await controller.findAll();
-
       expect(response).toStrictEqual(accountDtos);
     });
   });
@@ -79,7 +71,6 @@ describe('AccountController', () => {
   describe('findOne', () => {
     it('should return an account if it exists', async () => {
       const account = new Account('Existing Account', 'existingKey', 'existingSecret', ExchangeType.Bybit);
-
       account.id = 'existing-id';
       jest.spyOn(service, 'findOne').mockResolvedValue(account);
       expect(await controller.findOne('existing-id')).toEqual(new AccountResponseDto(account));
@@ -98,9 +89,7 @@ describe('AccountController', () => {
       secret: 'randomSecret123',
       exchange: ExchangeType.Bybit
     };
-
     const createdAccount: Account = new Account(dto.name, dto.key, dto.secret, dto.exchange);
-
     createdAccount.id = 'uuid-random-1';
 
     it('should create a new account', async () => {
@@ -120,7 +109,6 @@ describe('AccountController', () => {
   describe('update', () => {
     it('should update an account if it exists', async () => {
       const account = new Account('Updated Account', 'updatedKey', 'updatedSecret', ExchangeType.MEXC);
-
       account.id = 'existing-id';
       const dto: AccountUpdateRequestDto = {
         name: 'Updated Account',
@@ -128,7 +116,6 @@ describe('AccountController', () => {
         secret: 'updatedSecret',
         exchange: ExchangeType.MEXC
       };
-
       jest.spyOn(service, 'update').mockResolvedValue(account);
       expect(await controller.update('existing-id', dto)).toEqual(new AccountResponseDto(account));
     });

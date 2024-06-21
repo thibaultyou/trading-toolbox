@@ -9,7 +9,6 @@ import { BybitHealthIndicator } from './indicators/bybit.health.indicator';
 describe('HealthController', () => {
   let controller: HealthController;
   let healthCheckService: HealthCheckService;
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
@@ -28,7 +27,6 @@ describe('HealthController', () => {
         isHealthy: jest.fn()
       })
       .compile();
-
     controller = module.get<HealthController>(HealthController);
     healthCheckService = module.get<HealthCheckService>(HealthCheckService);
   });
@@ -61,7 +59,6 @@ describe('HealthController', () => {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
       } as unknown as Response;
-
       await controller.check(mockResponse);
 
       expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.OK);
@@ -96,7 +93,6 @@ describe('HealthController', () => {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
       } as unknown as Response;
-
       await controller.check(mockResponse);
 
       expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.SERVICE_UNAVAILABLE);
@@ -131,7 +127,6 @@ describe('HealthController', () => {
         status: jest.fn().mockReturnThis(),
         json: jest.fn()
       } as unknown as Response;
-
       await controller.check(mockResponse);
 
       expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.SERVICE_UNAVAILABLE);

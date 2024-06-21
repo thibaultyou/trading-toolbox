@@ -12,9 +12,7 @@ describe('Account Entity', () => {
         secret: 'testSecret',
         exchange: ExchangeType.Bybit
       };
-
       const account = Account.fromDto(dto);
-
       expect(account.name).toEqual(dto.name);
       expect(account.key).toEqual(dto.key);
       expect(account.secret).toEqual(dto.secret);
@@ -28,9 +26,7 @@ describe('Account Entity', () => {
         secret: 'updatedSecret',
         exchange: ExchangeType.MEXC
       };
-
       const account = Account.fromDto(dto);
-
       expect(account.name).toEqual(dto.name);
       expect(account.key).toEqual(dto.key);
       expect(account.secret).toEqual(dto.secret);

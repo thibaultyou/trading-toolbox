@@ -8,7 +8,6 @@ describe('AccountExceptionsFilter', () => {
   let filter: AccountExceptionsFilter;
   let mockResponse: { status: jest.Mock; json: jest.Mock };
   let mockRequest: { url: string };
-
   beforeEach(() => {
     filter = new AccountExceptionsFilter();
 
@@ -30,10 +29,8 @@ describe('AccountExceptionsFilter', () => {
       })
     } as any);
   };
-
   it('should format the response correctly for an AccountNotFoundException', () => {
     const exception = new AccountNotFoundException('123');
-
     executeFilterCatch(exception, '/test-url');
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.NOT_FOUND);
@@ -49,7 +46,6 @@ describe('AccountExceptionsFilter', () => {
     const accountName = 'duplicateAccount';
     const key = 'duplicateKey';
     const exception = new AccountAlreadyExistsException(accountName, key);
-
     executeFilterCatch(exception, '/accounts');
 
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.CONFLICT);

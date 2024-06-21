@@ -3,7 +3,6 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 export class OrderNotFoundException extends HttpException {
   constructor(accountId: string, orderId?: string) {
     const orderInfo = orderId ? `, OrderID: ${orderId}` : '';
-
     super(`Orders - Fetch Failed - AccountID: ${accountId}${orderInfo}, Reason: Order not found`, HttpStatus.NOT_FOUND);
   }
 }
@@ -31,7 +30,6 @@ export class OrdersUpdateAggregatedException extends HttpException {
           `AccountID: ${accountId}${orderId ? `, OrderID: ${orderId}` : ''}, Error: ${error.message}`
       )
       .join('; ');
-
     super(`Orders - Multiple Updates Failed - Errors: ${message}`, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }

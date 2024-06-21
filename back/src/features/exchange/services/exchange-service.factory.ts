@@ -10,7 +10,6 @@ import { BybitExchangeService } from './bybit-exchange.service';
 export class ExchangeFactory {
   public async createExchange(account: Account): Promise<IExchangeService> {
     let exchange: IExchangeService;
-
     switch (account.exchange) {
       case ExchangeType.Bybit:
         exchange = new BybitExchangeService(account);
@@ -20,7 +19,6 @@ export class ExchangeFactory {
     }
 
     await exchange.initialize();
-
     return exchange;
   }
 }

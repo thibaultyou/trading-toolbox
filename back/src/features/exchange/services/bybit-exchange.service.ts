@@ -17,7 +17,6 @@ export class BybitExchangeService extends AbstractExchangeService {
         apiKey: this.account.key,
         secret: this.account.secret
       });
-
       return pipe(
         this.getBalances(),
         TE.match(

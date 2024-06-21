@@ -28,7 +28,6 @@ export class AccountService {
   async getAllAccounts(): Promise<Account[]> {
     this.logger.log(`Accounts - Fetch Initiated`);
     const accounts = await this.accountRepository.find();
-
     return accounts;
   }
 
@@ -40,7 +39,6 @@ export class AccountService {
       this.logger.error(`Account - Fetch Failed - AccountID: ${id}, Reason: Account not found`);
       throw new AccountNotFoundException(id);
     }
-
     return account;
   }
 
@@ -76,10 +74,8 @@ export class AccountService {
     }
 
     const savedAccount = await this.accountRepository.save(account);
-
     this.eventEmitter.emit(Events.ACCOUNT_CREATED, new AccountCreatedEvent(savedAccount));
     this.logger.log(`Account - Created - AccountID: ${savedAccount.id}`);
-
     return savedAccount;
   }
 
@@ -95,10 +91,8 @@ export class AccountService {
     Object.assign(account, dto);
 
     const savedAccount = await this.accountRepository.save(account);
-
     this.eventEmitter.emit(Events.ACCOUNT_UPDATED, new AccountUpdatedEvent(savedAccount));
     this.logger.log(`Account - Updated - AccountID: ${savedAccount.id}`);
-
     return savedAccount;
   }
 
@@ -114,7 +108,6 @@ export class AccountService {
     await this.accountRepository.delete(id);
     this.eventEmitter.emit(Events.ACCOUNT_DELETED, new AccountDeletedEvent(account));
     this.logger.log(`Account - Deleted - AccountID: ${id}`);
-
     return true;
   }
 }

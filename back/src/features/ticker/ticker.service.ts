@@ -63,13 +63,11 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
       );
       throw new TickerPriceNotFoundException(accountId, marketId);
     }
-
     return getPriceFromTickerData(marketValues.get(marketId));
   }
 
   async updateTickersWatchList(type: WatchListType, accountId: string, marketIds: Set<string>): Promise<void> {
     const tickersMap = type === WatchListType.Positions ? this.positionsTickers : this.ordersTickers;
-
     tickersMap.set(accountId, marketIds);
 
     this.logger.log(
@@ -102,7 +100,6 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
 
     if (!accountTickers) {
       this.logger.error(`Ticker Data - Update Failed - AccountID: ${accountId}, Reason: Account not found`);
-
       return;
     }
 
@@ -164,14 +161,12 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
     } else {
       this.logger.debug(`Tickers Watch List - Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
     }
-
     return newUniqueTickers;
   }
 
   async refreshAll(): Promise<void> {
     this.logger.log(`All Tickers - Refresh Initiated`);
     const accountIds = new Set([...this.ordersTickers.keys(), ...this.positionsTickers.keys()]);
-
     accountIds.forEach((accountId) => this.refreshOne(accountId));
   }
 
@@ -181,7 +176,6 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
     for (const a of setA) {
       if (!setB.has(a)) return true;
     }
-
     return false;
   }
 }

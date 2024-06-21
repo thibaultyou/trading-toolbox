@@ -4,9 +4,9 @@ import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { BaseController } from '../../common/base/base.controller';
 import { SetupReadResponseDto } from './dto/_setup-read.response.dto';
 import { SetupService } from './setup.service';
+
 // import { SetupUpdateRequestDto } from './dto/setup-update.request.dto';
 // import { SetupReadResponseDto } from './dto/setup-read.response.dto';
-
 @ApiTags('Setups')
 @Controller('setups')
 export class SetupController extends BaseController {
