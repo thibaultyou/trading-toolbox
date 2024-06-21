@@ -3,14 +3,14 @@ import { IsNumber, IsOptional, IsPositive } from 'class-validator';
 
 export class OrderUpdateRequestDto {
   @ApiProperty({
-    description: 'The volume of the order.',
+    description: 'The quantity of the order.',
     example: 1.5,
     type: 'number'
   })
   @IsOptional()
-  @IsNumber({}, { message: 'Volume must be a number.' })
-  @IsPositive({ message: 'Volume must be positive.' })
-  volume?: number;
+  @IsNumber({}, { message: 'Quantity must be a number.' })
+  @IsPositive({ message: 'Quantity must be positive.' })
+  quantity?: number;
 
   @ApiProperty({
     description: 'The limit price for the order, optional.',

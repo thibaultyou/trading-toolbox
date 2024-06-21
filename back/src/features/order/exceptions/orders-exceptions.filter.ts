@@ -1,10 +1,20 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-import { OrdersUpdateAggregatedException } from './orders.exceptions';
+import {
+  OrderCancellationFailedException,
+  OrderCreationFailedException,
+  OrderNotFoundException,
+  OrdersUpdateAggregatedException
+} from './orders.exceptions';
 
-@Catch(OrdersUpdateAggregatedException)
-export class MarketExceptionsFilter implements ExceptionFilter {
+@Catch(
+  OrderNotFoundException,
+  OrderCreationFailedException,
+  OrderCancellationFailedException,
+  OrdersUpdateAggregatedException
+)
+export class OrdersExceptionsFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();

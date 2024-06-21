@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
 
-import { OrderSide } from '../order.types';
+import { IOrderDetails } from '../order.interfaces';
+import { OrderSide, OrderType } from '../order.types';
 
-export class OrderCreateRequestDto {
+export class OrderCreateRequestDto implements IOrderDetails {
   @ApiProperty({
     description: 'The market ID for the trading pair.',
     example: 'FTMUSDT'
@@ -13,23 +14,32 @@ export class OrderCreateRequestDto {
   marketId: string;
 
   @ApiProperty({
+    description: 'Type of order, like limit or market',
+    enum: OrderType,
+    example: OrderType.LIMIT
+  })
+  @IsNotEmpty({ message: 'Order type is required.' })
+  @IsEnum(OrderType, { message: 'Invalid order type.' })
+  type: OrderType;
+
+  @ApiProperty({
     description: 'The order side (buy or sell).',
     enum: OrderSide,
-    example: OrderSide.Buy
+    example: OrderSide.BUY
   })
   @IsNotEmpty({ message: 'Order side is required.' })
   @IsEnum(OrderSide, { message: 'Invalid order side.' })
   side: OrderSide;
 
   @ApiProperty({
-    description: 'The volume of the order.',
+    description: 'The quantity of the order.',
     example: 1.5,
     type: 'number'
   })
-  @IsNotEmpty({ message: 'Volume is required.' })
-  @IsNumber({}, { message: 'Volume must be a number.' })
-  @IsPositive({ message: 'Volume must be positive.' })
-  volume: number;
+  @IsNotEmpty({ message: 'Quantity is required.' })
+  @IsNumber({}, { message: 'Quantity must be a number.' })
+  @IsPositive({ message: 'Quantity must be positive.' })
+  quantity: number;
 
   @ApiProperty({
     description: 'The limit price for the order, optional.',
@@ -63,4 +73,14 @@ export class OrderCreateRequestDto {
   @IsNumber({}, { message: 'Take profit price must be a number if specified.' })
   @IsPositive({ message: 'Take profit price must be positive if specified.' })
   takeProfitPrice?: number;
+
+  @ApiProperty({
+    description: 'The additional parameters for the order, optional.',
+    example: { tpslMode: 'Partial' },
+    type: 'object',
+    required: false
+  })
+  @IsOptional()
+  @IsNotEmpty({ message: 'Params must be a non-empty object if specified.' })
+  params?: Record<string, any> = {};
 }

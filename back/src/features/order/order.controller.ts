@@ -9,6 +9,7 @@ import { OrderReadResponseDto } from './dto/order-read.response.dto';
 import { OrderUpdateRequestDto } from './dto/order-update.request.dto';
 import { OrderUpdateResponseDto } from './dto/order-update.response.dto';
 import { OrderService } from './order.service';
+import { OrderSide, OrderType } from './order.types';
 
 // TODO add create many
 // TODO add cancel many
@@ -45,13 +46,11 @@ export class OrderController extends BaseController {
     required: false,
     description: 'Optional ID of the market symbol to filter orders (e.g., BTCUSDT)'
   })
-  async getAccountOpenOrders(
+  getAccountOpenOrders(
     @Param('accountId') accountId: string,
     @Query('marketId') marketId?: string
-  ): Promise<OrderReadResponseDto[]> {
-    return (await this.orderService.getAccountOpenOrders(accountId, marketId)).map(
-      (order) => new OrderReadResponseDto(order)
-    );
+  ): OrderReadResponseDto[] {
+    return this.orderService.getAccountOpenOrders(accountId, marketId).map((order) => new OrderReadResponseDto(order));
   }
 
   @Post('/accounts/:accountId/orders')
@@ -65,19 +64,21 @@ export class OrderController extends BaseController {
         summary: 'Limit Order',
         value: {
           marketId: 'FTMUSDT',
-          side: 'buy',
-          volume: 1,
-          price: 0.9666,
-          stopLossPrice: 0.95,
-          takeProfitPrice: 1.06
+          type: OrderType.LIMIT,
+          side: OrderSide.BUY,
+          quantity: 1,
+          price: 0.3,
+          takeProfitPrice: 0.6,
+          stopLossPrice: 0.1
         }
       },
       aMarketOrder: {
         summary: 'Market Order',
         value: {
           marketId: 'FTMUSDT',
-          side: 'sell',
-          volume: 1
+          type: OrderType.MARKET,
+          side: OrderSide.SELL,
+          quantity: 1
         }
       }
     }
@@ -115,9 +116,7 @@ export class OrderController extends BaseController {
     @Param('orderId') orderId: string,
     @Body() updateOrderDto: OrderUpdateRequestDto
   ): Promise<OrderUpdateResponseDto> {
-    const order = await this.orderService.updateOrder(accountId, orderId, updateOrderDto);
-
-    return new OrderUpdateResponseDto(order);
+    return new OrderUpdateResponseDto(await this.orderService.updateOrder(accountId, orderId, updateOrderDto));
   }
 
   @Delete('/accounts/:accountId/orders/:orderId')

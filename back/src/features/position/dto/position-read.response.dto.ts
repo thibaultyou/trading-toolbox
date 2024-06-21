@@ -14,7 +14,7 @@ export class PositionReadResponseDto {
 
   @ApiProperty({
     description: 'Side of the position (buy or sell)',
-    example: OrderSide.Buy,
+    example: OrderSide.BUY,
     enum: OrderSide
   })
   side: OrderSide;
@@ -91,7 +91,7 @@ export class PositionReadResponseDto {
 
   constructor(position: Position) {
     this.marketId = position.info.symbol;
-    this.side = position.info.side.toLowerCase() === 'buy' ? OrderSide.Buy : OrderSide.Sell;
+    this.side = position.info.side.toLowerCase() === 'buy' ? OrderSide.BUY : OrderSide.SELL;
     this.avgPrice = parseFloat(position.info.avgPrice);
     this.positionValue = parseFloat(position.info.positionValue);
     this.leverage = parseFloat(position.info.leverage);

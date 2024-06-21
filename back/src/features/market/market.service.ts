@@ -2,8 +2,8 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Market } from 'ccxt';
 
-import { IAccountTracker } from '../../common/interfaces/account-tracker.interface';
-import { IDataRefresher } from '../../common/interfaces/data-refresher.interface';
+import { IAccountTracker } from '../../common/types/account-tracker.interface';
+import { IDataRefresher } from '../../common/types/data-refresher.interface';
 import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
 import { ExchangeService } from '../exchange/exchange.service';

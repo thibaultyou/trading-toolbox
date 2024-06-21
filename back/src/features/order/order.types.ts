@@ -1,9 +1,9 @@
 export enum OrderSide {
-  Buy = 'buy',
-  Sell = 'sell'
+  BUY = 'buy',
+  SELL = 'sell'
 }
 
 export enum OrderType {
-  Limit = 'Limit',
-  Market = 'Market'
+  LIMIT = 'limit',
+  MARKET = 'market'
 }

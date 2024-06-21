@@ -1,8 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
-import { IAccountTracker } from '../../common/interfaces/account-tracker.interface';
-import { IDataRefresher } from '../../common/interfaces/data-refresher.interface';
+import { IAccountTracker } from '../../common/types/account-tracker.interface';
+import { IDataRefresher } from '../../common/types/data-refresher.interface';
 import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
 import { WebSocketSubscribeEvent } from '../core/events/websocket-subscribe.event';
@@ -10,6 +10,8 @@ import { WebSocketUnsubscribeEvent } from '../core/events/websocket-unsubscribe.
 import { TickerPriceNotFoundException } from './exceptions/ticker.exceptions';
 import { TickerData, WatchListType } from './ticker.types';
 import { getPriceFromTickerData, hasTickerDataChanged } from './utils/ticker-data.util';
+
+// TODO improve logging, error handling, custom exceptions
 
 @Injectable()
 export class TickerService implements OnModuleInit, IAccountTracker, IDataRefresher<Set<string>> {

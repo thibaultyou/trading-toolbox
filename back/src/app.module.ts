@@ -13,6 +13,7 @@ import { LoggerModule } from './features/logger/logger.module';
 import { MarketModule } from './features/market/market.module';
 import { OrderModule } from './features/order/order.module';
 import { PositionModule } from './features/position/position.module';
+import { SetupModule } from './features/setup/setup.module';
 import { TickerModule } from './features/ticker/ticker.module';
 
 @Module({
@@ -36,7 +37,7 @@ import { TickerModule } from './features/ticker/ticker.module';
     MarketModule,
     OrderModule,
     PositionModule,
-    // SetupModule,
+    SetupModule,
     // ActionModule,
     // AlertModule,
     TickerModule,

@@ -104,41 +104,40 @@ export abstract class AbstractExchangeService implements IExchangeService {
 
   async openOrder(
     symbol: string,
+    type: OrderType,
     side: OrderSide,
-    volume: number,
+    quantity: number,
     price?: number,
-    stopLossPrice?: number,
     takeProfitPrice?: number,
+    stopLossPrice?: number,
     params?: Record<string, any>
   ): Promise<Order> {
-    const orderType = price ? OrderType.Limit : OrderType.Market;
-
     try {
       let order: Order;
 
       if (stopLossPrice || takeProfitPrice) {
         order = await this.exchange.createOrderWithTakeProfitAndStopLoss(
           symbol,
-          orderType,
+          type,
           side,
-          volume,
+          quantity,
           price,
           takeProfitPrice,
           stopLossPrice,
           params
         );
       } else {
-        order = await this.exchange.createOrder(symbol, orderType, side, volume, price, params);
+        order = await this.exchange.createOrder(symbol, type, side, quantity, price, params);
       }
 
       this.logger.log(
-        `${orderType} Order Opened - OrderID: ${order.id}, Side: ${side}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}`
+        `${type} Order Opened - OrderID: ${order.id}, Side: ${side}, Symbol: ${symbol}, Quantity: ${quantity}, Price: ${price}`
       );
 
       return { ...order, symbol };
     } catch (error) {
       this.logger.error(
-        `Failed to Open ${orderType} Order - Side: ${side}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}. Error: ${error.message}`,
+        `Failed to Open ${type} Order - Side: ${side}, Symbol: ${symbol}, Quantity: ${quantity}, Price: ${price}. Error: ${error.message}`,
         error.stack
       );
       throw new ExchangeOperationFailedException('opening order', error.message);
@@ -150,21 +149,21 @@ export abstract class AbstractExchangeService implements IExchangeService {
     symbol: string,
     type: string,
     side: OrderSide,
-    volume?: number,
+    quantity?: number,
     price?: number,
     params?: Record<string, any>
   ): Promise<Order> {
     try {
-      const order = await this.exchange.editOrder(orderId, symbol, type, side, volume, price, params);
+      const order = await this.exchange.editOrder(orderId, symbol, type, side, quantity, price, params);
 
       this.logger.log(
-        `Order Updated - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}`
+        `Order Updated - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Quantity: ${quantity}, Price: ${price}`
       );
 
       return order;
     } catch (error) {
       this.logger.error(
-        `Failed to Edit Order - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Volume: ${volume}, Price: ${price}, Error: ${error.message}`
+        `Failed to Edit Order - AccountID: ${this.account.id}, Type: ${type}, Side: ${side}, OrderID: ${orderId}, Symbol: ${symbol}, Quantity: ${quantity}, Price: ${price}, Error: ${error.message}`
       );
       throw new ExchangeOperationFailedException('editing order', error.message);
     }

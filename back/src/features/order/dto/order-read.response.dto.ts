@@ -38,7 +38,7 @@ export class OrderReadResponseDto {
 
   @ApiProperty({
     description: 'Order side, indicating whether the order is a buy or sell',
-    example: OrderSide.Sell,
+    example: OrderSide.SELL,
     enum: OrderSide
   })
   side: OrderSide;
@@ -51,7 +51,7 @@ export class OrderReadResponseDto {
 
   @ApiProperty({
     description: 'Type of the order, e.g., limit or market',
-    example: OrderType.Limit,
+    example: OrderType.LIMIT,
     enum: OrderType
   })
   type: OrderType;
@@ -96,9 +96,9 @@ export class OrderReadResponseDto {
     this.marketId = order.info.symbol;
     this.price = parseFloat(order.info.price);
     this.amount = order.amount;
-    this.side = order.info.side.toLowerCase() === 'buy' ? OrderSide.Buy : OrderSide.Sell;
+    this.side = order.info.side.toLowerCase() === 'buy' ? OrderSide.BUY : OrderSide.SELL;
     this.status = order.status;
-    this.type = order.info.orderType.toLowerCase() === 'limit' ? OrderType.Limit : OrderType.Market;
+    this.type = order.info.orderType.toLowerCase() === 'limit' ? OrderType.LIMIT : OrderType.MARKET;
     this.leavesQty = parseFloat(order.info.leavesQty);
     this.tpslMode = order.info.tpslMode;
     this.triggerPrice = parseFloat(order.info.triggerPrice);

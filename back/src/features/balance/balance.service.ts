@@ -6,7 +6,7 @@ import { pipe } from 'fp-ts/lib/function';
 import * as T from 'fp-ts/Task';
 import * as TE from 'fp-ts/TaskEither';
 
-import { IAccountTracker } from '../../common/interfaces/account-tracker.interface';
+import { IAccountTracker } from '../../common/types/account-tracker.interface';
 import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
 import { ExchangeService } from '../exchange/exchange.service';

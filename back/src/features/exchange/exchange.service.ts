@@ -7,7 +7,7 @@ import * as TE from 'fp-ts/TaskEither';
 import { Events } from '../../config';
 import { Account } from '../account/entities/account.entity';
 import { logEffect, logError } from '../logger/logger.utils';
-import { OrderSide } from '../order/order.types';
+import { OrderSide, OrderType } from '../order/order.types';
 import { ExchangeInitializedEvent } from './events/exchange-initialized.event';
 import { ExchangeTerminatedEvent } from './events/exchange-terminated.event';
 import { ExchangeNotFoundException, ExchangeOperationFailedException } from './exceptions/exchange.exceptions';
@@ -198,11 +198,12 @@ export class ExchangeService {
   async openOrder(
     accountId: string,
     symbol: string,
+    type: OrderType,
     side: OrderSide,
-    volume: number,
+    quantity: number,
     price?: number,
-    stopLossPrice?: number,
     takeProfitPrice?: number,
+    stopLossPrice?: number,
     params?: Record<string, any>
   ): Promise<Order> {
     this.logger.log(`Order - Create Initiated - AccountID: ${accountId}`);
@@ -210,7 +211,17 @@ export class ExchangeService {
 
     try {
       // TODO ensure that symbol is in hedge mode before opening the order
-      const order = await exchange.openOrder(symbol, side, volume, price, stopLossPrice, takeProfitPrice, params);
+      const order = await exchange.openOrder(
+        symbol,
+        type,
+        side,
+        quantity,
+        price,
+        takeProfitPrice,
+        stopLossPrice,
+        // NOTE see https://bybit-exchange.github.io/docs/v5/order/create-order#request-parameters for reference
+        { tpslMode: 'Partial', ...params, positionIdx: side === OrderSide.BUY ? 1 : 2 }
+      );
 
       this.logger.log(`Order - Created - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
 
@@ -227,7 +238,7 @@ export class ExchangeService {
     symbol: string,
     type: string,
     side: OrderSide,
-    volume?: number,
+    quantity?: number,
     price?: number,
     params?: Record<string, any>
   ): Promise<Order> {
@@ -235,7 +246,7 @@ export class ExchangeService {
     const exchange = this.getExchange(accountId);
 
     try {
-      const order = await exchange.updateOrder(orderId, symbol, type, side, volume, price, params);
+      const order = await exchange.updateOrder(orderId, symbol, type, side, quantity, price, params);
 
       this.logger.log(`Order - Updated - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
 
@@ -246,19 +257,20 @@ export class ExchangeService {
     }
   }
 
-  async closePosition(accountId: string, symbol: string, side: OrderSide, volume: number): Promise<Order> {
+  async closePosition(accountId: string, symbol: string, side: OrderSide, quantity: number): Promise<Order> {
     this.logger.log(`Position - Close Initiated - AccountID: ${accountId}, Symbol: ${symbol}, Side: ${side}`);
 
     try {
       const order = await this.openOrder(
         accountId,
         symbol,
-        side === OrderSide.Buy ? OrderSide.Sell : OrderSide.Buy,
-        volume,
+        OrderType.MARKET,
+        side === OrderSide.BUY ? OrderSide.SELL : OrderSide.BUY,
+        quantity,
         undefined,
         undefined,
         undefined,
-        { positionIdx: side === OrderSide.Buy ? 1 : 2 } // NOTE needed for bybit hedge mode
+        { positionIdx: side === OrderSide.BUY ? 1 : 2 } // NOTE needed for bybit hedge mode
       );
 
       this.logger.log(`Position - Closed - AccountID: ${accountId}, Symbol: ${symbol}, Side: ${side}`);

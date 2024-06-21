@@ -2,11 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WebsocketClient, WSClientConfigurableOptions } from 'bybit-api';
 
-import { IAccountTracker } from '../../../common/interfaces/account-tracker.interface';
+import { IAccountTracker } from '../../../common/types/account-tracker.interface';
 import { Events } from '../../../config';
 import { AccountService } from '../../account/account.service';
 import { Account } from '../../account/entities/account.entity';
+import { AccountNotFoundException } from '../../account/exceptions/account.exceptions';
 import { TickerDataUpdatedEvent } from '../../ticker/events/ticker-data-updated.event';
+import { TrackingFailedException } from '../exceptions/websocket.exceptions';
 
 @Injectable()
 export class WebsocketManagerService implements IAccountTracker {
@@ -32,8 +34,7 @@ export class WebsocketManagerService implements IAccountTracker {
       account = await this.accountService.getAccountById(accountId);
     } catch (error) {
       this.logger.error(`Account Fetch Failed - AccountID: ${accountId}, Error: ${error.message}`);
-      // TODO custom exception
-      throw new Error(`TODO`);
+      throw new AccountNotFoundException(accountId);
     }
 
     const options: WSClientConfigurableOptions = {
@@ -52,8 +53,7 @@ export class WebsocketManagerService implements IAccountTracker {
       this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
     } catch (error) {
       this.logger.error(`Tracking Failed - AccountID: ${accountId}, Error: ${error.message}`);
-      // TODO custom exception
-      throw new Error(`TODO`);
+      throw new TrackingFailedException(accountId, error);
     }
   }
 
@@ -70,12 +70,12 @@ export class WebsocketManagerService implements IAccountTracker {
     this.logger.log(
       `Subscription Initiated - AccountID: ${accountId}, Topics: ${Array.isArray(wsTopics) ? wsTopics.join(', ') : wsTopics}`
     );
-    let ws = this.wsConnections.get(accountId);
+    const ws = this.wsConnections.get(accountId);
 
-    if (!ws) {
-      await this.startTrackingAccount(accountId);
-      ws = this.wsConnections.get(accountId);
-    }
+    // if (!ws) {
+    //   await this.startTrackingAccount(accountId);
+    //   ws = this.wsConnections.get(accountId);
+    // }
 
     if (!ws) {
       this.logger.error(`Subscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`);
@@ -133,8 +133,8 @@ export class WebsocketManagerService implements IAccountTracker {
       const topicHandlerMapping = {
         'tickers.': this.handleTickerUpdate.bind(this)
         // FIXME update this
-        // execution: this.handleExecutionUpdate,
-        // position: this.handlePositionUpdate,
+        // execution: this.handleExecutionUpdate.bind(this),
+        // position: this.handlePositionUpdate.bind(this)
         // order: this.handleOrderUpdate,
         // wallet: this.handleWalletUpdate,
       };
@@ -160,31 +160,33 @@ export class WebsocketManagerService implements IAccountTracker {
     this.eventEmitter.emit(Events.TICKER_DATA_UPDATED, new TickerDataUpdatedEvent(accountId, marketId, msg.data));
   }
 
-  private cleanResources(accountId: string) {
-    const ws = this.wsConnections.get(accountId);
+  // private handlePositionUpdate(msg: any) {
+  //   this.logger.log('position', JSON.stringify(msg));
+  //   // FIXME add event update
+  // }
 
-    if (ws) {
-      ws.closeAll();
-      this.wsConnections.delete(accountId);
-      this.subscriptions.delete(accountId);
-      this.logger.log(`Cleaned up resources for account ${accountId}`);
+  // private handleExecutionUpdate(msg: any) {
+  //   this.logger.error('execution', JSON.stringify(msg));
+  //   // FIXME add event update
+  // }
+
+  private cleanResources(accountId: string) {
+    try {
+      const ws = this.wsConnections.get(accountId);
+
+      if (ws) {
+        ws.closeAll();
+        this.wsConnections.delete(accountId);
+        this.subscriptions.delete(accountId);
+        this.logger.log(`Cleaned up resources for account ${accountId}`);
+      }
+    } catch (error) {
+      this.logger.error(`Error cleaning resources for AccountID: ${accountId}, Error: ${error.message}`);
     }
   }
 }
 
 //   const topics = ['execution']; // 'wallet', 'position', 'order'
-
-// private handleExecutionUpdate(msg: any) {
-//   this.eventEmitter.emit(
-//     Events.ORDER_EXECUTED,
-//     new OrderExecutedEvent(this.account.id, msg.data),
-//   );
-// }
-
-// private handlePositionUpdate(msg: any) {
-//   this.logger.log('position', JSON.stringify(msg));
-//   // FIXME add event update
-// }
 
 // private handleOrderUpdate(msg: any) {
 //   this.logger.log('order', JSON.stringify(msg));

@@ -2,8 +2,8 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Order } from 'ccxt';
 
-import { IAccountTracker } from '../../common/interfaces/account-tracker.interface';
-import { IDataRefresher } from '../../common/interfaces/data-refresher.interface';
+import { IAccountTracker } from '../../common/types/account-tracker.interface';
+import { IDataRefresher } from '../../common/types/data-refresher.interface';
 import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
 import { ExchangeService } from '../exchange/exchange.service';
@@ -11,7 +11,12 @@ import { OrderCreateRequestDto } from './dto/order-create.request.dto';
 import { OrderUpdateRequestDto } from './dto/order-update.request.dto';
 import { OrderUpdatedEvent } from './events/order-updated.event';
 import { OrdersUpdatedEvent } from './events/orders-updated.event';
-import { OrdersUpdateAggregatedException } from './exceptions/orders.exceptions';
+import {
+  OrderCancellationFailedException,
+  OrderCreationFailedException,
+  OrderNotFoundException,
+  OrdersUpdateAggregatedException
+} from './exceptions/orders.exceptions';
 import { OrderSide } from './order.types';
 
 @Injectable()
@@ -54,8 +59,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       return await this.exchangeService.getOrders(accountId, marketId);
     } catch (error) {
       this.logger.error(`Orders - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
-      // TODO improve
-      throw error;
+      throw new OrderNotFoundException(accountId, '');
     }
   }
 
@@ -89,7 +93,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     const orderToFetch = this.openOrders.get(accountId).find((order) => order.id === orderId);
 
     if (!orderToFetch) {
-      throw new Error(`Order - Fetch Failed - AccountID: ${accountId}, OrderID: ${orderId}, Reason: Order not found`);
+      throw new OrderNotFoundException(accountId, orderId);
     }
 
     try {
@@ -105,12 +109,10 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         `Order - Fetch Failed - AccountID: ${accountId}, OrderID: ${orderId}, Error: ${error.message}`,
         error.stack
       );
-      // TODO improve
-      throw error;
+      throw new OrderNotFoundException(accountId, orderId);
     }
   }
 
-  // TODO replace by an event ?
   async createOrder(accountId: string, dto: OrderCreateRequestDto): Promise<Order> {
     this.logger.log(`Order - Create Initiated - AccountID: ${accountId}, MarketID: ${dto.marketId}`);
 
@@ -118,13 +120,12 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       const order = await this.exchangeService.openOrder(
         accountId,
         dto.marketId,
+        dto.type,
         dto.side,
-        dto.volume,
+        dto.quantity,
         dto.price,
-        dto.stopLossPrice,
         dto.takeProfitPrice,
-        // NOTE see https://bybit-exchange.github.io/docs/v5/order/create-order#request-parameters for reference
-        { tpslMode: 'Partial', positionIdx: dto.side === OrderSide.Buy ? 1 : 2 }
+        dto.stopLossPrice
       );
 
       this.logger.log(`Order - Created - AccountID: ${accountId}, Details: ${JSON.stringify(order)}`);
@@ -132,12 +133,10 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       return order;
     } catch (error) {
       this.logger.error(`Order - Creation Failed - AccountID: ${accountId}`, error.stack);
-      // TODO custom exception
-      throw error;
+      throw new OrderCreationFailedException(accountId, error.message);
     }
   }
 
-  // TODO replace by an event ?
   async cancelOrder(accountId: string, orderId: string): Promise<Order> {
     this.logger.log(`Order - Cancel Initiated - AccountID: ${accountId}, OrderID: ${orderId}`);
 
@@ -161,12 +160,10 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       return order;
     } catch (error) {
       this.logger.error(`Order - Cancellation Failed - AccountID: ${accountId}, OrderID: ${orderId}`, error.stack);
-      // TODO custom exception
-      throw error;
+      throw new OrderCancellationFailedException(accountId, orderId, error.message);
     }
   }
 
-  // TODO replace by an event ?
   async cancelOrdersByMarket(accountId: string, marketId: string): Promise<Order[]> {
     this.logger.log(`Orders - Cancel Initiated - AccountID: ${accountId}`);
 
@@ -184,8 +181,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       return orders;
     } catch (error) {
       this.logger.error(`Orders - Cancellation Failed - AccountID: ${accountId}`, error.stack);
-      // TODO custom exception
-      throw error;
+      throw new OrderCancellationFailedException(accountId, '', error.message);
     }
   }
 
@@ -211,7 +207,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         orderToUpdate.info.symbol,
         orderToUpdate.info.orderType,
         OrderSide[orderToUpdate.side],
-        dto.volume,
+        dto.quantity,
         dto.price,
         {}
       );
@@ -225,8 +221,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       return order;
     } catch (error) {
       this.logger.error(`Order - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
-      // TODO custom exception
-      throw error;
+      throw new OrderCreationFailedException(accountId, error.message);
     }
   }
 
@@ -249,8 +244,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       return newOrders;
     } catch (error) {
       this.logger.error(`Open Orders - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
-      // TODO custom exception
-      throw error;
+      throw new OrdersUpdateAggregatedException([{ accountId, error }]);
     }
   }
 
