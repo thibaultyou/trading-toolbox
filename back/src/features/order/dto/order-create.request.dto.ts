@@ -14,6 +14,14 @@ export class OrderCreateRequestDto implements IOrderDetails {
   marketId: string;
 
   @ApiProperty({
+    description: 'External order link ID, used for tracking the order on external systems or client side',
+    example: '3cms_req_t_697716177_3'
+  })
+  @IsOptional()
+  @IsString({ message: 'Order link ID must be a string.' })
+  linkId?: string;
+
+  @ApiProperty({
     description: 'Type of order, like limit or market',
     enum: OrderType,
     example: OrderType.LIMIT

@@ -74,7 +74,7 @@ export class ExchangeService {
       TE.tapIO((balances) =>
         logEffect(
           this.logger,
-          `Balances - Fetched - AccountID: ${accountId}, Balances: ${JSON.stringify(balances)}`
+          `Balances - Fetched - AccountID: ${accountId}`
         )(balances)
       ),
       TE.mapError((error) => new ExchangeOperationFailedException('getBalances', error.message)),

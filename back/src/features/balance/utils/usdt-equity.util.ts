@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 
-import { IWalletAccount } from '../types/wallet-account.interface';
 import { ICoinData } from '../types/coin-data.interface';
+import { IWalletAccount } from '../types/wallet-account.interface';
 
 export function extractUSDTEquity(walletAccount: IWalletAccount, logger: Logger): number | null {
   let usdtEquity: number | null = null;

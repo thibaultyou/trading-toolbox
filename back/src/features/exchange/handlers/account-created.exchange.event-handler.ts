@@ -13,7 +13,7 @@ export class ExchangeAccountCreatedEventHandler {
 
   @OnEvent(Events.ACCOUNT_CREATED)
   async handle(event: AccountCreatedEvent) {
-    const actionContext = `Event: ${Events.ACCOUNT_CREATED} - AccountID: ${event.account.id}`;
+    const actionContext = `${Events.ACCOUNT_CREATED} | AccountID: ${event.account.id}`;
 
     try {
       await this.exchangeService.initializeExchange(event.account);

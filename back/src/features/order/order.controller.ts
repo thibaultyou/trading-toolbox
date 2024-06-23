@@ -64,6 +64,7 @@ export class OrderController extends BaseController {
         summary: 'Limit Order',
         value: {
           marketId: 'FTMUSDT',
+          orderLinkId: '1234567890',
           type: OrderType.LIMIT,
           side: OrderSide.BUY,
           quantity: 1,
@@ -76,9 +77,12 @@ export class OrderController extends BaseController {
         summary: 'Market Order',
         value: {
           marketId: 'FTMUSDT',
+          orderLinkId: '1234567890',
           type: OrderType.MARKET,
           side: OrderSide.SELL,
-          quantity: 1
+          quantity: 1,
+          takeProfitPrice: 0.6,
+          stopLossPrice: 0.1
         }
       }
     }

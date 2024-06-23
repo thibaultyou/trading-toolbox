@@ -8,8 +8,9 @@ import { AccountNotFoundException } from '../account/exceptions/account.exceptio
 import { WebSocketSubscribeEvent } from '../core/events/websocket-subscribe.event';
 import { WebSocketUnsubscribeEvent } from '../core/events/websocket-unsubscribe.event';
 import { TickerPriceNotFoundException } from './exceptions/ticker.exceptions';
-import { TickerData, WatchListType } from './ticker.types';
-import { getPriceFromTickerData, hasTickerDataChanged } from './utils/ticker-data.util';
+import { getPriceFromTickerData, hasTickerDataChanged } from './ticker.utils';
+import { ITickerData } from '../core/types/ticker-data.interface';
+import { TickerWatchListType } from './types/ticker-watch-list-types.enum';
 
 // TODO improve logging, error handling, custom exceptions
 
@@ -19,7 +20,7 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
   private ordersTickers: Map<string, Set<string>> = new Map();
   private positionsTickers: Map<string, Set<string>> = new Map();
   private trackedTickers: Map<string, Set<string>> = new Map();
-  private tickerValues: Map<string, Map<string, TickerData>> = new Map();
+  private tickerValues: Map<string, Map<string, ITickerData>> = new Map();
 
   constructor(private eventEmitter: EventEmitter2) {}
 
@@ -66,8 +67,8 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
     return getPriceFromTickerData(marketValues.get(marketId));
   }
 
-  async updateTickersWatchList(type: WatchListType, accountId: string, marketIds: Set<string>): Promise<void> {
-    const tickersMap = type === WatchListType.Positions ? this.positionsTickers : this.ordersTickers;
+  async updateTickersWatchList(type: TickerWatchListType, accountId: string, marketIds: Set<string>): Promise<void> {
+    const tickersMap = type === TickerWatchListType.Positions ? this.positionsTickers : this.ordersTickers;
     tickersMap.set(accountId, marketIds);
 
     this.logger.log(
@@ -81,15 +82,15 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
     );
   }
 
-  updateTickerPositionsWatchList(accountId: string, marketIds: Set<string>): void {
-    this.updateTickersWatchList(WatchListType.Positions, accountId, marketIds);
+  async updateTickerPositionsWatchList(accountId: string, marketIds: Set<string>): Promise<void> {
+    await this.updateTickersWatchList(TickerWatchListType.Positions, accountId, marketIds);
   }
 
-  updateTickerOrdersWatchList(accountId: string, marketIds: Set<string>): void {
-    this.updateTickersWatchList(WatchListType.Orders, accountId, marketIds);
+  async updateTickerOrdersWatchList(accountId: string, marketIds: Set<string>): Promise<void> {
+    await this.updateTickersWatchList(TickerWatchListType.Orders, accountId, marketIds);
   }
 
-  updateTickerData(accountId: string, marketId: string, data: TickerData): void {
+  updateTickerData(accountId: string, marketId: string, data: ITickerData): void {
     this.logger.debug(`Ticker Data - Update Initiated - AccountID: ${accountId}`);
 
     if (!this.tickerValues.has(accountId)) {
@@ -107,7 +108,7 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
     const hasChanges = hasTickerDataChanged(existingData, data);
 
     if (hasChanges) {
-      const updatedData: TickerData = { ...existingData, ...data };
+      const updatedData: ITickerData = { ...existingData, ...data };
       const price = getPriceFromTickerData(updatedData);
 
       if (price !== null) {
@@ -147,12 +148,12 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
       let logMessage = `Tickers Watch List - Updated - AccountID: ${accountId}`;
 
       if (toSubscribe.length > 0) {
-        this.eventEmitter.emit(Events.SUBSCRIBE_WEBSOCKET, new WebSocketSubscribeEvent(accountId, toSubscribe));
+        this.eventEmitter.emit(Events.WEBSOCKET_SUBSCRIBE, new WebSocketSubscribeEvent(accountId, toSubscribe));
         logMessage += `, Subscribed to: ${toSubscribe.sort().join(', ')}`;
       }
 
       if (toUnsubscribe.length > 0) {
-        this.eventEmitter.emit(Events.UNSUBSCRIBE_WEBSOCKET, new WebSocketUnsubscribeEvent(accountId, toUnsubscribe));
+        this.eventEmitter.emit(Events.WEBSOCKET_UNSUBSCRIBE, new WebSocketUnsubscribeEvent(accountId, toUnsubscribe));
         logMessage += `, Unsubscribed from: ${toUnsubscribe.sort().join(', ')}`;
       }
 

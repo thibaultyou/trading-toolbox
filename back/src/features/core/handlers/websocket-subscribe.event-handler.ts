@@ -11,9 +11,9 @@ export class CoreModuleWebSocketSubscribeEventEventHandler {
 
   constructor(private websocketManagerService: WebsocketManagerService) {}
 
-  @OnEvent(Events.SUBSCRIBE_WEBSOCKET)
+  @OnEvent(Events.WEBSOCKET_SUBSCRIBE)
   async handle(event: WebSocketSubscribeEvent) {
-    const actionContext = `Event: ${Events.SUBSCRIBE_WEBSOCKET} - AccountID: ${event.accountId}`;
+    const actionContext = `${Events.WEBSOCKET_SUBSCRIBE} | AccountID: ${event.accountId}`;
 
     try {
       await this.websocketManagerService.subscribe(event.accountId, event.topics);

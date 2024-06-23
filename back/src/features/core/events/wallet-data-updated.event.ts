@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { IWalletData } from '../core.interfaces';
+import { IWalletData } from '../types/wallet-data.interface';
 
 export class WalletDataUpdatedEvent {
   @ApiProperty()

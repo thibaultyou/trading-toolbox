@@ -12,11 +12,11 @@ export class TickerModulePositionsUpdatedEventHandler {
   constructor(private tickerService: TickerService) {}
 
   @OnEvent(Events.POSITIONS_UPDATED)
-  handle(event: PositionsUpdatedEvent) {
-    const actionContext = `Event: ${Events.POSITIONS_UPDATED} - AccountID: ${event.accountId}`;
+  async handle(event: PositionsUpdatedEvent) {
+    const actionContext = `${Events.POSITIONS_UPDATED} | AccountID: ${event.accountId}`;
 
     try {
-      this.tickerService.updateTickerPositionsWatchList(
+      await this.tickerService.updateTickerPositionsWatchList(
         event.accountId,
         new Set(event.positions.map((p) => p.info.symbol))
       );

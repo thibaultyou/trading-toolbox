@@ -1,13 +1,13 @@
 export class OrderUpdatedEvent {
   public readonly accountId: string;
 
-  public readonly orderId: string;
+  public readonly id: string;
 
-  public readonly orderLinkId: string;
+  public readonly linkId: string;
 
   constructor(accountId: string, orderId: string, orderLinkId: string) {
     this.accountId = accountId;
-    this.orderId = orderId;
-    this.orderLinkId = orderLinkId;
+    this.id = orderId;
+    this.linkId = orderLinkId;
   }
 }

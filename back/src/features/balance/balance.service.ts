@@ -6,7 +6,6 @@ import { Events } from 'src/config';
 
 import { IAccountTracker } from '../../common/types/account-tracker.interface';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
-import { IWalletData } from '../core/core.interfaces';
 import { ExchangeOperationFailedException } from '../exchange/exceptions/exchange.exceptions';
 import { ExchangeService } from '../exchange/exchange.service';
 import { logEffect, logError } from '../logger/logger.utils';
@@ -15,6 +14,7 @@ import { BalanceGateway } from './balance.gateway';
 import { BalancesUpdatedEvent } from './events/balances-updated.event';
 import { IWalletAccount } from './types/wallet-account.interface';
 import { extractUSDTEquity } from './utils/usdt-equity.util';
+import { IWalletData } from '../core/types/wallet-data.interface';
 
 @Injectable()
 export class BalanceService implements IAccountTracker {

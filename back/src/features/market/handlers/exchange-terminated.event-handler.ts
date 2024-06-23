@@ -13,7 +13,7 @@ export class MarketModuleExchangeTerminatedEventHandler {
 
   @OnEvent(Events.EXCHANGE_TERMINATED)
   handle(event: ExchangeTerminatedEvent) {
-    const actionContext = `Event: ${Events.EXCHANGE_TERMINATED} - AccountID: ${event.accountId}`;
+    const actionContext = `${Events.EXCHANGE_TERMINATED} | AccountID: ${event.accountId}`;
 
     try {
       this.marketService.stopTrackingAccount(event.accountId);

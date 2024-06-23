@@ -13,7 +13,7 @@ export class CoreModuleExchangeInitializedEventHandler {
 
   @OnEvent(Events.EXCHANGE_INITIALIZED)
   async handle(event: ExchangeInitializedEvent) {
-    const actionContext = `Event: ${Events.EXCHANGE_INITIALIZED} - AccountID: ${event.accountId}`;
+    const actionContext = `${Events.EXCHANGE_INITIALIZED} | AccountID: ${event.accountId}`;
 
     try {
       await this.websocketManagerService.startTrackingAccount(event.accountId);

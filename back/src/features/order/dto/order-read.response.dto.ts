@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Order } from 'ccxt';
 
+import { OrderConverter } from '../order.converter';
+import { IOrder } from '../order.interfaces';
 import { OrderSide, OrderType } from '../order.types';
 
 export class OrderReadResponseDto {
@@ -8,13 +10,13 @@ export class OrderReadResponseDto {
     description: 'Unique identifier for the order',
     example: '3f309063-cfd1-4ce8-ad74-77c94b01563f'
   })
-  orderId: string;
+  id: string;
 
   @ApiProperty({
     description: 'External order link ID, used for tracking the order on external systems or client side',
     example: '3cms_req_t_697716177_3'
   })
-  orderLinkId: string;
+  linkId: string;
 
   @ApiProperty({
     description: 'Trading symbol for the order',
@@ -91,18 +93,19 @@ export class OrderReadResponseDto {
   updatedTime: number;
 
   constructor(order: Order) {
-    this.orderId = order.info.orderId;
-    this.orderLinkId = order.info.orderLinkId;
-    this.marketId = order.info.symbol;
-    this.price = parseFloat(order.info.price);
-    this.amount = order.amount;
-    this.side = order.info.side.toLowerCase() === 'buy' ? OrderSide.BUY : OrderSide.SELL;
-    this.status = order.status;
-    this.type = order.info.orderType.toLowerCase() === 'limit' ? OrderType.LIMIT : OrderType.MARKET;
-    this.leavesQty = parseFloat(order.info.leavesQty);
-    this.tpslMode = order.info.tpslMode;
-    this.triggerPrice = parseFloat(order.info.triggerPrice);
-    this.createdTime = parseInt(order.info.createdTime);
-    this.updatedTime = parseInt(order.info.updatedTime);
+    const internalOrder: IOrder = OrderConverter.toInternalOrder(order);
+    this.id = internalOrder.id;
+    this.linkId = internalOrder.linkId;
+    this.marketId = internalOrder.marketId;
+    this.price = internalOrder.price;
+    this.amount = internalOrder.amount;
+    this.side = internalOrder.side;
+    this.status = internalOrder.status;
+    this.type = internalOrder.type;
+    this.leavesQty = internalOrder.leavesQty;
+    this.tpslMode = internalOrder.tpslMode;
+    this.triggerPrice = internalOrder.triggerPrice;
+    this.createdTime = internalOrder.createdTime;
+    this.updatedTime = internalOrder.updatedTime;
   }
 }

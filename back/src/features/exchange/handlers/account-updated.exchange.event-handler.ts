@@ -13,7 +13,7 @@ export class ExchangeAccountUpdatedEventHandler {
 
   @OnEvent(Events.ACCOUNT_UPDATED)
   async handle(event: AccountUpdatedEvent) {
-    const actionContext = `Event: ${Events.ACCOUNT_UPDATED} - AccountID: ${event.account.id}`;
+    const actionContext = `${Events.ACCOUNT_UPDATED} | AccountID: ${event.account.id}`;
 
     try {
       await this.exchangeService.cleanResources(event.account.id);

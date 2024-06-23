@@ -13,7 +13,7 @@ export class BalanceModuleWalletDataUpdatedEventHandler {
 
   @OnEvent(Events.WALLET_DATA_UPDATED)
   async handle(event: WalletDataUpdatedEvent) {
-    const actionContext = `Event: ${Events.WALLET_DATA_UPDATED} - AccountID: ${event.accountId}`;
+    const actionContext = `${Events.WALLET_DATA_UPDATED} | AccountID: ${event.accountId}`;
 
     try {
       for (const executionData of event.data) {

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
 import { EventHandlersContext, Events } from '../../../config';
-import { TickerDataUpdatedEvent } from '../events/ticker-data-updated.event';
+import { TickerDataUpdatedEvent } from '../../core/events/ticker-data-updated.event';
 import { TickerService } from '../ticker.service';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class TickerModuleTickerUpdatedEventHandler {
 
   @OnEvent(Events.TICKER_DATA_UPDATED)
   handle(event: TickerDataUpdatedEvent) {
-    const actionContext = `Event: ${Events.TICKER_DATA_UPDATED} - AccountID: ${event.accountId}`;
+    const actionContext = `${Events.TICKER_DATA_UPDATED} | AccountID: ${event.accountId}`;
 
     try {
       this.tickerService.updateTickerData(event.accountId, event.marketId, event.data);

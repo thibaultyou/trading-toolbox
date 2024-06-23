@@ -11,9 +11,9 @@ export class CoreModuleWebSocketUnsubscribeEventEventHandler {
 
   constructor(private websocketManagerService: WebsocketManagerService) {}
 
-  @OnEvent(Events.UNSUBSCRIBE_WEBSOCKET)
+  @OnEvent(Events.WEBSOCKET_UNSUBSCRIBE)
   handle(event: WebSocketUnsubscribeEvent) {
-    const actionContext = `Event: ${Events.UNSUBSCRIBE_WEBSOCKET} - AccountID: ${event.accountId}`;
+    const actionContext = `${Events.WEBSOCKET_UNSUBSCRIBE} | AccountID: ${event.accountId}`;
 
     try {
       this.websocketManagerService.unsubscribe(event.accountId, event.topics);

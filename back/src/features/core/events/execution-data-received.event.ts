@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { IExecutionData } from '../core.interfaces';
+import { IExecutionData } from '../types/execution-data.interface';
 
 export class ExecutionDataReceivedEvent {
   @ApiProperty()

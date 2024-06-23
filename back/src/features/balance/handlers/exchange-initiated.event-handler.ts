@@ -13,7 +13,7 @@ export class BalanceModuleExchangeInitializedEventHandler {
 
   @OnEvent(Events.EXCHANGE_INITIALIZED)
   async handle(event: ExchangeInitializedEvent): Promise<void> {
-    const actionContext = `Event: ${Events.EXCHANGE_INITIALIZED} - AccountID: ${event.accountId}`;
+    const actionContext = `${Events.EXCHANGE_INITIALIZED} | AccountID: ${event.accountId}`;
 
     try {
       await this.balanceService.startTrackingAccount(event.accountId);

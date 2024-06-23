@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { ITickerData } from '../core.interfaces';
+import { ITickerData } from '../types/ticker-data.interface';
 
 export class TickerDataUpdatedEvent {
   @ApiProperty()

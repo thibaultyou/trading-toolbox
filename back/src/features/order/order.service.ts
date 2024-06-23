@@ -121,7 +121,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         dto.price,
         dto.takeProfitPrice,
         dto.stopLossPrice,
-        dto.params
+        { ...dto.params, orderLinkId: dto.linkId }
       );
       this.logger.log(`Order - Created - AccountID: ${accountId}, Details: ${JSON.stringify(order)}`);
       return order;

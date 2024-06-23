@@ -13,7 +13,7 @@ export class TickerModuleExchangeTerminatedEventHandler {
 
   @OnEvent(Events.EXCHANGE_TERMINATED)
   handle(event: ExchangeTerminatedEvent) {
-    const actionContext = `Event: ${Events.EXCHANGE_TERMINATED} - AccountID: ${event.accountId}`;
+    const actionContext = `${Events.EXCHANGE_TERMINATED} | AccountID: ${event.accountId}`;
 
     try {
       this.tickerService.stopTrackingAccount(event.accountId);

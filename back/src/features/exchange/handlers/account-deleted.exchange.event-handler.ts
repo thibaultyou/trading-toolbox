@@ -13,7 +13,7 @@ export class ExchangeAccountDeletedEventHandler {
 
   @OnEvent(Events.ACCOUNT_CREATED)
   async handle(event: AccountDeletedEvent) {
-    const actionContext = `Event: ${Events.ACCOUNT_CREATED} - AccountID: ${event.account.id}`;
+    const actionContext = `${Events.ACCOUNT_CREATED} | AccountID: ${event.account.id}`;
 
     try {
       await this.exchangeService.cleanResources(event.account.id);

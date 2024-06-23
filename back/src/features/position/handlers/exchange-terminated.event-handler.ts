@@ -13,7 +13,7 @@ export class PositionModuleExchangeTerminatedEventHandler {
 
   @OnEvent(Events.EXCHANGE_TERMINATED)
   handle(event: ExchangeTerminatedEvent) {
-    const actionContext = `Event: EXCHANGE_TERMINATED - AccountID: ${event.accountId}`;
+    const actionContext = `${Events.EXCHANGE_TERMINATED} | AccountID: ${event.accountId}`;
 
     try {
       this.positionService.stopTrackingAccount(event.accountId);
