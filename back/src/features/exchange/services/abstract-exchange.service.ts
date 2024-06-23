@@ -204,48 +204,48 @@ export abstract class AbstractExchangeService implements IExchangeService {
       throw new ExchangeTerminationFailedException(this.account.id, errMsg);
     }
   }
+
+  //   async updateStopLoss(orderId: string, symbol: string, amount: number, stopLossPrice: number): Promise<Order> {
+  //   try {
+  //     const updatedOrder = await this.editOrder(
+  //       orderId,
+  //       symbol,
+  //       'stop_loss',
+  //       'sell',
+  //       amount,
+  //       stopLossPrice,
+  //       'updating stop loss'
+  //     );
+
+  //     this.logger.log(
+  //       `Stop Loss Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`
+  //     );
+
+  //     return updatedOrder;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
+
+  // async updateTakeProfit(orderId: string, symbol: string, amount: number, takeProfitPrice: number): Promise<Order> {
+  //   try {
+  //     const updatedOrder = await this.editOrder(
+  //       orderId,
+  //       symbol,
+  //       'take_profit',
+  //       'sell',
+  //       amount,
+  //       takeProfitPrice,
+  //       'updating take profit'
+  //     );
+
+  //     this.logger.log(
+  //       `Take Profit Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`
+  //     );
+
+  //     return updatedOrder;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
 }
-
-// async updateStopLoss(orderId: string, symbol: string, amount: number, stopLossPrice: number): Promise<Order> {
-//   try {
-//     const updatedOrder = await this.editOrder(
-//       orderId,
-//       symbol,
-//       'stop_loss',
-//       'sell',
-//       amount,
-//       stopLossPrice,
-//       'updating stop loss'
-//     );
-
-//     this.logger.log(
-//       `Stop Loss Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`
-//     );
-
-//     return updatedOrder;
-//   } catch (error) {
-//     throw error;
-//   }
-// }
-
-// async updateTakeProfit(orderId: string, symbol: string, amount: number, takeProfitPrice: number): Promise<Order> {
-//   try {
-//     const updatedOrder = await this.editOrder(
-//       orderId,
-//       symbol,
-//       'take_profit',
-//       'sell',
-//       amount,
-//       takeProfitPrice,
-//       'updating take profit'
-//     );
-
-//     this.logger.log(
-//       `Take Profit Updated - AccountID: ${this.account.id}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`
-//     );
-
-//     return updatedOrder;
-//   } catch (error) {
-//     throw error;
-//   }
-// }

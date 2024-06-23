@@ -66,29 +66,6 @@ export class ExchangeService {
     return exchange;
   }
 
-  // async getBalances(accountId: string): Promise<Balances> {
-  //   this.logger.log(`Balances Fetch Initiated - AccountID: ${accountId}`);
-  //   const exchange = this.getExchange(accountId);
-  //   const taskResult = await exchange.getBalances()();
-
-  //   return pipe(
-  //     taskResult,
-  //     E.fold(
-  //       (error) => {
-  //         const errorMessage = `Balances Fetch Failed - AccountID: ${accountId}, Error: ${error.message}`;
-
-  //         this.logger.error(errorMessage, error.stack);
-  //         throw new ExchangeOperationFailedException('getBalances', error.message);
-  //       },
-  //       (balances) => {
-  //         this.logger.log(`Balances Fetched - AccountID: ${accountId}, Balances: ${JSON.stringify(balances)}`);
-
-  //         return balances;
-  //       }
-  //     )
-  //   );
-  // }
-
   getBalances = (accountId: string): TE.TaskEither<Error, Balances> =>
     pipe(
       TE.right(accountId),

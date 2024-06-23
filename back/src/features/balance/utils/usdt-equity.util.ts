@@ -1,9 +1,11 @@
 import { Logger } from '@nestjs/common';
-import { Balances } from 'ccxt';
 
-export function extractUSDTEquity(balances: Balances, logger: Logger): number | null {
+import { IWalletAccount } from '../types/wallet-account.interface';
+import { ICoinData } from '../types/coin-data.interface';
+
+export function extractUSDTEquity(walletAccount: IWalletAccount, logger: Logger): number | null {
   let usdtEquity: number | null = null;
-  const usdtCoinObject = balances.info?.result?.list[0]?.coin.find((coin: any) => coin.coin === 'USDT');
+  const usdtCoinObject = walletAccount?.coin.find((coin: ICoinData) => coin.coin === 'USDT');
 
   if (usdtCoinObject?.equity !== undefined) {
     const parsedEquity = parseFloat(usdtCoinObject.equity);

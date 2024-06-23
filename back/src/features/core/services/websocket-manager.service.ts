@@ -7,7 +7,9 @@ import { Events } from '../../../config';
 import { AccountService } from '../../account/account.service';
 import { Account } from '../../account/entities/account.entity';
 import { AccountNotFoundException } from '../../account/exceptions/account.exceptions';
-import { TickerDataUpdatedEvent } from '../../ticker/events/ticker-data-updated.event';
+import { ExecutionDataReceivedEvent } from '../events/execution-data-received.event';
+import { TickerDataUpdatedEvent } from '../events/ticker-data-updated.event';
+import { WalletDataUpdatedEvent } from '../events/wallet-data-updated.event';
 import { TrackingFailedException } from '../exceptions/websocket.exceptions';
 
 @Injectable()
@@ -39,8 +41,7 @@ export class WebsocketManagerService implements IAccountTracker {
     const options: WSClientConfigurableOptions = {
       key: account.key,
       secret: account.secret,
-      testnet: false,
-      market: 'contractUSDT'
+      market: 'v5'
     };
 
     try {
@@ -48,6 +49,7 @@ export class WebsocketManagerService implements IAccountTracker {
       ws.on('update', (message: any) => this.handleWsUpdate(accountId, message));
       this.wsConnections.set(accountId, ws);
       this.subscriptions.set(accountId, new Set());
+      await this.subscribe(accountId, ['execution', 'position', 'order', 'wallet'], true);
       this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
     } catch (error) {
       this.logger.error(`Tracking Failed - AccountID: ${accountId}, Error: ${error.message}`);
@@ -68,12 +70,12 @@ export class WebsocketManagerService implements IAccountTracker {
     this.logger.log(
       `Subscription Initiated - AccountID: ${accountId}, Topics: ${Array.isArray(wsTopics) ? wsTopics.join(', ') : wsTopics}`
     );
-    const ws = this.wsConnections.get(accountId);
+    let ws = this.wsConnections.get(accountId);
 
-    // if (!ws) {
-    //   await this.startTrackingAccount(accountId);
-    //   ws = this.wsConnections.get(accountId);
-    // }
+    if (!ws) {
+      await this.startTrackingAccount(accountId);
+      ws = this.wsConnections.get(accountId);
+    }
 
     if (!ws) {
       this.logger.error(`Subscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`);
@@ -86,7 +88,7 @@ export class WebsocketManagerService implements IAccountTracker {
 
     if (topicsToSubscribe.length > 0) {
       try {
-        await ws.subscribe(topicsToSubscribe, isPrivateTopic);
+        await ws.subscribeV5(topicsToSubscribe, 'linear', isPrivateTopic);
         topicsToSubscribe.forEach((topic) => {
           subscriptions.add(topic);
         });
@@ -111,7 +113,7 @@ export class WebsocketManagerService implements IAccountTracker {
     topics.forEach((topic) => {
       if (subscriptions?.has(topic)) {
         try {
-          ws.unsubscribe([topic], isPrivateTopic);
+          ws.unsubscribeV5([topic], 'linear', isPrivateTopic);
           subscriptions.delete(topic);
         } catch (error) {
           this.logger.error(
@@ -126,24 +128,19 @@ export class WebsocketManagerService implements IAccountTracker {
   private handleWsUpdate(accountId: string, message: any) {
     if (message?.topic) {
       const topicHandlerMapping = {
-        'tickers.': this.handleTickerUpdate.bind(this)
-        // FIXME update this
-        // execution: this.handleExecutionUpdate.bind(this),
-        // position: this.handlePositionUpdate.bind(this)
-        // order: this.handleOrderUpdate,
-        // wallet: this.handleWalletUpdate,
+        'tickers.': this.handleTickerUpdate.bind(this),
+        execution: this.handleExecutionUpdate.bind(this),
+        position: this.handlePositionUpdate.bind(this),
+        order: this.handleOrderUpdate.bind(this),
+        wallet: this.handleWalletUpdate.bind(this)
       };
       for (const [key, handler] of Object.entries(topicHandlerMapping)) {
-        if (message.topic.startsWith(key)) {
+        if (message.topic === key || message.topic.startsWith(key)) {
           handler(accountId, message);
           return;
         }
       }
       this.logger.warn(`Unrecognized Topic - AccountID: ${accountId}, Topic: ${message.topic}`);
-      // FIXME update this
-      // this.logger.warn(message.data)
-      // this.eventEmitter.emit(`${message.topic}.${accountId}`, message.data);
-      // this.logger.log(`Message dispatched for topic ${message.topic} and account ${accountId}`);
     }
   }
 
@@ -152,15 +149,23 @@ export class WebsocketManagerService implements IAccountTracker {
     this.eventEmitter.emit(Events.TICKER_DATA_UPDATED, new TickerDataUpdatedEvent(accountId, marketId, msg.data));
   }
 
-  // private handlePositionUpdate(msg: any) {
-  //   this.logger.log('position', JSON.stringify(msg));
-  //   // FIXME add event update
-  // }
+  private handlePositionUpdate(accountId: string, msg: any) {
+    // this.logger.log('position', JSON.stringify(msg));
+    // Implement event update logic here
+  }
 
-  // private handleExecutionUpdate(msg: any) {
-  //   this.logger.error('execution', JSON.stringify(msg));
-  //   // FIXME add event update
-  // }
+  private handleExecutionUpdate(accountId: string, msg: any) {
+    this.eventEmitter.emit(Events.EXECUTION_DATA_RECEIVED, new ExecutionDataReceivedEvent(accountId, msg.data));
+  }
+
+  private handleOrderUpdate(accountId: string, msg: any) {
+    // this.logger.log('order', JSON.stringify(msg));
+    // Implement event update logic here
+  }
+
+  private handleWalletUpdate(accountId: string, msg: any) {
+    this.eventEmitter.emit(Events.WALLET_DATA_UPDATED, new WalletDataUpdatedEvent(accountId, msg.data));
+  }
 
   private cleanResources(accountId: string) {
     try {
@@ -177,17 +182,3 @@ export class WebsocketManagerService implements IAccountTracker {
     }
   }
 }
-
-//   const topics = ['execution']; // 'wallet', 'position', 'order'
-
-// private handleOrderUpdate(msg: any) {
-//   this.logger.log('order', JSON.stringify(msg));
-//   // FIXME add event update
-// }
-
-// private handleWalletUpdate(msg: any) {
-//   this.eventEmitter.emit(
-//     Events.UPDATE_BALANCE,
-//     new UpdateBalanceEvent(this.account.id, msg.data),
-//   );
-// }

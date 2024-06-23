@@ -37,7 +37,7 @@
     "@nestjs/websockets": "10.3.7",
     "axios": "1.6.8",
     "bottleneck": "2.19.5",
-    "bybit-api": "3.9.8",
+    "bybit-api": "3.10.6",
     "ccxt": "4.2.88",
     "class-transformer": "0.5.1",
     "class-validator": "0.14.1",

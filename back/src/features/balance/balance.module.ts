@@ -5,6 +5,7 @@ import { BalanceGateway } from './balance.gateway';
 import { BalanceService } from './balance.service';
 import { BalanceModuleExchangeInitializedEventHandler } from './handlers/exchange-initiated.event-handler';
 import { BalanceModuleExchangeTerminatedEventHandler } from './handlers/exchange-terminated.event-handler';
+import { BalanceModuleWalletDataUpdatedEventHandler } from './handlers/wallet-data-updated.event-handler';
 
 @Module({
   controllers: [BalanceController],
@@ -13,7 +14,8 @@ import { BalanceModuleExchangeTerminatedEventHandler } from './handlers/exchange
     BalanceService,
     BalanceGateway,
     BalanceModuleExchangeInitializedEventHandler,
-    BalanceModuleExchangeTerminatedEventHandler
+    BalanceModuleExchangeTerminatedEventHandler,
+    BalanceModuleWalletDataUpdatedEventHandler
   ]
 })
 export class BalanceModule {}

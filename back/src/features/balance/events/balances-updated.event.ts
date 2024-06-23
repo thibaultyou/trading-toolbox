@@ -1,12 +1,10 @@
-import { Balances } from 'ccxt';
-
 export class BalancesUpdatedEvent {
   public readonly accountId: string;
 
-  public readonly balances: Balances;
+  public readonly usdtEquity: number;
 
-  constructor(accountId: string, balances: Balances) {
+  constructor(accountId: string, usdtEquity: number) {
     this.accountId = accountId;
-    this.balances = balances;
+    this.usdtEquity = usdtEquity;
   }
 }
