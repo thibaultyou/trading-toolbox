@@ -1,13 +1,11 @@
 import { Balances, Market, Order, Position } from 'ccxt';
-import * as TE from 'fp-ts/TaskEither';
 
 import { OrderSide, OrderType } from '../order/order.types';
 
 export interface IExchangeService {
   initialize(): Promise<boolean>;
-  getBalances(): TE.TaskEither<Error, Balances>;
-
-  // getBalances(): Promise<Balances>;
+  // getBalances(): TE.TaskEither<Error, Balances>;
+  getBalances(): Promise<Balances>;
   getMarkets(): Promise<Market[]>;
   getOpenOrders(): Promise<Order[]>;
   getOrder(orderId: string, symbol: string): Promise<Order>;

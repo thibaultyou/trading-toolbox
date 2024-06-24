@@ -1,7 +1,7 @@
 import { Balances } from 'ccxt';
 
-import { IWalletAccount } from './types/wallet-account.interface';
 import { IWalletData } from '../core/types/wallet-data.interface';
+import { IWalletAccount } from './types/wallet-account.interface';
 
 export class BalanceConverter {
   static fromBalancestoWalletAccount(balances: Balances): IWalletAccount[] {

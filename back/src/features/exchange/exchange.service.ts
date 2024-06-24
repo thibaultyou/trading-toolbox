@@ -1,12 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Balances, Market, Order, Position } from 'ccxt';
-import { pipe } from 'fp-ts/lib/function';
-import * as TE from 'fp-ts/TaskEither';
 
 import { Events } from '../../config';
 import { Account } from '../account/entities/account.entity';
-import { logEffect, logError } from '../logger/logger.utils';
 import { OrderSide, OrderType } from '../order/order.types';
 import { ExchangeInitializedEvent } from './events/exchange-initialized.event';
 import { ExchangeTerminatedEvent } from './events/exchange-terminated.event';
@@ -66,24 +63,37 @@ export class ExchangeService {
     return exchange;
   }
 
-  getBalances = (accountId: string): TE.TaskEither<Error, Balances> =>
-    pipe(
-      TE.right(accountId),
-      TE.tapIO((id) => logEffect(this.logger, `Balances - Fetch Initiated - AccountID: ${id}`)(id)),
-      TE.flatMap(() => this.getExchange(accountId).getBalances()),
-      TE.tapIO((balances) =>
-        logEffect(
-          this.logger,
-          `Balances - Fetched - AccountID: ${accountId}`
-        )(balances)
-      ),
-      TE.mapError((error) => new ExchangeOperationFailedException('getBalances', error.message)),
-      TE.tapError((error) => logError(this.logger, `Balances Fetch Failed - AccountID: ${accountId}`)(error))
-    );
+  // getBalances = (accountId: string): TE.TaskEither<Error, Balances> =>
+  //   pipe(
+  //     TE.right(accountId),
+  //     TE.tapIO((id) => logEffect(this.logger, `Balances - Fetch Initiated - AccountID: ${id}`)(id)),
+  //     TE.flatMap(() => this.getExchange(accountId).getBalances()),
+  //     TE.tapIO((balances) =>
+  //       logEffect(
+  //         this.logger,
+  //         `Balances - Fetched - AccountID: ${accountId}`
+  //       )(balances)
+  //     ),
+  //     TE.mapError((error) => new ExchangeOperationFailedException('getBalances', error.message)),
+  //     TE.tapError((error) => logError(this.logger, `Balances Fetch Failed - AccountID: ${accountId}`)(error))
+  //   );
+
+  async getBalances(accountId: string): Promise<Balances> {
+    this.logger.log(`Balances - Fetch Initiated - AccountID: ${accountId}`);
+    const exchange = this.getExchange(accountId);
+
+    try {
+      const balances = await exchange.getBalances();
+      this.logger.log(`Balances - Fetched - AccountID: ${accountId}`);
+      return balances;
+    } catch (error) {
+      this.logger.error(`Balances - Fetch Failed - AccountID: '${accountId}', Error: ${error.message}`, error.stack);
+      throw new ExchangeOperationFailedException('getBalances', error);
+    }
+  }
 
   async getMarkets(accountId: string): Promise<Market[]> {
     this.logger.log(`Markets - Fetch Initiated - AccountID: ${accountId}`);
-
     const exchange = this.getExchange(accountId);
 
     try {

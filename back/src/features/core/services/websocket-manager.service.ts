@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WebsocketClient, WSClientConfigurableOptions } from 'bybit-api';
 
+import { TrackingFailedException } from '../../../common/exceptions/tracking.exceptions';
 import { IAccountTracker } from '../../../common/types/account-tracker.interface';
 import { Events } from '../../../config';
 import { AccountService } from '../../account/account.service';
@@ -10,7 +11,6 @@ import { OrderDataUpdatedEvent } from '../events/order-data-updated.event';
 import { PositionDataUpdatedEvent } from '../events/position-data-updated.event';
 import { TickerDataUpdatedEvent } from '../events/ticker-data-updated.event';
 import { WalletDataUpdatedEvent } from '../events/wallet-data-updated.event';
-import { TrackingFailedException } from '../exceptions/websocket.exceptions';
 
 @Injectable()
 export class WebsocketManagerService implements IAccountTracker {
@@ -69,7 +69,9 @@ export class WebsocketManagerService implements IAccountTracker {
     }
 
     if (!ws) {
-      this.logger.error(`Websocket - Subscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`);
+      this.logger.error(
+        `Websocket - Subscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`
+      );
       return;
     }
 
@@ -84,7 +86,9 @@ export class WebsocketManagerService implements IAccountTracker {
           subscriptions.add(topic);
         });
         this.subscriptions.set(accountId, subscriptions);
-        this.logger.log(`Websocket - Subscribed - AccountID: ${accountId}, Topics: ${topicsToSubscribe.sort().join(', ')}`);
+        this.logger.log(
+          `Websocket - Subscribed - AccountID: ${accountId}, Topics: ${topicsToSubscribe.sort().join(', ')}`
+        );
       } catch (error) {
         this.logger.error(`Websocket - Subscription Failed - AccountID: ${accountId}, Error: ${error}`);
       }
@@ -95,7 +99,9 @@ export class WebsocketManagerService implements IAccountTracker {
     const ws = this.wsConnections.get(accountId);
 
     if (!ws) {
-      this.logger.error(`Websocket - Unsubscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`);
+      this.logger.error(
+        `Websocket - Unsubscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`
+      );
       return;
     }
 
@@ -117,7 +123,9 @@ export class WebsocketManagerService implements IAccountTracker {
     });
 
     if (failedTopics.length === topics.length) {
-      this.logger.error(`Websocket - All Unsubscriptions Failed - AccountID: ${accountId}, Topics: ${topics.join(', ')}`);
+      this.logger.error(
+        `Websocket - All Unsubscriptions Failed - AccountID: ${accountId}, Topics: ${topics.join(', ')}`
+      );
     } else {
       this.logger.log(
         `Websocket - Unsubscribed - AccountID: ${accountId}, Topics: ${topics.filter((topic) => !failedTopics.includes(topic)).join(', ')}`

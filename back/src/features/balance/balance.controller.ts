@@ -16,6 +16,6 @@ export class BalanceController extends BaseController {
   @ApiOperation({ summary: 'Fetch balances' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   getAccountBalances(@Param('accountId') accountId: string): BalanceReadResponseDto {
-    return new BalanceReadResponseDto(this.balanceService.getAccountBalances(accountId));
+    return new BalanceReadResponseDto(this.balanceService.getBalances(accountId));
   }
 }

@@ -1,11 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { Balances, Exchange, Market, Order, Position } from 'ccxt';
-import { pipe } from 'fp-ts/function';
-import { toError } from 'fp-ts/lib/Either';
-import * as TE from 'fp-ts/TaskEither';
 
 import { Account } from '../../account/entities/account.entity';
-import { logEffect, logError } from '../../logger/logger.utils';
 import { OrderSide, OrderType } from '../../order/order.types';
 import {
   ExchangeOperationFailedException,
@@ -25,13 +21,24 @@ export abstract class AbstractExchangeService implements IExchangeService {
 
   abstract initialize(): Promise<boolean>;
 
-  getBalances = (): TE.TaskEither<Error, Balances> =>
-    pipe(
-      TE.tryCatch(() => this.exchange.fetchBalance(), toError),
-      TE.tap(logEffect(this.logger, `Exchange - Fetched Balances Successfully - AccountID: ${this.account.id}`)),
-      // TE.mapError((error) => new ExchangeOperationFailedException('fetching balances', String(error))),
-      TE.tapError(logError(this.logger, `Exchange - Failed to Fetch Balances - AccountID: ${this.account.id}`))
-    );
+  // getBalances = (): TE.TaskEither<Error, Balances> =>
+  //   pipe(
+  //     TE.tryCatch(() => this.exchange.fetchBalance(), toError),
+  //     TE.tap(logEffect(this.logger, `Exchange - Fetched Balances Successfully - AccountID: ${this.account.id}`)),
+  //     // TE.mapError((error) => new ExchangeOperationFailedException('fetching balances', String(error))),
+  //     TE.tapError(logError(this.logger, `Exchange - Failed to Fetch Balances - AccountID: ${this.account.id}`))
+  //   );
+
+  async getBalances(): Promise<Balances> {
+    try {
+      const balances = await this.exchange.fetchBalance();
+      this.logger.log(`Fetched Balances Successfully - AccountID: ${this.account.id}`);
+      return balances;
+    } catch (error) {
+      this.logger.error(`Failed to Fetch Balances - AccountID: ${this.account.id}, Error: ${error.message}`);
+      throw new ExchangeOperationFailedException('fetching balances', error.message);
+    }
+  }
 
   async getMarkets(): Promise<Market[]> {
     try {
