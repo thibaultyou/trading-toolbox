@@ -7,22 +7,26 @@ import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
 import { WebSocketSubscribeEvent } from '../core/events/websocket-subscribe.event';
 import { WebSocketUnsubscribeEvent } from '../core/events/websocket-unsubscribe.event';
-import { TickerPriceNotFoundException } from './exceptions/ticker.exceptions';
-import { getPriceFromTickerData, hasTickerDataChanged } from './ticker.utils';
 import { ITickerData } from '../core/types/ticker-data.interface';
-import { TickerWatchListType } from './types/ticker-watch-list-types.enum';
+import { OrderService } from '../order/order.service';
+import { PositionService } from '../position/position.service';
+import { TickerPriceNotFoundException } from './exceptions/ticker.exceptions';
+import { fromTickerDataToPrice, haveTickerDataChanged, haveTickerSetsChanged } from './ticker.utils';
 
 // TODO improve logging, error handling, custom exceptions
+// TODO improve events to keep track of tickers
 
 @Injectable()
 export class TickerService implements OnModuleInit, IAccountTracker, IDataRefresher<Set<string>> {
   private logger = new Logger(TickerService.name);
-  private ordersTickers: Map<string, Set<string>> = new Map();
-  private positionsTickers: Map<string, Set<string>> = new Map();
   private trackedTickers: Map<string, Set<string>> = new Map();
-  private tickerValues: Map<string, Map<string, ITickerData>> = new Map();
+  private tickerValues: Map<string, Map<string, ITickerData>> = new Map(); // accountId, marketId, value
 
-  constructor(private eventEmitter: EventEmitter2) {}
+  constructor(
+    private eventEmitter: EventEmitter2,
+    private orderService: OrderService,
+    private positionService: PositionService
+  ) {}
 
   async onModuleInit() {
     setInterval(() => {
@@ -30,18 +34,17 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
     }, Timers.TICKERS_CACHE_COOLDOWN);
   }
 
-  // FIXME
-  async startTrackingAccount(_accountId: string): Promise<void> {
-    throw new Error('startTrackingAccount - Not Implemented');
+  async startTrackingAccount(accountId: string) {
+    if (!this.tickerValues.has(accountId)) {
+      this.tickerValues.set(accountId, new Map());
+      this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
+    } else {
+      this.logger.warn(`Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
+    }
   }
 
   stopTrackingAccount(accountId: string) {
-    const deletedOrders = this.ordersTickers.delete(accountId);
-    const deletedPositions = this.positionsTickers.delete(accountId);
-    const deletedTracked = this.trackedTickers.delete(accountId);
-    const deletedValues = this.tickerValues.delete(accountId);
-
-    if (deletedOrders || deletedPositions || deletedTracked || deletedValues) {
+    if (this.tickerValues.delete(accountId)) {
       this.logger.log(`Tracking Stopped - AccountID: ${accountId}`);
     } else {
       this.logger.warn(`Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
@@ -64,30 +67,7 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
       );
       throw new TickerPriceNotFoundException(accountId, marketId);
     }
-    return getPriceFromTickerData(marketValues.get(marketId));
-  }
-
-  async updateTickersWatchList(type: TickerWatchListType, accountId: string, marketIds: Set<string>): Promise<void> {
-    const tickersMap = type === TickerWatchListType.Positions ? this.positionsTickers : this.ordersTickers;
-    tickersMap.set(accountId, marketIds);
-
-    this.logger.log(
-      `${type} Tickers Watch List - Updated - AccountID: ${accountId}, MarketIDs: ${Array.from(marketIds).sort().join(', ')}`
-    );
-    await this.refreshOne(accountId).catch((error) =>
-      this.logger.error(
-        `${type} Tickers Watch List - Refresh Failed - AccountID: ${accountId}, Error: ${error.message}`,
-        error.stack
-      )
-    );
-  }
-
-  async updateTickerPositionsWatchList(accountId: string, marketIds: Set<string>): Promise<void> {
-    await this.updateTickersWatchList(TickerWatchListType.Positions, accountId, marketIds);
-  }
-
-  async updateTickerOrdersWatchList(accountId: string, marketIds: Set<string>): Promise<void> {
-    await this.updateTickersWatchList(TickerWatchListType.Orders, accountId, marketIds);
+    return fromTickerDataToPrice(marketValues.get(marketId));
   }
 
   updateTickerData(accountId: string, marketId: string, data: ITickerData): void {
@@ -105,11 +85,11 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
     }
 
     const existingData = accountTickers.get(marketId) || {};
-    const hasChanges = hasTickerDataChanged(existingData, data);
+    const hasChanges = haveTickerDataChanged(existingData, data);
 
     if (hasChanges) {
       const updatedData: ITickerData = { ...existingData, ...data };
-      const price = getPriceFromTickerData(updatedData);
+      const price = fromTickerDataToPrice(updatedData);
 
       if (price !== null) {
         accountTickers.set(marketId, updatedData);
@@ -132,11 +112,11 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
 
   async refreshOne(accountId: string): Promise<Set<string>> {
     this.logger.log(`Tickers Watch List - Refresh Initiated - AccountID: ${accountId}`);
-    const ordersTickers = this.ordersTickers.get(accountId) || new Set();
-    const positionsTickers = this.positionsTickers.get(accountId) || new Set();
+    const ordersTickers = new Set(this.orderService.getOpenOrders(accountId).map((order) => order.info.symbol));
+    const positionsTickers = new Set(this.positionService.getPositions(accountId).map((position) => position.marketId));
     const newUniqueTickers = new Set([...ordersTickers, ...positionsTickers]);
     const previousTickers = this.trackedTickers.get(accountId) || new Set();
-    const haveTickersChanged = this.haveTickersChanged(previousTickers, newUniqueTickers);
+    const haveTickersChanged = haveTickerSetsChanged(previousTickers, newUniqueTickers);
 
     if (haveTickersChanged) {
       const toSubscribe = Array.from(newUniqueTickers)
@@ -167,44 +147,6 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
 
   async refreshAll(): Promise<void> {
     this.logger.log(`All Tickers - Refresh Initiated`);
-    const accountIds = new Set([...this.ordersTickers.keys(), ...this.positionsTickers.keys()]);
-    accountIds.forEach((accountId) => this.refreshOne(accountId));
-  }
-
-  private haveTickersChanged(setA: Set<string>, setB: Set<string>): boolean {
-    if (setA.size !== setB.size) return true;
-
-    for (const a of setA) {
-      if (!setB.has(a)) return true;
-    }
-    return false;
+    await Promise.all(Array.from(this.tickerValues.keys()).map((accountId) => this.refreshOne(accountId)));
   }
 }
-
-// async getTickerPriceHistory(base: string, fetchNewOnly = false): Promise<Candle[]> {
-//   try {
-//     let url = `https://api.binance.com/api/v3/klines?symbol=${base}&interval=1h&limit=1000`;
-
-//     if (fetchNewOnly && this.lastFetchedTimes[base]) {
-//       url += `&startTime=${this.lastFetchedTimes[base]}`;
-//     }
-
-//     const { data } = await axios.get(url);
-
-//     const candles = data.map(([time, open, high, low, close]) => ({
-//       time: time / 1000,
-//       open: Number(open),
-//       high: Number(high),
-//       low: Number(low),
-//       close: Number(close)
-//     }));
-
-//     if (candles.length) {
-//       this.lastFetchedTimes[base] = candles[candles.length - 1].time * 1000;
-//     }
-
-//     return candles;
-//   } catch (error) {
-//     throw new FetchTickerPriceHistoryException(base, fetchNewOnly, error);
-//   }
-// }

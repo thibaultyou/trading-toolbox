@@ -22,17 +22,4 @@ export class TickerController extends BaseController {
   getTickerPrice(@Param('accountId') accountId: string, @Param('marketId') marketId: string): number {
     return this.tickerService.getTickerPrice(accountId, marketId);
   }
-
-  // @Get('/:base/history')
-  // @ApiOperation({ summary: 'Get ticker price history' })
-  // async getHistory(
-  //   @Param('base') base: string,
-  //   @Query('newOnly') newOnly: boolean,
-  // ): Promise<Candle[]> {
-  //   try {
-  //     return await this.tickerService.getTickerPriceHistory(base, newOnly);
-  //   } catch (error) {
-  //     throw new FetchTickerPriceHistoryException(base, newOnly, error);
-  //   }
-  // }
 }
