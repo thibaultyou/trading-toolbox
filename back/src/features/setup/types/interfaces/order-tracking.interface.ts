@@ -1,5 +1,4 @@
-import { IOrderDetails } from 'src/features/order/order.interfaces';
-
+import { IOrderDetails } from '../../../order/types/order-details.interface';
 import { OrderStatus } from '../enums/order-status.enum';
 
 export interface IOrderTracking {

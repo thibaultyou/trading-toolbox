@@ -2,15 +2,15 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { IPosition } from '../position.interface';
 
-export class PositionsUpdatedEvent {
+export class PositionUpdatedEvent {
   @ApiProperty()
   public readonly accountId: string;
 
   @ApiProperty()
-  public readonly positions: IPosition[];
+  public readonly position: IPosition;
 
-  constructor(accountId: string, positions: IPosition[]) {
+  constructor(accountId: string, position: IPosition) {
     this.accountId = accountId;
-    this.positions = positions;
+    this.position = position;
   }
 }

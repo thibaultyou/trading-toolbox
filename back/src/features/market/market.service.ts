@@ -26,7 +26,7 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
     }, Timers.MARKETS_CACHE_COOLDOWN);
   }
 
-  async startTrackingAccount(accountId: string): Promise<void> {
+  async startTrackingAccount(accountId: string) {
     if (!this.markets.has(accountId)) {
       this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
       await this.refreshOne(accountId);
@@ -102,8 +102,8 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
     }
   }
 
-  async refreshAll(): Promise<void> {
-    this.logger.log(`All Markets - Refresh Initiated`);
+  async refreshAll() {
+    this.logger.debug(`All Markets - Refresh Initiated`);
     const accountIds = Array.from(this.markets.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
     const marketsPromises = accountIds.map((accountId) =>

@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
 
-import { IOrderDetails } from '../order.interfaces';
-import { OrderSide, OrderType } from '../order.types';
+import { IOrderDetails } from '../types/order-details.interface';
+import { OrderSide } from '../types/order-side.enum';
+import { OrderType } from '../types/order-type.enum';
 
 export class OrderCreateRequestDto implements IOrderDetails {
   @ApiProperty({

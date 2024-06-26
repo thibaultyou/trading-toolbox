@@ -10,7 +10,7 @@ export class CoreService implements OnModuleInit {
     private exchangeService: ExchangeService
   ) {}
 
-  async onModuleInit(): Promise<void> {
+  async onModuleInit() {
     const accounts = await this.accountService.getAllAccounts();
     // NOTE 1s delay to allow other modules to init and listen to exchange events
     setTimeout(async () => {

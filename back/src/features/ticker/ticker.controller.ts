@@ -19,7 +19,7 @@ export class TickerController extends BaseController {
     required: true,
     description: 'The trading symbol of the ticker (e.g., BTCUSDT)'
   })
-  getTickerPrice(@Param('accountId') accountId: string, @Param('marketId') marketId: string): number {
-    return this.tickerService.getTickerPrice(accountId, marketId);
+  async getTickerPrice(@Param('accountId') accountId: string, @Param('marketId') marketId: string): Promise<number> {
+    return await this.tickerService.getTickerPrice(accountId, marketId);
   }
 }

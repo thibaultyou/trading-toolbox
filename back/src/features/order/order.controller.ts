@@ -9,7 +9,8 @@ import { OrderReadResponseDto } from './dto/order-read.response.dto';
 import { OrderUpdateRequestDto } from './dto/order-update.request.dto';
 import { OrderUpdateResponseDto } from './dto/order-update.response.dto';
 import { OrderService } from './order.service';
-import { OrderSide, OrderType } from './order.types';
+import { OrderSide } from './types/order-side.enum';
+import { OrderType } from './types/order-type.enum';
 
 // TODO add create many
 // TODO add cancel many
@@ -33,9 +34,7 @@ export class OrderController extends BaseController {
     @Param('accountId') accountId: string,
     @Query('marketId') marketId?: string
   ): Promise<OrderReadResponseDto[]> {
-    return (await this.orderService.getAccountOrders(accountId, marketId)).map(
-      (order) => new OrderReadResponseDto(order)
-    );
+    return (await this.orderService.getOrders(accountId, marketId)).map((order) => new OrderReadResponseDto(order));
   }
 
   @Get('/accounts/:accountId/orders/open')
@@ -50,7 +49,7 @@ export class OrderController extends BaseController {
     @Param('accountId') accountId: string,
     @Query('marketId') marketId?: string
   ): OrderReadResponseDto[] {
-    return this.orderService.getAccountOpenOrders(accountId, marketId).map((order) => new OrderReadResponseDto(order));
+    return this.orderService.getOpenOrders(accountId, marketId).map((order) => new OrderReadResponseDto(order));
   }
 
   @Post('/accounts/:accountId/orders')
@@ -98,12 +97,14 @@ export class OrderController extends BaseController {
   @Get('/accounts/:accountId/orders/:orderId')
   @ApiOperation({ summary: 'Fetch an Order by ID' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
+  @ApiParam({ name: 'marketId', required: true, description: 'The ID of the market symbol' })
   @ApiParam({ name: 'orderId', required: true, description: 'The ID of the order to retrieve' })
   async getAccountOrderById(
     @Param('accountId') accountId: string,
+    @Param('marketId') marketId: string,
     @Param('orderId') orderId: string
   ): Promise<OrderReadResponseDto> {
-    return new OrderReadResponseDto(await this.orderService.getAccountOrderById(accountId, orderId));
+    return new OrderReadResponseDto(await this.orderService.getOrderById(accountId, marketId, orderId));
   }
 
   @Patch('/accounts/:accountId/orders/:orderId')

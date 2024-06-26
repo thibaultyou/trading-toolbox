@@ -1,11 +1,13 @@
-import { Balances, Market, Order, Position } from 'ccxt';
+import { Balances, Market, Order, Position, Ticker } from 'ccxt';
 
-import { OrderSide, OrderType } from '../order/order.types';
+import { OrderSide } from '../order/types/order-side.enum';
+import { OrderType } from '../order/types/order-type.enum';
 
 export interface IExchangeService {
   initialize(): Promise<boolean>;
   // getBalances(): TE.TaskEither<Error, Balances>;
   getBalances(): Promise<Balances>;
+  getTicker(symbol: string): Promise<Ticker>;
   getMarkets(): Promise<Market[]>;
   getOpenOrders(): Promise<Order[]>;
   getOrder(orderId: string, symbol: string): Promise<Order>;

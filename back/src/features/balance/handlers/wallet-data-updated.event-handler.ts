@@ -16,8 +16,8 @@ export class BalanceModuleWalletDataUpdatedEventHandler {
     const actionContext = `${Events.WALLET_DATA_UPDATED} | AccountID: ${event.accountId}`;
 
     try {
-      for (const executionData of event.data) {
-        this.balanceService.processWalletData(event.accountId, executionData);
+      for (const walletData of event.data) {
+        this.balanceService.processWalletData(event.accountId, walletData);
       }
       this.logger.log(actionContext);
     } catch (error) {

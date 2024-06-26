@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Order } from 'ccxt';
 
-import { OrderConverter } from '../order.converter';
-import { IOrder } from '../order.interfaces';
-import { OrderSide, OrderType } from '../order.types';
+import { fromOrdertoInternalOrder } from '../order.utils';
+import { IOrder } from '../types/order.interface';
+import { OrderSide } from '../types/order-side.enum';
+import { OrderType } from '../types/order-type.enum';
 
 export class OrderReadResponseDto {
   @ApiProperty({
@@ -93,7 +94,7 @@ export class OrderReadResponseDto {
   updatedTime: number;
 
   constructor(order: Order) {
-    const internalOrder: IOrder = OrderConverter.toInternalOrder(order);
+    const internalOrder: IOrder = fromOrdertoInternalOrder(order);
     this.id = internalOrder.id;
     this.linkId = internalOrder.linkId;
     this.marketId = internalOrder.marketId;

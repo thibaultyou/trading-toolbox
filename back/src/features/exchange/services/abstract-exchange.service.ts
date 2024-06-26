@@ -1,8 +1,9 @@
 import { Logger } from '@nestjs/common';
-import { Balances, Exchange, Market, Order, Position } from 'ccxt';
+import { Balances, Exchange, Market, Order, Position, Ticker } from 'ccxt';
 
 import { Account } from '../../account/entities/account.entity';
-import { OrderSide, OrderType } from '../../order/order.types';
+import { OrderSide } from '../../order/types/order-side.enum';
+import { OrderType } from '../../order/types/order-type.enum';
 import {
   ExchangeOperationFailedException,
   ExchangeTerminationFailedException
@@ -37,6 +38,17 @@ export abstract class AbstractExchangeService implements IExchangeService {
     } catch (error) {
       this.logger.error(`Failed to Fetch Balances - AccountID: ${this.account.id}, Error: ${error.message}`);
       throw new ExchangeOperationFailedException('fetching balances', error.message);
+    }
+  }
+
+  async getTicker(symbol: string): Promise<Ticker> {
+    try {
+      const ticker = await this.exchange.fetchTicker(symbol);
+      this.logger.log(`Fetched Ticker Successfully - AccountID: ${this.account.id}`);
+      return ticker;
+    } catch (error) {
+      this.logger.error(`Failed to Fetch Ticker - AccountID: ${this.account.id}, Error: ${error.message}`);
+      throw new ExchangeOperationFailedException('fetching ticker', error.message);
     }
   }
 

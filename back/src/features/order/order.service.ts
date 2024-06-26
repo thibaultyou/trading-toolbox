@@ -17,7 +17,7 @@ import {
   OrderNotFoundException,
   OrdersUpdateAggregatedException
 } from './exceptions/orders.exceptions';
-import { OrderSide } from './order.types';
+import { OrderSide } from './types/order-side.enum';
 
 @Injectable()
 export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresher<Order[]> {
@@ -35,7 +35,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     }, Timers.ORDERS_CACHE_COOLDOWN);
   }
 
-  async startTrackingAccount(accountId: string): Promise<void> {
+  async startTrackingAccount(accountId: string) {
     if (!this.openOrders.has(accountId)) {
       this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
       await this.refreshOne(accountId);
@@ -52,7 +52,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     }
   }
 
-  async getAccountOrders(accountId: string, marketId?: string): Promise<Order[]> {
+  async getOrders(accountId: string, marketId?: string): Promise<Order[]> {
     this.logger.log(`Orders - Fetch Initiated - AccountID: ${accountId}`);
 
     try {
@@ -63,7 +63,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     }
   }
 
-  getAccountOpenOrders(accountId: string, marketId?: string): Order[] {
+  getOpenOrders(accountId: string, marketId?: string): Order[] {
     this.logger.log(`Open Orders - Fetch Initiated - AccountID: ${accountId}`);
 
     if (!this.openOrders.has(accountId)) {
@@ -79,7 +79,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     return orders;
   }
 
-  async getAccountOrderById(accountId: string, orderId: string): Promise<Order> {
+  async getOrderById(accountId: string, marketId: string, orderId: string): Promise<Order> {
     this.logger.log(`Order - Fetch Initiated - AccountID: ${accountId}, OrderID: ${orderId}`);
 
     if (!this.openOrders.has(accountId)) {
@@ -87,14 +87,15 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       throw new AccountNotFoundException(accountId);
     }
 
-    const orderToFetch = this.openOrders.get(accountId).find((order) => order.id === orderId);
+    // const orderToFetch = this.openOrders.get(accountId).find((order) => order.id === orderId);
 
-    if (!orderToFetch) {
-      throw new OrderNotFoundException(accountId, orderId);
-    }
+    // if (!orderToFetch) {
+    //   throw new OrderNotFoundException(accountId, orderId);
+    // }
 
     try {
-      const order = await this.exchangeService.getOrder(accountId, orderToFetch.info.symbol, orderId);
+      // const order = await this.exchangeService.getOrder(accountId, orderToFetch.info.symbol, orderId);
+      const order = await this.exchangeService.getOrder(accountId, marketId, orderId);
       this.logger.log(
         `Order - Fetched - AccountID: ${accountId}, OrderID: ${orderId}, Details: ${JSON.stringify(order)}`
       );
@@ -234,8 +235,8 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     }
   }
 
-  async refreshAll(): Promise<void> {
-    this.logger.log(`All Open Orders - Refresh Initiated`);
+  async refreshAll() {
+    this.logger.debug(`All Open Orders - Refresh Initiated`);
     const accountIds = Array.from(this.openOrders.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
     const ordersPromises = accountIds.map((accountId) =>

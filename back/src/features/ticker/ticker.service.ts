@@ -1,13 +1,14 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Ticker } from 'ccxt';
 
 import { IAccountTracker } from '../../common/types/account-tracker.interface';
-import { IDataRefresher } from '../../common/types/data-refresher.interface';
-import { Events, Timers } from '../../config';
+import { Events } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
 import { WebSocketSubscribeEvent } from '../core/events/websocket-subscribe.event';
 import { WebSocketUnsubscribeEvent } from '../core/events/websocket-unsubscribe.event';
 import { ITickerData } from '../core/types/ticker-data.interface';
+import { ExchangeService } from '../exchange/exchange.service';
 import { OrderService } from '../order/order.service';
 import { PositionService } from '../position/position.service';
 import { TickerPriceNotFoundException } from './exceptions/ticker.exceptions';
@@ -17,21 +18,22 @@ import { fromTickerDataToPrice, haveTickerDataChanged, haveTickerSetsChanged } f
 // TODO improve events to keep track of tickers
 
 @Injectable()
-export class TickerService implements OnModuleInit, IAccountTracker, IDataRefresher<Set<string>> {
+export class TickerService implements OnModuleInit, IAccountTracker {
   private logger = new Logger(TickerService.name);
   private trackedTickers: Map<string, Set<string>> = new Map();
   private tickerValues: Map<string, Map<string, ITickerData>> = new Map(); // accountId, marketId, value
 
   constructor(
     private eventEmitter: EventEmitter2,
+    private exchangeService: ExchangeService,
     private orderService: OrderService,
     private positionService: PositionService
   ) {}
 
   async onModuleInit() {
-    setInterval(() => {
-      this.refreshAll();
-    }, Timers.TICKERS_CACHE_COOLDOWN);
+    // setInterval(() => {
+    //   this.refreshAll();
+    // }, Timers.TICKERS_CACHE_COOLDOWN);
   }
 
   async startTrackingAccount(accountId: string) {
@@ -51,7 +53,7 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
     }
   }
 
-  getTickerPrice(accountId: string, marketId: string): number | null {
+  async getTickerPrice(accountId: string, marketId: string): Promise<number | null> {
     this.logger.log(`Ticker Price - Fetch Initiated - AccountID: ${accountId}, MarketID: ${marketId}`);
 
     if (!this.tickerValues.has(accountId)) {
@@ -62,10 +64,19 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
     const marketValues = this.tickerValues.get(accountId);
 
     if (!marketValues || !marketValues.has(marketId)) {
-      this.logger.error(
+      this.logger.warn(
         `Ticker Price - Fetch Failed - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Ticker Not Found / Not Tracked`
       );
-      throw new TickerPriceNotFoundException(accountId, marketId);
+
+      try {
+        const ticker = await this.fetchTicker(accountId, marketId);
+        return fromTickerDataToPrice(ticker.info);
+      } catch (error) {
+        this.logger.error(
+          `Ticker Price - Fetch Failed and FetchTicker also failed - AccountID: ${accountId}, MarketID: ${marketId}, Reason: ${error.message}`
+        );
+        throw new TickerPriceNotFoundException(accountId, marketId);
+      }
     }
     return fromTickerDataToPrice(marketValues.get(marketId));
   }
@@ -110,8 +121,21 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
     }
   }
 
-  async refreshOne(accountId: string): Promise<Set<string>> {
-    this.logger.log(`Tickers Watch List - Refresh Initiated - AccountID: ${accountId}`);
+  private async fetchTicker(accountId: string, marketId: string): Promise<Ticker> {
+    this.logger.debug(`Ticker - Fetch Initiated - AccountID: ${accountId}`);
+
+    try {
+      const ticker = await this.exchangeService.getTicker(accountId, marketId);
+      this.logger.log(`Ticker - Fetched - AccountID: ${accountId}`);
+      return ticker;
+    } catch (error) {
+      this.logger.error(`Ticker - Fetch Failed - AccountID: ${accountId}, Reason: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async refreshAccountTickersWatchList(accountId: string): Promise<Set<string>> {
+    this.logger.debug(`Tickers Watch List - Refresh Initiated - AccountID: ${accountId}`);
     const ordersTickers = new Set(this.orderService.getOpenOrders(accountId).map((order) => order.info.symbol));
     const positionsTickers = new Set(this.positionService.getPositions(accountId).map((position) => position.marketId));
     const newUniqueTickers = new Set([...ordersTickers, ...positionsTickers]);
@@ -145,8 +169,10 @@ export class TickerService implements OnModuleInit, IAccountTracker, IDataRefres
     return newUniqueTickers;
   }
 
-  async refreshAll(): Promise<void> {
-    this.logger.log(`All Tickers - Refresh Initiated`);
-    await Promise.all(Array.from(this.tickerValues.keys()).map((accountId) => this.refreshOne(accountId)));
+  async refreshAccountsTickersWatchList() {
+    this.logger.error(`Tickers Watch List - Refresh All Initiated`);
+    await Promise.all(
+      Array.from(this.tickerValues.keys()).map((accountId) => this.refreshAccountTickersWatchList(accountId))
+    );
   }
 }

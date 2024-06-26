@@ -49,15 +49,14 @@ export class SetupService implements OnModuleInit, IAccountTracker {
     //   // positionTracking: undefined,
     //   // ordersTracking: []
     // };
-
     // await this.createSetup('1660782b-9765-4ede-9f0f-94d235bbc170', setup);
     //
-    setInterval(() => {
-      this.refreshAll();
-    }, 15000);
+    // setInterval(() => {
+    //   this.refreshAll();
+    // }, 15000);
   }
 
-  async startTrackingAccount(accountId: string): Promise<void> {
+  async startTrackingAccount(accountId: string) {
     if (!this.trackedSetups.has(accountId)) {
       this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
       //   await this.refreshOne(accountId);
@@ -118,7 +117,7 @@ export class SetupService implements OnModuleInit, IAccountTracker {
     return setups;
   }
 
-  async refreshAll(): Promise<void> {
+  async refreshAll() {
     this.logger.log(`All Setups - Refresh Initiated`);
     const accountIds = Array.from(this.trackedSetups.keys());
     for (const accountId of accountIds) {

@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { IOrderDetails } from '../../../order/order.interfaces';
-import { OrderSide, OrderType } from '../../../order/order.types';
+import { IOrderDetails } from '../../../order/types/order-details.interface';
+import { OrderSide } from '../../../order/types/order-side.enum';
+import { OrderType } from '../../../order/types/order-type.enum';
 
 export class OrderDetailsDto implements IOrderDetails {
   @ApiProperty({

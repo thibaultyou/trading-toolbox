@@ -3,7 +3,7 @@ import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../../common/base/base.controller';
 import { OrderReadResponseDto } from '../order/dto/order-read.response.dto';
-import { OrderSide } from '../order/order.types';
+import { OrderSide } from '../order/types/order-side.enum';
 import { PositionReadResponseDto } from './dto/position-read.response.dto';
 import { PositionService } from './position.service';
 
@@ -28,9 +28,7 @@ export class PositionController extends BaseController {
     @Query('symbol') symbol?: string,
     @Query('side') side?: OrderSide
   ): PositionReadResponseDto[] {
-    return this.positionService
-      .getAccountOpenPositions(accountId, symbol, side)
-      .map((p) => new PositionReadResponseDto(p));
+    return this.positionService.getPositions(accountId, symbol, side).map((p) => new PositionReadResponseDto(p));
   }
 
   @Delete('/accounts/:accountId/positions/:marketId/:side')

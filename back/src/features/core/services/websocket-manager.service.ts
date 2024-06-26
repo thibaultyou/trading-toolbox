@@ -23,7 +23,7 @@ export class WebsocketManagerService implements IAccountTracker {
     private accountService: AccountService
   ) {}
 
-  async startTrackingAccount(accountId: string): Promise<void> {
+  async startTrackingAccount(accountId: string) {
     if (this.wsConnections.has(accountId)) {
       this.logger.warn(`Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
       return;
@@ -57,7 +57,7 @@ export class WebsocketManagerService implements IAccountTracker {
     }
   }
 
-  async subscribe(accountId: string, wsTopics: string[] | string, isPrivateTopic: boolean = false): Promise<void> {
+  async subscribe(accountId: string, wsTopics: string[] | string, isPrivateTopic: boolean = false) {
     this.logger.log(
       `Websocket - Subscription Initiated - AccountID: ${accountId}, Topics: ${Array.isArray(wsTopics) ? wsTopics.join(', ') : wsTopics}`
     );

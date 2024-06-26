@@ -1,13 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Order } from 'ccxt';
 
-export class PositionsClosedEvent {
+export class PositionClosedEvent {
   @ApiProperty()
   public readonly accountId: string;
 
-  @ApiProperty({
-    type: () => Object
-  })
+  @ApiProperty()
   public readonly order: Order;
 
   constructor(accountId: string, order: Order) {

@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Position } from 'ccxt';
 
-import { OrderSide } from '../../order/order.types';
+import { OrderSide } from '../../order/types/order-side.enum';
+import { IPosition } from '../position.interface';
 
-export class PositionReadResponseDto {
+export class PositionReadResponseDto implements IPosition {
   // FIXME where's my id ?
 
   @ApiProperty({
@@ -61,46 +61,52 @@ export class PositionReadResponseDto {
   })
   amount: number;
 
-  @ApiProperty({
-    description: 'Price at which the position will automatically close in profit',
-    example: 0,
-    type: Number
-  })
-  takeProfitPrice: number;
+  // @ApiProperty({
+  //   description: 'Price at which the position will automatically close in profit',
+  //   example: 0,
+  //   type: Number
+  // })
+  // takeProfitPrice: number;
+
+  // @ApiProperty({
+  //   description: 'Price at which the position will automatically close at a loss to prevent further losses',
+  //   example: 0,
+  //   type: Number
+  // })
+  // stopLossPrice: number;
+
+  // @ApiProperty({
+  //   description: 'Timestamp when the position was created',
+  //   example: 1678071047066,
+  //   type: Number
+  // })
+  // createdTime: number;
+
+  // @ApiProperty({
+  //   description: 'Timestamp when the position was last updated',
+  //   example: 1712131200564,
+  //   type: Number
+  // })
+  // updatedTime: number;
 
   @ApiProperty({
-    description: 'Price at which the position will automatically close at a loss to prevent further losses',
-    example: 0,
-    type: Number
+    description: 'Stop loss mode used on the position',
+    example: 'Partial',
+    type: String
   })
-  stopLossPrice: number;
+  tpslMode: string;
 
-  @ApiProperty({
-    description: 'Timestamp when the position was created',
-    example: 1678071047066,
-    type: Number
-  })
-  createdTime: number;
-
-  @ApiProperty({
-    description: 'Timestamp when the position was last updated',
-    example: 1712131200564,
-    type: Number
-  })
-  updatedTime: number;
-
-  constructor(position: Position) {
-    this.marketId = position.info.symbol;
-    this.side = position.info.side.toLowerCase() === 'buy' ? OrderSide.BUY : OrderSide.SELL;
-    this.avgPrice = parseFloat(position.info.avgPrice);
-    this.positionValue = parseFloat(position.info.positionValue);
-    this.leverage = parseFloat(position.info.leverage);
-    this.unrealisedPnl = parseFloat(position.info.unrealisedPnl);
-    this.markPrice = parseFloat(position.info.markPrice);
-    this.amount = parseFloat(position.info.size);
-    this.takeProfitPrice = position.takeProfitPrice;
-    this.stopLossPrice = position.stopLossPrice;
-    this.createdTime = parseInt(position.info.createdTime);
-    this.updatedTime = parseInt(position.info.updatedTime);
+  constructor(position: IPosition) {
+    this.marketId = position.marketId;
+    this.side = position.side;
+    this.avgPrice = position.avgPrice;
+    this.positionValue = position.positionValue;
+    this.leverage = position.leverage;
+    this.unrealisedPnl = position.unrealisedPnl;
+    this.markPrice = position.markPrice;
+    this.amount = position.amount;
+    this.tpslMode = position.tpslMode;
+    // this.takeProfitPrice = position.takeProfitPrice;
+    // this.stopLossPrice = position.stopLossPrice;
   }
 }

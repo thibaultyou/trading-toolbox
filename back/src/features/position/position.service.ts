@@ -1,23 +1,24 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Order, Position } from 'ccxt';
+import { Order } from 'ccxt';
+import { IAccountTracker } from 'src/common/types/account-tracker.interface';
 
-import { IAccountTracker } from '../../common/types/account-tracker.interface';
-import { IDataRefresher } from '../../common/types/data-refresher.interface';
 import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
 import { ExchangeService } from '../exchange/exchange.service';
-import { OrderSide } from '../order/order.types';
-import { PositionsClosedEvent } from './events/position-closed.event';
+import { OrderSide } from '../order/types/order-side.enum';
+import { PositionClosedEvent } from './events/position-closed.event';
 import { PositionsUpdatedEvent } from './events/positions-updated.event';
 import { PositionNotFoundException, PositionsUpdateAggregatedException } from './exceptions/position.exceptions';
+import { IPosition } from './position.interface';
+import { fromPositionToInternalPosition } from './position.utils';
 
 // TODO improve logging, error handling, custom exceptions
 
 @Injectable()
-export class PositionService implements OnModuleInit, IAccountTracker, IDataRefresher<Position[]> {
+export class PositionService implements OnModuleInit, IAccountTracker {
   private logger = new Logger(PositionService.name);
-  private positions: Map<string, Position[]> = new Map();
+  private positions: Map<string, IPosition[]> = new Map();
 
   constructor(
     private eventEmitter: EventEmitter2,
@@ -30,10 +31,10 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
     }, Timers.POSITIONS_CACHE_COOLDOWN);
   }
 
-  async startTrackingAccount(accountId: string): Promise<void> {
+  async startTrackingAccount(accountId: string) {
     if (!this.positions.has(accountId)) {
       this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
-      await this.refreshOne(accountId);
+      await this.fetchPositions(accountId);
     } else {
       this.logger.warn(`Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
     }
@@ -47,14 +48,14 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
     }
   }
 
-  getAccountOpenPositions(accountId: string, marketId?: string, side?: OrderSide): Position[] {
+  getPositions(accountId: string, marketId?: string, side?: OrderSide): IPosition[] {
     this.logger.log(
-      `Open Positions - Fetch Initiated - AccountID: ${accountId}${marketId ? `, MarketID: ${marketId}` : ''}${side ? `, Side: ${side}` : ''}`
+      `Positions - Fetch Initiated - AccountID: ${accountId}${marketId ? `, MarketID: ${marketId}` : ''}${side ? `, Side: ${side}` : ''}`
     );
 
     if (!this.positions.has(accountId)) {
       this.logger.error(
-        `Open Positions - Fetch Failed - AccountID: ${accountId}${marketId ? `, MarketID: ${marketId}` : ''}${side ? `, Side: ${side}` : ''}, Reason: Account not found`
+        `Positions - Fetch Failed - AccountID: ${accountId}${marketId ? `, MarketID: ${marketId}` : ''}${side ? `, Side: ${side}` : ''}, Reason: Account not found`
       );
       throw new AccountNotFoundException(accountId);
     }
@@ -62,43 +63,40 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
     let positions = this.positions.get(accountId);
 
     if (marketId) {
-      positions = positions.filter((position) => position.info.symbol === marketId.toUpperCase());
+      positions = positions.filter((position) => position.marketId === marketId.toUpperCase());
     }
 
     if (side) {
-      positions = positions.filter((position) => position.info.side.toLowerCase() === side.toLowerCase());
+      positions = positions.filter((position) => position.side.toLowerCase() === side.toLowerCase());
     }
     return positions;
   }
 
   async closePosition(accountId: string, marketId: string, side: OrderSide): Promise<Order> {
     this.logger.log(
-      `Open Position - Close Initiated - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}`,
+      `Position - Close Initiated - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}`,
       this.positions.get(accountId)
     );
 
-    const position = this.getAccountOpenPositions(accountId).find(
-      (p) => p.info.symbol === marketId.toUpperCase() && p.info.side.toLowerCase() === side.toLowerCase()
+    const position = this.getPositions(accountId).find(
+      (p) => p.marketId === marketId.toUpperCase() && p.side.toLowerCase() === side.toLowerCase()
     );
 
     if (!position) {
       this.logger.error(
-        `Open Position - Close Failed - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}, Reason: Position not found`
+        `Position - Close Failed - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}, Reason: Position not found`
       );
       throw new PositionNotFoundException(accountId, marketId);
     }
 
     try {
-      // FIXME remove
-      this.logger.error(position);
-      //
-      const order = await this.exchangeService.closePosition(accountId, marketId, side, position.contracts);
-      this.eventEmitter.emit(Events.POSITION_CLOSED, new PositionsClosedEvent(accountId, order));
-      this.logger.log(`Open Position - Close Succeeded - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
+      const order = await this.exchangeService.closePosition(accountId, marketId, side, position.amount);
+      this.eventEmitter.emit(Events.POSITION_CLOSED, new PositionClosedEvent(accountId, order));
+      this.logger.log(`Position - Close Succeeded - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
       return order;
     } catch (error) {
       this.logger.error(
-        `Open Position - Close Failed - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}, Error: ${error.message}`
+        `Position - Close Failed - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}, Error: ${error.message}`
       );
       throw error;
       // FIXME
@@ -106,30 +104,28 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
     }
   }
 
-  async refreshOne(accountId: string): Promise<Position[]> {
-    this.logger.log(`Open Positions - Refresh Initiated - AccountID: ${accountId}`);
+  async fetchPositions(accountId: string): Promise<IPosition[]> {
+    this.logger.log(`Positions - Refresh Initiated - AccountID: ${accountId}`);
 
     try {
       const positions = await this.exchangeService.getOpenPositions(accountId);
-      this.positions.set(accountId, positions);
-      this.eventEmitter.emit(Events.POSITIONS_UPDATED, new PositionsUpdatedEvent(accountId, positions));
-      this.logger.log(`Open Positions - Updated - AccountID: ${accountId}, Count: ${positions.length}`);
-      return positions;
+      const newPositions = positions.map((position) => fromPositionToInternalPosition(position));
+      this.positions.set(accountId, newPositions);
+      this.eventEmitter.emit(Events.POSITIONS_UPDATED, new PositionsUpdatedEvent(accountId, newPositions));
+      this.logger.log(`Positions - Updated - AccountID: ${accountId}, Count: ${positions.length}`);
+      return newPositions;
     } catch (error) {
-      this.logger.error(
-        `Open Positions - Update Failed - AccountID: ${accountId}, Error: ${error.message}`,
-        error.stack
-      );
+      this.logger.error(`Positions - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
       throw error;
     }
   }
 
-  async refreshAll(): Promise<void> {
-    this.logger.log(`All Open Positions - Refresh Initiated`);
+  async refreshAll() {
+    this.logger.debug(`All Open Positions - Refresh Initiated`);
     const accountIds = Array.from(this.positions.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
     const positionsPromises = accountIds.map((accountId) =>
-      this.refreshOne(accountId).catch((error) => {
+      this.fetchPositions(accountId).catch((error) => {
         errors.push({ accountId, error });
       })
     );
@@ -142,3 +138,26 @@ export class PositionService implements OnModuleInit, IAccountTracker, IDataRefr
     }
   }
 }
+
+// processPositionData(accountId: string, positionData: IPositionData) {
+//   this.logger.log(`Position Data - Update Initiated - AccountID: ${accountId}`);
+//   const existingPositions = this.positions.get(accountId);
+
+//   if (!existingPositions) {
+//     this.logger.error(`Position Data - Update Failed - AccountID: ${accountId}, Reason: Account not found`);
+//     throw new AccountNotFoundException(accountId);
+//   }
+
+//   const updatedPosition = fromPositionDataToPosition(positionData);
+//   const index = existingPositions.findIndex(p => p.marketId === updatedPosition.marketId && p.side === updatedPosition.side);
+
+//   if (index !== -1) {
+//     existingPositions[index] = updatedPosition;
+//   } else {
+//     existingPositions.push(updatedPosition);
+//   }
+
+//   this.positions.set(accountId, existingPositions);
+//   this.eventEmitter.emit(Events.POSITION_UPDATED, new PositionUpdatedEvent(accountId, updatedPosition));
+//   this.logger.log(`Position Data - Updated - AccountID: ${accountId}`);
+// }
