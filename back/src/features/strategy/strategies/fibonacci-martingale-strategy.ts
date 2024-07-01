@@ -2,16 +2,41 @@ import { Logger } from '@nestjs/common';
 
 import { IExecutionData } from '../../core/types/execution-data.interface';
 import { CurrencyMode } from '../types/currency-mode.enum';
+import { IFibonacciMartingaleStrategyOptions } from '../types/options/fibonacci-martingale-strategy-options.interface';
 import { IStrategy } from '../types/strategy.interface';
+import { StrategyType } from '../types/strategy-type.enum';
 import { BaseStrategy } from './base-strategy';
 
 export class FibonacciMartingaleStrategy extends BaseStrategy {
   protected readonly logger = new Logger(FibonacciMartingaleStrategy.name);
 
-  async process(accountId: string, strategy: IStrategy): Promise<void> {
-    this.logger.log(
-      `Strategy - Processing Fibonacci Martingale Strategy - AccountID: ${accountId}, StrategyID: ${strategy.id}`
+  isFibonacciMartingaleOptions(options: any): options is IFibonacciMartingaleStrategyOptions {
+    return (
+      'baseOrderSize' in options &&
+      'safetyOrderSize' in options &&
+      'safetyOrderStepScale' in options &&
+      'safetyOrderVolumeScale' in options &&
+      'initialSafetyOrderDistancePct' in options &&
+      'takeProfitPercentage' in options &&
+      'maxSafetyOrdersCount' in options &&
+      'currencyMode' in options
     );
+  }
+
+  async process(accountId: string, strategy: IStrategy, executionData?: IExecutionData): Promise<void> {
+    this.logger.debug(
+      `Processing Fibonacci Martingale Strategy - AccountID: ${accountId} - StrategyID: ${strategy.id}`
+    );
+
+    if (!this.validateStrategyOptions(StrategyType.FIBONACCI_MARTINGALE, strategy.options)) {
+      this.logger.warn(`Invalid strategy options - AccountID: ${accountId} - StrategyID: ${strategy.id}`);
+      return;
+    }
+
+    if (!this.isFibonacciMartingaleOptions(strategy.options)) {
+      this.logger.warn(`Invalid strategy options type - AccountID: ${accountId} - StrategyID: ${strategy.id}`);
+      return;
+    }
 
     if (strategy.orders.length === 0) {
       const {
@@ -39,7 +64,7 @@ export class FibonacciMartingaleStrategy extends BaseStrategy {
         //   quantity: baseOrderSizeInBase
         // });
         // strategy.orders.push(baseOrder.id);
-        this.logOrder(currencyMode, marketId, 'Base Order Placed', baseOrderPrice, baseOrderSizeInBase);
+        this.logOrder(currencyMode, marketId, 'Base Order', baseOrderPrice, baseOrderSizeInBase);
 
         // Place take profit order
         const takeProfitPrice = baseOrderPrice * (1 + takeProfitPercentage / 100);
@@ -55,7 +80,7 @@ export class FibonacciMartingaleStrategy extends BaseStrategy {
         this.logOrder(
           currencyMode,
           marketId,
-          'Take Profit Order Placed',
+          'Take Profit Order',
           takeProfitPrice,
           baseOrderSizeInBase,
           takeProfitPercentage
@@ -78,7 +103,7 @@ export class FibonacciMartingaleStrategy extends BaseStrategy {
           this.logOrder(
             currencyMode,
             marketId,
-            `Safety Order ${i + 1} Placed`,
+            `Safety Order ${i + 1}`,
             safetyOrderPrice,
             safetyOrderSizeInBase,
             currentDeviation
@@ -87,13 +112,25 @@ export class FibonacciMartingaleStrategy extends BaseStrategy {
           currentSafetyOrderSize *= safetyOrderVolumeScale;
           currentDeviation = currentDeviation * safetyOrderStepScale + initialSafetyOrderDistancePct;
         }
+
+        this.logger.log(
+          `Placed all orders for Fibonacci Martingale Strategy - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
+        );
+      } else {
+        this.logger.warn(
+          `Failed to get base order price - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
+        );
       }
     } else {
-      this.logger.log(`StrategyExisting orders found, implementing update logic`);
+      this.logger.warn(
+        `Existing orders found, MISSING logic here - AccountID: ${accountId} - StrategyID: ${strategy.id}`
+      );
       // TODO: Implement logic for handling existing orders
     }
   }
+}
 
+// Commented out code remains unchanged
 
 // else {
 //   // If a safety order is executed, update the take profit order
@@ -121,23 +158,3 @@ export class FibonacciMartingaleStrategy extends BaseStrategy {
 //     this.logger.log(`Strategy - Take Profit Order Updated - ${JSON.stringify(internalNewTakeProfitOrder)}`);
 //   }
 // }
-
-  async handleOrderExecution(accountId: string, strategy: IStrategy, executionData: IExecutionData) {
-    this.logger.log(
-      `Strategy - Updating Orders - AccountID: ${accountId}, StrategyID: ${strategy.id}, OrderID: ${executionData.orderId}`
-    );
-
-    const executedOrderIndex = strategy.orders.findIndex((id) => id === executionData.orderId);
-
-    if (executedOrderIndex !== -1) {
-      strategy.orders.splice(executedOrderIndex, 1);
-
-      if (strategy.takeProfitOrderId === executionData.orderId) {
-        this.logger.log(`Strategy - Take Profit Order Executed - AccountID: ${accountId}, StrategyID: ${strategy.id}`);
-        strategy.takeProfitOrderId = undefined;
-      }
-
-      await this.process(accountId, strategy);
-    }
-  }
-}

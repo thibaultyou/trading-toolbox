@@ -1,7 +1,6 @@
-import { CurrencyMode } from './currency-mode.enum';
+import { IBaseStrategyOptions } from './base-strategy-options.interface';
 
-export interface IStrategyOptions {
-  currencyMode: CurrencyMode;
+export interface IFibonacciMartingaleStrategyOptions extends IBaseStrategyOptions {
   baseOrderSize: number;
   safetyOrderSize: number;
   safetyOrderStepScale: number;

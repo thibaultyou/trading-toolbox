@@ -17,7 +17,7 @@ export class StrategyModuleExecutionReceivedEventHandler {
 
     try {
       for (const executionData of event.data) {
-        await this.strategyService.processOrderExecutionData(event.accountId, executionData);
+        await this.strategyService.processOrderExecutionData(executionData);
       }
       this.logger.log(actionContext);
     } catch (error) {

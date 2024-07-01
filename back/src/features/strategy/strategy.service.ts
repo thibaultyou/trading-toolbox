@@ -1,154 +1,131 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 import { Timers } from '../../config';
 import { IExecutionData } from '../core/types/execution-data.interface';
-import { BaseStrategy } from './strategies/base-strategy';
+import { StrategyCreateRequestDto } from './dtos/strategy-create.request.dto';
+import { StrategyUpdateRequestDto } from './dtos/strategy-update.request.dto';
+import { Strategy } from './entities/strategy.entity';
+import { StrategyNotFoundException } from './exceptions/strategy.exceptions';
 import { StrategyFactory } from './strategies/strategy.factory';
-import { CurrencyMode } from './types/currency-mode.enum';
-import { IStrategy } from './types/strategy.interface';
-import { StrategyType } from './types/strategy-type.enum';
-
-const fakeStrategy = {
-  accountId: '1660782b-9765-4ede-9f0f-94d235bbc170',
-  strategies: [
-    {
-      id: '1',
-      type: StrategyType.FIBONACCI_MARTINGALE,
-      marketId: 'FTMUSDT',
-      options: {
-        currencyMode: CurrencyMode.QUOTE,
-        baseOrderSize: 30,
-        safetyOrderSize: 20,
-        safetyOrderStepScale: 1.7,
-        safetyOrderVolumeScale: 2.8,
-        initialSafetyOrderDistancePct: 0.89,
-        takeProfitPercentage: 1.49,
-        maxSafetyOrdersCount: 4
-      },
-      orders: []
-    }
-  ]
-};
-interface StrategyInfo {
-  config: IStrategy;
-  instance: BaseStrategy;
-}
 
 @Injectable()
 export class StrategyService implements OnModuleInit {
   private logger = new Logger(StrategyService.name);
-  private strategies: Map<string, Map<string, StrategyInfo>> = new Map();
 
   constructor(
-    private eventEmitter: EventEmitter2,
+    @InjectRepository(Strategy)
+    private strategyRepository: Repository<Strategy>,
     private strategyFactory: StrategyFactory
   ) {}
 
   async onModuleInit() {
-    const initialStrategies = await this.fetchAllInitialStrategies();
-    initialStrategies.forEach(({ accountId, strategies }) => {
-      strategies.forEach((strategy) => {
-        this.addStrategy(accountId, strategy);
-      });
-    });
+    this.logger.debug('Initializing module');
     setInterval(() => {
       this.processStrategies();
     }, Timers.STRATEGIES_CHECK_COOLDOWN);
+    this.logger.log('Module initialized successfully');
   }
 
-  private async fetchAllInitialStrategies(): Promise<{ accountId: string; strategies: IStrategy[] }[]> {
-    return [fakeStrategy];
+  async getAllStrategies(): Promise<Strategy[]> {
+    this.logger.debug('Fetching all strategies');
+    const strategies = await this.strategyRepository.find();
+    this.logger.log(`Fetched strategies - Count: ${strategies.length}`);
+    return strategies;
   }
 
-  addStrategy(accountId: string, strategyConfig: IStrategy) {
-    if (!this.strategies.has(accountId)) {
-      this.strategies.set(accountId, new Map());
+  async getStrategyById(id: string): Promise<Strategy> {
+    this.logger.debug(`Fetching strategy - StrategyID: ${id}`);
+    const strategy = await this.strategyRepository.findOne({ where: { id } });
+
+    if (!strategy) {
+      this.logger.warn(`Strategy not found - StrategyID: ${id}`);
+      throw new StrategyNotFoundException(id);
     }
 
-    const accountStrategies = this.strategies.get(accountId);
-    const strategyInstance = this.strategyFactory.createStrategy(strategyConfig.type);
-    accountStrategies.set(strategyConfig.id, {
-      config: strategyConfig,
-      instance: strategyInstance
+    this.logger.debug(`Fetched strategy - StrategyID: ${id}`);
+    return strategy;
+  }
+
+  async createStrategy(dto: StrategyCreateRequestDto): Promise<Strategy> {
+    this.logger.debug('Creating new strategy');
+    const strategy = new Strategy({ ...dto, orders: [] });
+    const savedStrategy = await this.strategyRepository.save(strategy);
+    this.logger.log(`Created new strategy - StrategyID: ${savedStrategy.id} - Type: ${savedStrategy.type}`);
+    return savedStrategy;
+  }
+
+  async updateStrategy(id: string, dto: StrategyUpdateRequestDto): Promise<Strategy> {
+    this.logger.debug(`Updating strategy - StrategyID: ${id}`);
+    const strategy = await this.getStrategyById(id);
+    Object.assign(strategy, dto);
+    const updatedStrategy = await this.strategyRepository.save(strategy);
+    this.logger.log(`Updated strategy - StrategyID: ${id}`);
+    return updatedStrategy;
+  }
+
+  async deleteStrategy(id: string): Promise<boolean> {
+    this.logger.debug(`Deleting strategy - StrategyID: ${id}`);
+    const strategy = await this.getStrategyById(id);
+    await this.strategyRepository.remove(strategy);
+    this.logger.log(`Deleted strategy - StrategyID: ${id}`);
+    return true;
+  }
+
+  async processOrderExecutionData(executionData: IExecutionData) {
+    this.logger.debug(`Processing order execution data - OrderID: ${executionData.orderId}`);
+    const relevantStrategies = await this.strategyRepository.find({
+      where: { orders: executionData.orderId }
     });
-
-    this.logger.log(`Strategy - Added - AccountID: ${accountId}, StrategyID: ${strategyConfig.id}`);
-    // this.eventEmitter.emit(Events.STRATEGY_ADDED, new StrategyAddedEvent(accountId, strategyConfig));
-  }
-
-  removeStrategy(accountId: string, strategyId: string) {
-    const accountStrategies = this.strategies.get(accountId);
-
-    if (accountStrategies && accountStrategies.has(strategyId)) {
-      accountStrategies.delete(strategyId);
-      this.logger.log(`Strategy - Removed - AccountID: ${accountId}, StrategyID: ${strategyId}`);
-    }
-  }
-
-  getStrategies(accountId: string): IStrategy[] {
-    const accountStrategies = this.strategies.get(accountId);
-    return accountStrategies ? Array.from(accountStrategies.values()).map((info) => info.config) : [];
-  }
-
-  async processOrderExecutionData(accountId: string, executionData: IExecutionData) {
-    this.logger.log(`Strategy - Processing Order Execution Data - AccountID: ${accountId}`);
-    const accountStrategies = this.strategies.get(accountId);
-
-    if (!accountStrategies) {
-      this.logger.warn(
-        `Strategy - Processing Order Execution Data Failed - AccountID: ${accountId}, Reason: Account not found`
-      );
-      return;
-    }
-
-    const relevantStrategies = Array.from(accountStrategies.values()).filter(
-      ({ config }) => config.marketId === executionData.symbol
+    this.logger.debug(
+      `Found relevant strategies - Count: ${relevantStrategies.length} - OrderID: ${executionData.orderId}`
     );
+
     await Promise.all(
-      relevantStrategies.map(async ({ config, instance }) => {
-        await instance.handleOrderExecution(accountId, config, executionData);
+      relevantStrategies.map(async (strategy) => {
+        try {
+          const instance = this.strategyFactory.createStrategy(strategy.type);
+          this.logger.debug(
+            `Handling order execution - StrategyID: ${strategy.id} - OrderID: ${executionData.orderId}`
+          );
+          await instance.handleOrderExecution(strategy.accountId, strategy, executionData);
+          this.logger.debug(`Handled order execution - StrategyID: ${strategy.id} - OrderID: ${executionData.orderId}`);
+
+          await this.strategyRepository.save(strategy);
+        } catch (error) {
+          this.logger.error(
+            `Order execution processing failed - StrategyID: ${strategy.id} - OrderID: ${executionData.orderId} - Error: ${error.message}`,
+            error.stack
+          );
+        }
       })
     );
+    this.logger.debug(`Completed processing order execution data - OrderID: ${executionData.orderId}`);
   }
 
-  async processStrategy(accountId: string, strategyId: string): Promise<void> {
-    const accountStrategies = this.strategies.get(accountId);
+  private async processStrategy(strategy: Strategy): Promise<void> {
+    this.logger.debug(`Processing strategy - StrategyID: ${strategy.id}`);
+    const instance = this.strategyFactory.createStrategy(strategy.type);
 
-    if (!accountStrategies) {
-      this.logger.warn(`Strategy - Processing Failed - AccountID: ${accountId}, Reason: Account not found`);
-      return;
-    }
-
-    const strategyInfo = accountStrategies.get(strategyId);
-
-    if (!strategyInfo) {
-      this.logger.warn(
-        `Strategy - Processing Failed - AccountID: ${accountId}, StrategyID: ${strategyId}, Reason: Strategy not found`
+    try {
+      await instance.process(strategy.accountId, strategy);
+      this.logger.debug(`Processed strategy - StrategyID: ${strategy.id}`);
+    } catch (error) {
+      this.logger.error(
+        `Strategy processing failed - StrategyID: ${strategy.id} - Error: ${error.message}`,
+        error.stack
       );
-      return;
-    }
-
-    this.logger.debug(`Strategy - Processing - AccountID: ${accountId}, StrategyID: ${strategyId}`);
-    await strategyInfo.instance.process(accountId, strategyInfo.config);
-  }
-
-  async processStrategies() {
-    this.logger.debug(`Strategy - Processing Strategies`);
-    for (const [accountId, accountStrategies] of this.strategies) {
-      for (const [strategyId] of accountStrategies) {
-        await this.processStrategy(accountId, strategyId);
-      }
     }
   }
 
-  updateStrategyConfig(accountId: string, strategyId: string, newConfig: Partial<IStrategy>) {
-    const accountStrategies = this.strategies.get(accountId);
-
-    if (accountStrategies && accountStrategies.has(strategyId)) {
-      const strategyInfo = accountStrategies.get(strategyId);
-      strategyInfo.config = { ...strategyInfo.config, ...newConfig };
-      this.logger.log(`Strategy - Config Updated - AccountID: ${accountId}, StrategyID: ${strategyId}`);
+  private async processStrategies() {
+    this.logger.debug('Starting to process all strategies');
+    const strategies = await this.getAllStrategies();
+    this.logger.debug(`Processing strategies - Count: ${strategies.length}`);
+    for (const strategy of strategies) {
+      await this.processStrategy(strategy);
     }
+    this.logger.debug('Completed processing all strategies');
   }
 }
