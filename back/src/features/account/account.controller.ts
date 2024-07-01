@@ -3,9 +3,9 @@ import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../../common/base/base.controller';
 import { AccountService } from './account.service';
-import { AccountCreateRequestDto } from './dto/account-create.request.dto';
-import { AccountReadResponseDto } from './dto/account-read.response.dto';
-import { AccountUpdateRequestDto } from './dto/account-update.request.dto';
+import { AccountCreateRequestDto } from './dtos/account-create.request.dto';
+import { AccountReadResponseDto } from './dtos/account-read.response.dto';
+import { AccountUpdateRequestDto } from './dtos/account-update.request.dto';
 import { AccountNotFoundException } from './exceptions/account.exceptions';
 
 @ApiTags('Accounts')

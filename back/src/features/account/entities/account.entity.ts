@@ -2,8 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 import { ExchangeType } from '../../exchange/exchange.types';
-import { AccountCreateRequestDto } from '../dto/account-create.request.dto';
-import { AccountUpdateRequestDto } from '../dto/account-update.request.dto';
+import { AccountCreateRequestDto } from '../dtos/account-create.request.dto';
+import { AccountUpdateRequestDto } from '../dtos/account-update.request.dto';
 
 @Entity()
 export class Account {
