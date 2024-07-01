@@ -26,37 +26,41 @@ export class PositionService implements OnModuleInit, IAccountTracker {
   ) {}
 
   async onModuleInit() {
+    this.logger.debug('Initializing module');
     setInterval(() => {
       this.refreshAll();
     }, Timers.POSITIONS_CACHE_COOLDOWN);
+    this.logger.log('Module initialized successfully');
   }
 
   async startTrackingAccount(accountId: string) {
+    this.logger.debug(`Starting account tracking - AccountID: ${accountId}`);
+
     if (!this.positions.has(accountId)) {
-      this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
       await this.fetchPositions(accountId);
+      this.logger.log(`Started tracking account - AccountID: ${accountId}`);
     } else {
-      this.logger.warn(`Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
+      this.logger.warn(`Account tracking skipped - AccountID: ${accountId} - Reason: Already tracked`);
     }
   }
 
   stopTrackingAccount(accountId: string) {
+    this.logger.debug(`Stopping account tracking - AccountID: ${accountId}`);
+
     if (this.positions.delete(accountId)) {
-      this.logger.log(`Tracking Stopped - AccountID: ${accountId}`);
+      this.logger.log(`Stopped tracking account - AccountID: ${accountId}`);
     } else {
-      this.logger.warn(`Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
+      this.logger.warn(`Account tracking removal failed - AccountID: ${accountId} - Reason: Not tracked`);
     }
   }
 
   getPositions(accountId: string, marketId?: string, side?: OrderSide): IPosition[] {
-    this.logger.log(
-      `Positions - Fetch Initiated - AccountID: ${accountId}${marketId ? `, MarketID: ${marketId}` : ''}${side ? `, Side: ${side}` : ''}`
+    this.logger.debug(
+      `Fetching positions - AccountID: ${accountId}${marketId ? ` - MarketID: ${marketId}` : ''}${side ? ` - Side: ${side}` : ''}`
     );
 
     if (!this.positions.has(accountId)) {
-      this.logger.error(
-        `Positions - Fetch Failed - AccountID: ${accountId}${marketId ? `, MarketID: ${marketId}` : ''}${side ? `, Side: ${side}` : ''}, Reason: Account not found`
-      );
+      this.logger.warn(`Positions not found - AccountID: ${accountId}`);
       throw new AccountNotFoundException(accountId);
     }
 
@@ -69,59 +73,57 @@ export class PositionService implements OnModuleInit, IAccountTracker {
     if (side) {
       positions = positions.filter((position) => position.side.toLowerCase() === side.toLowerCase());
     }
+
+    this.logger.debug(`Fetched positions - AccountID: ${accountId} - Count: ${positions.length}`);
     return positions;
   }
 
   async closePosition(accountId: string, marketId: string, side: OrderSide): Promise<Order> {
-    this.logger.log(
-      `Position - Close Initiated - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}`,
-      this.positions.get(accountId)
-    );
+    this.logger.debug(`Closing position - AccountID: ${accountId} - MarketID: ${marketId} - Side: ${side}`);
 
     const position = this.getPositions(accountId).find(
       (p) => p.marketId === marketId.toUpperCase() && p.side.toLowerCase() === side.toLowerCase()
     );
 
     if (!position) {
-      this.logger.error(
-        `Position - Close Failed - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}, Reason: Position not found`
-      );
+      this.logger.warn(`Position not found - AccountID: ${accountId} - MarketID: ${marketId} - Side: ${side}`);
       throw new PositionNotFoundException(accountId, marketId);
     }
 
     try {
       const order = await this.exchangeService.closePosition(accountId, marketId, side, position.amount);
       this.eventEmitter.emit(Events.POSITION_CLOSED, new PositionClosedEvent(accountId, order));
-      this.logger.log(`Position - Close Succeeded - AccountID: ${accountId}, Order: ${JSON.stringify(order)}`);
+      this.logger.log(
+        `Closed position - AccountID: ${accountId} - MarketID: ${marketId} - Side: ${side} - OrderID: ${order.id}`
+      );
       return order;
     } catch (error) {
       this.logger.error(
-        `Position - Close Failed - AccountID: ${accountId}, MarketID: ${marketId}, Side: ${side}, Error: ${error.message}`
+        `Position closing failed - AccountID: ${accountId} - MarketID: ${marketId} - Side: ${side} - Error: ${error.message}`,
+        error.stack
       );
       throw error;
-      // FIXME
-      // throw new ClosePositionException(accountId, positionId, error.message);
     }
   }
 
   async fetchPositions(accountId: string): Promise<IPosition[]> {
-    this.logger.log(`Positions - Refresh Initiated - AccountID: ${accountId}`);
+    this.logger.debug(`Fetching positions - AccountID: ${accountId}`);
 
     try {
       const positions = await this.exchangeService.getOpenPositions(accountId);
       const newPositions = positions.map((position) => fromPositionToInternalPosition(position));
       this.positions.set(accountId, newPositions);
       this.eventEmitter.emit(Events.POSITIONS_UPDATED, new PositionsUpdatedEvent(accountId, newPositions));
-      this.logger.log(`Positions - Updated - AccountID: ${accountId}, Count: ${positions.length}`);
+      this.logger.log(`Fetched positions - AccountID: ${accountId} - Count: ${newPositions.length}`);
       return newPositions;
     } catch (error) {
-      this.logger.error(`Positions - Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
+      this.logger.error(`Positions fetch failed - AccountID: ${accountId} - Error: ${error.message}`, error.stack);
       throw error;
     }
   }
 
   async refreshAll() {
-    this.logger.debug(`All Open Positions - Refresh Initiated`);
+    this.logger.debug('Starting refresh of all positions');
     const accountIds = Array.from(this.positions.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
     const positionsPromises = accountIds.map((accountId) =>
@@ -133,9 +135,10 @@ export class PositionService implements OnModuleInit, IAccountTracker {
 
     if (errors.length > 0) {
       const aggregatedError = new PositionsUpdateAggregatedException(errors);
-      this.logger.error(`Multiple Updates Failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
-      // NOTE Avoid interrupting the loop by not throwing an exception
+      this.logger.error(`Multiple position updates failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
     }
+
+    this.logger.debug(`Completed refresh of all positions`);
   }
 }
 

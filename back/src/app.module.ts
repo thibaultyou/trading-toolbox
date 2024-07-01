@@ -32,18 +32,18 @@ import { WalletModule } from './features/wallet/wallet.module';
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     AccountModule,
-    WalletModule,
-    ExchangeModule, // Global
     MarketModule,
     OrderModule,
     PositionModule,
+    StrategyModule,
     TickerModule,
+    WalletModule,
+    ExchangeModule, // Global
     // SetupModule,
     // ActionModule,
     // AlertModule,
     CoreModule,
     // GridModule,
-    StrategyModule,
     HealthModule
   ]
 })

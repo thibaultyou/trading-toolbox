@@ -2,9 +2,9 @@ import * as ccxt from 'ccxt';
 
 import { Account } from '../../account/entities/account.entity';
 import { ExchangeInitializationException, InvalidCredentialsException } from '../exceptions/exchange.exceptions';
-import { AbstractExchangeService } from './abstract-exchange.service';
+import { BaseExchangeService } from './base-exchange.service';
 
-export class BybitExchangeService extends AbstractExchangeService {
+export class BybitExchangeService extends BaseExchangeService {
   constructor(account: Account) {
     super(account);
   }

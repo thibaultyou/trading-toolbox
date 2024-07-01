@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../../common/base/base.controller';
-import { MarketReadResponseDto } from './dto/market-read.response.dto';
+import { MarketReadResponseDto } from './dtos/market-read.response.dto';
 import { MarketService } from './market.service';
 
 @ApiTags('Markets')

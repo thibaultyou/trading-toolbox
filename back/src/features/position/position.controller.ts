@@ -2,9 +2,9 @@ import { Controller, Delete, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../../common/base/base.controller';
-import { OrderReadResponseDto } from '../order/dto/order-read.response.dto';
+import { OrderReadResponseDto } from '../order/dtos/order-read.response.dto';
 import { OrderSide } from '../order/types/order-side.enum';
-import { PositionReadResponseDto } from './dto/position-read.response.dto';
+import { PositionReadResponseDto } from './dtos/position-read.response.dto';
 import { PositionService } from './position.service';
 
 @ApiTags('Positions')

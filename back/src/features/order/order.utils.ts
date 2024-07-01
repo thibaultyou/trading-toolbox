@@ -19,3 +19,17 @@ export const fromOrdertoInternalOrder = (order: Order): IOrder => ({
   createdTime: parseInt(order.info.createdTime),
   updatedTime: parseInt(order.info.updatedTime)
 });
+
+export const haveOrdersChanged = (currentOrders: Order[], newOrders: Order[]): boolean => {
+  if (currentOrders.length !== newOrders.length) return true;
+
+  const orderMap = new Map(currentOrders.map((order) => [order.id, order]));
+  for (const order of newOrders) {
+    const currentOrder = orderMap.get(order.id);
+
+    if (!currentOrder || currentOrder.lastUpdateTimestamp !== order.lastUpdateTimestamp) {
+      return true;
+    }
+  }
+  return false;
+};

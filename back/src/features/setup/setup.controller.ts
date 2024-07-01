@@ -2,7 +2,7 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../../common/base/base.controller';
-import { SetupReadResponseDto } from './dto/_setup-read.response.dto';
+import { SetupReadResponseDto } from './dtos/_setup-read.response.dto';
 import { SetupService } from './setup.service';
 
 // import { SetupUpdateRequestDto } from './dto/setup-update.request.dto';

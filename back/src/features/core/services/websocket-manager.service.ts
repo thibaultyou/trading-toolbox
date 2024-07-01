@@ -24,8 +24,10 @@ export class WebsocketManagerService implements IAccountTracker {
   ) {}
 
   async startTrackingAccount(accountId: string) {
+    this.logger.debug(`Starting account tracking - AccountID: ${accountId}`);
+
     if (this.wsConnections.has(accountId)) {
-      this.logger.warn(`Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
+      this.logger.warn(`Account tracking skipped - AccountID: ${accountId} - Reason: Already tracked`);
       return;
     }
 
@@ -41,25 +43,27 @@ export class WebsocketManagerService implements IAccountTracker {
       this.wsConnections.set(accountId, ws);
       this.subscriptions.set(accountId, new Set());
       await this.subscribe(accountId, ['execution', 'position', 'order', 'wallet'], true);
-      this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
+      this.logger.log(`Started tracking account - AccountID: ${accountId}`);
     } catch (error) {
-      this.logger.error(`Tracking Failed - AccountID: ${accountId}, Error: ${error.message}`);
+      this.logger.error(`Account tracking failed - AccountID: ${accountId} - Error: ${error.message}`, error.stack);
       throw new TrackingFailedException(accountId, error);
     }
   }
 
   stopTrackingAccount(accountId: string) {
+    this.logger.debug(`Stopping account tracking - AccountID: ${accountId}`);
+
     if (this.wsConnections.has(accountId)) {
       this.cleanResources(accountId);
-      this.logger.log(`Tracking Stopped - AccountID: ${accountId}`);
+      this.logger.log(`Stopped tracking account - AccountID: ${accountId}`);
     } else {
-      this.logger.warn(`Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
+      this.logger.warn(`Account tracking removal failed - AccountID: ${accountId} - Reason: Not tracked`);
     }
   }
 
   async subscribe(accountId: string, wsTopics: string[] | string, isPrivateTopic: boolean = false) {
-    this.logger.log(
-      `Websocket - Subscription Initiated - AccountID: ${accountId}, Topics: ${Array.isArray(wsTopics) ? wsTopics.join(', ') : wsTopics}`
+    this.logger.debug(
+      `Initiating websocket subscription - AccountID: ${accountId} - Topics: ${Array.isArray(wsTopics) ? wsTopics.join(', ') : wsTopics}`
     );
     let ws = this.wsConnections.get(accountId);
 
@@ -69,9 +73,7 @@ export class WebsocketManagerService implements IAccountTracker {
     }
 
     if (!ws) {
-      this.logger.error(
-        `Websocket - Subscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`
-      );
+      this.logger.warn(`Websocket subscription failed - AccountID: ${accountId} - Reason: WebSocket client not found`);
       return;
     }
 
@@ -87,20 +89,26 @@ export class WebsocketManagerService implements IAccountTracker {
         });
         this.subscriptions.set(accountId, subscriptions);
         this.logger.log(
-          `Websocket - Subscribed - AccountID: ${accountId}, Topics: ${topicsToSubscribe.sort().join(', ')}`
+          `Subscribed to websocket topics - AccountID: ${accountId} - Topics: ${topicsToSubscribe.sort().join(', ')}`
         );
       } catch (error) {
-        this.logger.error(`Websocket - Subscription Failed - AccountID: ${accountId}, Error: ${error}`);
+        this.logger.error(
+          `Websocket subscription failed - AccountID: ${accountId} - Error: ${error.message}`,
+          error.stack
+        );
       }
     }
   }
 
   unsubscribe(accountId: string, wsTopics: string[] | string, isPrivateTopic: boolean = false) {
+    this.logger.debug(
+      `Initiating websocket unsubscription - AccountID: ${accountId} - Topics: ${Array.isArray(wsTopics) ? wsTopics.join(', ') : wsTopics}`
+    );
     const ws = this.wsConnections.get(accountId);
 
     if (!ws) {
-      this.logger.error(
-        `Websocket - Unsubscription Failed - AccountID: ${accountId}, Reason: WebSocket Client Not Found`
+      this.logger.warn(
+        `Websocket unsubscription failed - AccountID: ${accountId} - Reason: WebSocket client not found`
       );
       return;
     }
@@ -115,7 +123,8 @@ export class WebsocketManagerService implements IAccountTracker {
           subscriptions.delete(topic);
         } catch (error) {
           this.logger.error(
-            `Websocket - Unsubscription Failed - AccountID: ${accountId}, Topic: ${topic}, Error: ${error.message}`
+            `Websocket unsubscription failed - AccountID: ${accountId} - Topic: ${topic} - Error: ${error.message}`,
+            error.stack
           );
           failedTopics.push(topic);
         }
@@ -124,16 +133,18 @@ export class WebsocketManagerService implements IAccountTracker {
 
     if (failedTopics.length === topics.length) {
       this.logger.error(
-        `Websocket - All Unsubscriptions Failed - AccountID: ${accountId}, Topics: ${topics.join(', ')}`
+        `All websocket unsubscriptions failed - AccountID: ${accountId} - Topics: ${topics.join(', ')}`
       );
     } else {
       this.logger.log(
-        `Websocket - Unsubscribed - AccountID: ${accountId}, Topics: ${topics.filter((topic) => !failedTopics.includes(topic)).join(', ')}`
+        `Unsubscribed from websocket topics - AccountID: ${accountId} - Topics: ${topics.filter((topic) => !failedTopics.includes(topic)).join(', ')}`
       );
     }
   }
 
   private handleWsUpdate(accountId: string, message: any) {
+    this.logger.debug(`Handling websocket update - AccountID: ${accountId} - Topic: ${message?.topic}`);
+
     if (message?.topic) {
       const topicHandlerMapping = {
         'tickers.': this.handleTickerUpdate.bind(this),
@@ -148,32 +159,39 @@ export class WebsocketManagerService implements IAccountTracker {
           return;
         }
       }
-      this.logger.warn(`Websocket - Unrecognized Topic - AccountID: ${accountId}, Topic: ${message.topic}`);
+      this.logger.warn(`Unrecognized websocket topic - AccountID: ${accountId} - Topic: ${message.topic}`);
     }
   }
 
   private handleExecutionUpdate(accountId: string, message: any) {
+    this.logger.debug(`Handling execution update - AccountID: ${accountId}`);
     this.eventEmitter.emit(Events.EXECUTION_DATA_RECEIVED, new ExecutionDataReceivedEvent(accountId, message.data));
   }
 
   private handlePositionUpdate(accountId: string, message: any) {
+    this.logger.debug(`Handling position update - AccountID: ${accountId}`);
     this.eventEmitter.emit(Events.POSITION_DATA_UPDATED, new PositionDataUpdatedEvent(accountId, message.data));
   }
 
   private handleTickerUpdate(accountId: string, message: any) {
     const marketId = message.topic.substring('tickers.'.length);
+    this.logger.debug(`Handling ticker update - AccountID: ${accountId} - MarketID: ${marketId}`);
     this.eventEmitter.emit(Events.TICKER_DATA_UPDATED, new TickerDataUpdatedEvent(accountId, marketId, message.data));
   }
 
   private handleOrderUpdate(accountId: string, message: any) {
+    this.logger.debug(`Handling order update - AccountID: ${accountId}`);
     this.eventEmitter.emit(Events.ORDER_DATA_UPDATED, new OrderDataUpdatedEvent(accountId, message.data));
   }
 
   private handleWalletUpdate(accountId: string, message: any) {
+    this.logger.debug(`Handling wallet update - AccountID: ${accountId}`);
     this.eventEmitter.emit(Events.WALLET_DATA_UPDATED, new WalletDataUpdatedEvent(accountId, message.data));
   }
 
   private cleanResources(accountId: string) {
+    this.logger.debug(`Cleaning websocket resources - AccountID: ${accountId}`);
+
     try {
       const ws = this.wsConnections.get(accountId);
 
@@ -181,10 +199,13 @@ export class WebsocketManagerService implements IAccountTracker {
         ws.closeAll();
         this.wsConnections.delete(accountId);
         this.subscriptions.delete(accountId);
-        this.logger.log(`Websocket - Cleaned Resources - AccountID: ${accountId}`);
+        this.logger.log(`Cleaned websocket resources - AccountID: ${accountId}`);
       }
     } catch (error) {
-      this.logger.error(`Websocket - Resources Cleaning Failed - AccountID: ${accountId}, Error: ${error.message}`);
+      this.logger.error(
+        `Websocket resources cleaning failed - AccountID: ${accountId} - Error: ${error.message}`,
+        error.stack
+      );
     }
   }
 }

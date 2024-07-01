@@ -9,6 +9,7 @@ import { AppLogger } from './features/logger/logger.service';
 import { MarketExceptionsFilter } from './features/market/exceptions/market.exceptions.filter';
 import { OrderExceptionsFilter } from './features/order/exceptions/order.exceptions.filter';
 import { PositionExceptionsFilter } from './features/position/exceptions/position.exceptions.filter';
+import { StrategyExceptionsFilter } from './features/strategy/exceptions/strategy.exceptions.filter';
 import { TickerExceptionsFilter } from './features/ticker/exceptions/ticker.exceptions.filter';
 import { WalletExceptionsFilter } from './features/wallet/exceptions/wallet.exceptions.filter';
 
@@ -25,6 +26,7 @@ async function bootstrap() {
     new MarketExceptionsFilter(),
     new PositionExceptionsFilter(),
     new OrderExceptionsFilter(),
+    new StrategyExceptionsFilter(),
     new TickerExceptionsFilter(),
     new WalletExceptionsFilter()
   );

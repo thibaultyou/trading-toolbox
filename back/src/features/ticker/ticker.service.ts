@@ -1,9 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Ticker } from 'ccxt';
 
 import { IAccountTracker } from '../../common/types/account-tracker.interface';
-import { Events } from '../../config';
+import { Events, Timers } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
 import { WebSocketSubscribeEvent } from '../core/events/websocket-subscribe.event';
 import { WebSocketUnsubscribeEvent } from '../core/events/websocket-unsubscribe.event';
@@ -12,16 +11,12 @@ import { ExchangeService } from '../exchange/exchange.service';
 import { OrderService } from '../order/order.service';
 import { PositionService } from '../position/position.service';
 import { TickerPriceNotFoundException } from './exceptions/ticker.exceptions';
-import { fromTickerDataToPrice, haveTickerDataChanged, haveTickerSetsChanged } from './ticker.utils';
-
-// TODO improve logging, error handling, custom exceptions
-// TODO improve events to keep track of tickers
+import { fromTickerDataToPrice, haveTickerDataChanged } from './ticker.utils';
 
 @Injectable()
 export class TickerService implements OnModuleInit, IAccountTracker {
   private logger = new Logger(TickerService.name);
-  private trackedTickers: Map<string, Set<string>> = new Map();
-  private tickerValues: Map<string, Map<string, ITickerData>> = new Map(); // accountId, marketId, value
+  private tickerValues: Map<string, Map<string, ITickerData>> = new Map();
 
   constructor(
     private eventEmitter: EventEmitter2,
@@ -31,33 +26,39 @@ export class TickerService implements OnModuleInit, IAccountTracker {
   ) {}
 
   async onModuleInit() {
-    // setInterval(() => {
-    //   this.refreshAll();
-    // }, Timers.TICKERS_CACHE_COOLDOWN);
+    this.logger.debug('Initializing module');
+    setInterval(() => {
+      this.refreshAccountsTickersWatchList();
+    }, Timers.TICKERS_CACHE_COOLDOWN);
+    this.logger.log('Module initialized successfully');
   }
 
   async startTrackingAccount(accountId: string) {
+    this.logger.debug(`Starting account tracking - AccountID: ${accountId}`);
+
     if (!this.tickerValues.has(accountId)) {
       this.tickerValues.set(accountId, new Map());
-      this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
+      this.logger.log(`Started tracking account - AccountID: ${accountId}`);
     } else {
-      this.logger.warn(`Tracking Skipped - AccountID: ${accountId}, Reason: Already tracked`);
+      this.logger.warn(`Account tracking skipped - AccountID: ${accountId} - Reason: Already tracked`);
     }
   }
 
   stopTrackingAccount(accountId: string) {
+    this.logger.debug(`Stopping account tracking - AccountID: ${accountId}`);
+
     if (this.tickerValues.delete(accountId)) {
-      this.logger.log(`Tracking Stopped - AccountID: ${accountId}`);
+      this.logger.log(`Stopped tracking account - AccountID: ${accountId}`);
     } else {
-      this.logger.warn(`Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
+      this.logger.warn(`Account tracking removal failed - AccountID: ${accountId} - Reason: Not tracked`);
     }
   }
 
   async getTickerPrice(accountId: string, marketId: string): Promise<number | null> {
-    this.logger.log(`Ticker Price - Fetch Initiated - AccountID: ${accountId}, MarketID: ${marketId}`);
+    this.logger.debug(`Fetching ticker price - AccountID: ${accountId} - MarketID: ${marketId}`);
 
     if (!this.tickerValues.has(accountId)) {
-      this.logger.error(`Ticker Price - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.warn(`Ticker price fetch failed - AccountID: ${accountId} - Reason: Account not found`);
       throw new AccountNotFoundException(accountId);
     }
 
@@ -65,24 +66,22 @@ export class TickerService implements OnModuleInit, IAccountTracker {
 
     if (!marketValues || !marketValues.has(marketId)) {
       this.logger.warn(
-        `Ticker Price - Fetch Failed - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Ticker Not Found / Not Tracked`
+        `Ticker price not in cache - AccountID: ${accountId} - MarketID: ${marketId} - Action: Fetching and subscribing`
       );
-
-      try {
-        const ticker = await this.fetchTicker(accountId, marketId);
-        return fromTickerDataToPrice(ticker.info);
-      } catch (error) {
-        this.logger.error(
-          `Ticker Price - Fetch Failed and FetchTicker also failed - AccountID: ${accountId}, MarketID: ${marketId}, Reason: ${error.message}`
-        );
-        throw new TickerPriceNotFoundException(accountId, marketId);
-      }
+      this.eventEmitter.emit(
+        Events.WEBSOCKET_SUBSCRIBE,
+        new WebSocketSubscribeEvent(accountId, [`tickers.${marketId}`])
+      );
+      return await this.fetchAndCacheTicker(accountId, marketId);
     }
-    return fromTickerDataToPrice(marketValues.get(marketId));
+
+    const price = fromTickerDataToPrice(marketValues.get(marketId));
+    this.logger.debug(`Fetched ticker price - AccountID: ${accountId} - MarketID: ${marketId} - Price: ${price}`);
+    return price;
   }
 
   updateTickerData(accountId: string, marketId: string, data: ITickerData): void {
-    this.logger.debug(`Ticker Data - Update Initiated - AccountID: ${accountId}`);
+    this.logger.debug(`Updating ticker data - AccountID: ${accountId} - MarketID: ${marketId}`);
 
     if (!this.tickerValues.has(accountId)) {
       this.tickerValues.set(accountId, new Map());
@@ -91,7 +90,7 @@ export class TickerService implements OnModuleInit, IAccountTracker {
     const accountTickers = this.tickerValues.get(accountId);
 
     if (!accountTickers) {
-      this.logger.error(`Ticker Data - Update Failed - AccountID: ${accountId}, Reason: Account not found`);
+      this.logger.warn(`Ticker data update failed - AccountID: ${accountId} - Reason: Account not found`);
       return;
     }
 
@@ -105,74 +104,81 @@ export class TickerService implements OnModuleInit, IAccountTracker {
       if (price !== null) {
         accountTickers.set(marketId, updatedData);
         this.eventEmitter.emit(Events.TICKER_PRICE_UPDATED, { accountId, marketId, price });
-        this.logger.debug(`Ticker Data - Updated - AccountID: ${accountId}, MarketID: ${marketId}, Price: ${price}`);
+        this.logger.debug(`Updated ticker data - AccountID: ${accountId} - MarketID: ${marketId} - Price: ${price}`);
       } else {
         this.logger.warn(
-          `Ticker Data - Update Skipped - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Incomplete data`,
-          {
-            updatedData
-          }
+          `Ticker data update skipped - AccountID: ${accountId} - MarketID: ${marketId} - Reason: Incomplete data`,
+          { updatedData }
         );
       }
     } else {
       this.logger.debug(
-        `Ticker Data - Update Skipped - AccountID: ${accountId}, MarketID: ${marketId}, Reason: Unchanged`
+        `Ticker data update skipped - AccountID: ${accountId} - MarketID: ${marketId} - Reason: Unchanged`
       );
     }
   }
 
-  private async fetchTicker(accountId: string, marketId: string): Promise<Ticker> {
-    this.logger.debug(`Ticker - Fetch Initiated - AccountID: ${accountId}`);
-
+  private async fetchAndCacheTicker(accountId: string, marketId: string): Promise<number | null> {
     try {
       const ticker = await this.exchangeService.getTicker(accountId, marketId);
-      this.logger.log(`Ticker - Fetched - AccountID: ${accountId}`);
-      return ticker;
+      this.updateTickerData(accountId, marketId, ticker.info);
+      return fromTickerDataToPrice(ticker.info);
     } catch (error) {
-      this.logger.error(`Ticker - Fetch Failed - AccountID: ${accountId}, Reason: ${error.message}`);
-      throw error;
+      this.logger.error(
+        `Ticker fetch failed - AccountID: ${accountId} - MarketID: ${marketId} - Error: ${error.message}`,
+        error.stack
+      );
+      throw new TickerPriceNotFoundException(accountId, marketId);
     }
   }
 
-  async refreshAccountTickersWatchList(accountId: string): Promise<Set<string>> {
-    this.logger.debug(`Tickers Watch List - Refresh Initiated - AccountID: ${accountId}`);
+  private async refreshAccountsTickersWatchList() {
+    this.logger.debug('Refreshing all accounts tickers watch list');
+    const accountIds = Array.from(this.tickerValues.keys());
+    await Promise.all(accountIds.map((accountId) => this.refreshAccountTickersWatchList(accountId)));
+    this.logger.log(`Refreshed all accounts tickers watch list`);
+  }
+
+  private async refreshAccountTickersWatchList(accountId: string): Promise<void> {
+    this.logger.debug(`Refreshing tickers watch list - AccountID: ${accountId}`);
     const ordersTickers = new Set(this.orderService.getOpenOrders(accountId).map((order) => order.info.symbol));
     const positionsTickers = new Set(this.positionService.getPositions(accountId).map((position) => position.marketId));
     const newUniqueTickers = new Set([...ordersTickers, ...positionsTickers]);
-    const previousTickers = this.trackedTickers.get(accountId) || new Set();
-    const haveTickersChanged = haveTickerSetsChanged(previousTickers, newUniqueTickers);
+    const currentlyTracked = this.tickerValues.get(accountId)?.keys() || [];
+    const currentlyTrackedSet = new Set(currentlyTracked);
+    const toSubscribe = Array.from(newUniqueTickers).filter((ticker) => !currentlyTrackedSet.has(ticker));
+    const toUnsubscribe = Array.from(currentlyTrackedSet).filter((ticker) => !newUniqueTickers.has(ticker));
+    let updated = false;
 
-    if (haveTickersChanged) {
-      const toSubscribe = Array.from(newUniqueTickers)
-        .filter((ticker) => !previousTickers.has(ticker))
-        .map((ticker) => `tickers.${ticker}`);
-      const toUnsubscribe = Array.from(previousTickers)
-        .filter((ticker) => !newUniqueTickers.has(ticker))
-        .map((ticker) => `tickers.${ticker}`);
-      let logMessage = `Tickers Watch List - Updated - AccountID: ${accountId}`;
-
-      if (toSubscribe.length > 0) {
-        this.eventEmitter.emit(Events.WEBSOCKET_SUBSCRIBE, new WebSocketSubscribeEvent(accountId, toSubscribe));
-        logMessage += `, Subscribed to: ${toSubscribe.sort().join(', ')}`;
-      }
-
-      if (toUnsubscribe.length > 0) {
-        this.eventEmitter.emit(Events.WEBSOCKET_UNSUBSCRIBE, new WebSocketUnsubscribeEvent(accountId, toUnsubscribe));
-        logMessage += `, Unsubscribed from: ${toUnsubscribe.sort().join(', ')}`;
-      }
-
-      this.trackedTickers.set(accountId, newUniqueTickers);
-      this.logger.log(logMessage);
-    } else {
-      this.logger.debug(`Tickers Watch List - Update Skipped - AccountID: ${accountId}, Reason: Unchanged`);
+    if (toSubscribe.length > 0) {
+      this.eventEmitter.emit(
+        Events.WEBSOCKET_SUBSCRIBE,
+        new WebSocketSubscribeEvent(
+          accountId,
+          toSubscribe.map((t) => `tickers.${t}`)
+        )
+      );
+      this.logger.debug(`Subscribed to tickers - AccountID: ${accountId} - Tickers: ${toSubscribe.join(', ')}`);
+      updated = true;
     }
-    return newUniqueTickers;
-  }
 
-  async refreshAccountsTickersWatchList() {
-    this.logger.error(`Tickers Watch List - Refresh All Initiated`);
-    await Promise.all(
-      Array.from(this.tickerValues.keys()).map((accountId) => this.refreshAccountTickersWatchList(accountId))
-    );
+    if (toUnsubscribe.length > 0) {
+      this.eventEmitter.emit(
+        Events.WEBSOCKET_UNSUBSCRIBE,
+        new WebSocketUnsubscribeEvent(
+          accountId,
+          toUnsubscribe.map((t) => `tickers.${t}`)
+        )
+      );
+      this.logger.debug(`Unsubscribed from tickers - AccountID: ${accountId} - Tickers: ${toUnsubscribe.join(', ')}`);
+      toUnsubscribe.forEach((ticker) => this.tickerValues.get(accountId)?.delete(ticker));
+      updated = true;
+    }
+
+    if (updated) {
+      this.logger.log(`Updated tickers watch list - AccountID: ${accountId} - NewCount: ${newUniqueTickers.size}`);
+    } else {
+      this.logger.debug(`Tickers watch list unchanged - AccountID: ${accountId} - Count: ${newUniqueTickers.size}`);
+    }
   }
 }
