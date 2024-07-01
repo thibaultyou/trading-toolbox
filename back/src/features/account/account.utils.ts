@@ -1,4 +1,4 @@
-export function maskString(str: string, visibleLength = 4): string {
+export const maskString = (str: string, visibleLength = 4): string => {
   let masked = '';
 
   if (str.length > visibleLength) {
@@ -6,4 +6,4 @@ export function maskString(str: string, visibleLength = 4): string {
     masked += str.substr(str.length - visibleLength);
   }
   return masked;
-}
+};

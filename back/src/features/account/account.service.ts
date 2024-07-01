@@ -3,9 +3,9 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { maskString } from '../../common/utils/string.util';
 import { Events } from '../../config';
 import { ExchangeFactory } from '../exchange/services/exchange-service.factory';
+import { maskString } from './account.utils';
 import { AccountCreateRequestDto } from './dtos/account-create.request.dto';
 import { AccountUpdateRequestDto } from './dtos/account-update.request.dto';
 import { Account } from './entities/account.entity';

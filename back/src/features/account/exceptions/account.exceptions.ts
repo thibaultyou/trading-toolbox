@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
-import { maskString } from '../../../common/utils/string.util';
+import { maskString } from '../account.utils';
 
 export class AccountNotFoundException extends HttpException {
   constructor(identifier: string, isName = false) {
