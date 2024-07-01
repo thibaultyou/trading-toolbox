@@ -2,7 +2,7 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '../../common/base/base.controller';
-import { WalletReadResponseDto } from './dto/wallet-read.response.dto';
+import { WalletReadResponseDto } from './dtos/wallet-read.response.dto';
 import { WalletService } from './wallet.service';
 
 @ApiTags('Wallets')
