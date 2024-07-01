@@ -5,7 +5,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { databaseConfig } from './config';
 import { AccountModule } from './features/account/account.module';
-import { BalanceModule } from './features/balance/balance.module';
 import { CoreModule } from './features/core/core.module';
 import { ExchangeModule } from './features/exchange/exchange.module';
 import { HealthModule } from './features/health/health.module';
@@ -15,6 +14,7 @@ import { OrderModule } from './features/order/order.module';
 import { PositionModule } from './features/position/position.module';
 import { StrategyModule } from './features/strategy/strategy.module';
 import { TickerModule } from './features/ticker/ticker.module';
+import { WalletModule } from './features/wallet/wallet.module';
 
 @Module({
   imports: [
@@ -32,7 +32,7 @@ import { TickerModule } from './features/ticker/ticker.module';
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     AccountModule,
-    BalanceModule,
+    WalletModule,
     ExchangeModule, // Global
     MarketModule,
     OrderModule,

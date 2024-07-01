@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 
-import { BalanceModule } from '../balance/balance.module';
+import { WalletModule } from '../wallet/wallet.module';
 import { ExchangeService } from './exchange.service';
 import { ExchangeAccountCreatedEventHandler } from './handlers/account-created.exchange.event-handler';
 import { ExchangeAccountDeletedEventHandler } from './handlers/account-deleted.exchange.event-handler';
@@ -11,7 +11,7 @@ import { ExchangeFactory } from './services/exchange-service.factory';
 @Global()
 @Module({
   exports: [ExchangeFactory, ExchangeService],
-  imports: [BalanceModule],
+  imports: [WalletModule],
   providers: [
     BybitExchangeService,
     ExchangeFactory,

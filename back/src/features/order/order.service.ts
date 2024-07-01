@@ -16,7 +16,7 @@ import {
   OrderCreationFailedException,
   OrderNotFoundException,
   OrdersUpdateAggregatedException
-} from './exceptions/orders.exceptions';
+} from './exceptions/order.exceptions';
 import { OrderSide } from './types/order-side.enum';
 
 @Injectable()

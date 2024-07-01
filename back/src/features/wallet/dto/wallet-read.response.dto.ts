@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IWalletAccount } from '../types/wallet-account.interface';
 import { CoinDetailDto } from './coin-detail.dto';
 
-export class BalanceReadResponseDto {
+export class WalletReadResponseDto {
   @ApiProperty({ example: 'CONTRACT', description: 'Type of account' })
   accountType: string;
 

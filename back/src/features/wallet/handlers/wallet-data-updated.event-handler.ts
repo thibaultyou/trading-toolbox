@@ -3,13 +3,13 @@ import { OnEvent } from '@nestjs/event-emitter';
 
 import { EventHandlersContext, Events } from '../../../config';
 import { WalletDataUpdatedEvent } from '../../core/events/wallet-data-updated.event';
-import { BalanceService } from '../balance.service';
+import { WalletService } from '../wallet.service';
 
 @Injectable()
-export class BalanceModuleWalletDataUpdatedEventHandler {
-  private logger = new Logger(EventHandlersContext.BalanceModuleEventHandler);
+export class WalletModuleWalletDataUpdatedEventHandler {
+  private logger = new Logger(EventHandlersContext.WalletModuleEventHandler);
 
-  constructor(private balanceService: BalanceService) {}
+  constructor(private walletService: WalletService) {}
 
   @OnEvent(Events.WALLET_DATA_UPDATED)
   async handle(event: WalletDataUpdatedEvent) {
@@ -17,7 +17,7 @@ export class BalanceModuleWalletDataUpdatedEventHandler {
 
     try {
       for (const walletData of event.data) {
-        this.balanceService.processWalletData(event.accountId, walletData);
+        this.walletService.processWalletData(event.accountId, walletData);
       }
       this.logger.log(actionContext);
     } catch (error) {

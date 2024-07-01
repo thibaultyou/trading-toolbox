@@ -5,11 +5,12 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { Urls } from './config';
 import { AccountExceptionsFilter } from './features/account/exceptions/account.exceptions.filter';
-import { BalanceExceptionsFilter } from './features/balance/exceptions/balance.exceptions.filter';
 import { AppLogger } from './features/logger/logger.service';
-import { MarketExceptionsFilter } from './features/market/exceptions/market-exceptions.filter';
-import { PositionExceptionsFilter } from './features/position/exceptions/position-exceptions.filter';
-import { TickerExceptionsFilter } from './features/ticker/exceptions/ticker-exceptions.filter';
+import { MarketExceptionsFilter } from './features/market/exceptions/market.exceptions.filter';
+import { OrderExceptionsFilter } from './features/order/exceptions/order.exceptions.filter';
+import { PositionExceptionsFilter } from './features/position/exceptions/position.exceptions.filter';
+import { TickerExceptionsFilter } from './features/ticker/exceptions/ticker.exceptions.filter';
+import { WalletExceptionsFilter } from './features/wallet/exceptions/wallet.exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,10 +22,11 @@ async function bootstrap() {
 
   app.useGlobalFilters(
     new AccountExceptionsFilter(),
-    new BalanceExceptionsFilter(),
     new MarketExceptionsFilter(),
     new PositionExceptionsFilter(),
-    new TickerExceptionsFilter()
+    new OrderExceptionsFilter(),
+    new TickerExceptionsFilter(),
+    new WalletExceptionsFilter()
   );
 
   app.useGlobalPipes(new ValidationPipe());

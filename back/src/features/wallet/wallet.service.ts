@@ -6,24 +6,24 @@ import { Events } from '../../config';
 import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
 import { IWalletData } from '../core/types/wallet-data.interface';
 import { ExchangeService } from '../exchange/exchange.service';
-import { BalanceGateway } from './balance.gateway';
-import { extractUSDTEquity, fromBalancesToWalletContractAccount, fromWalletDataToWalletAccount } from './balance.utils';
-import { BalancesUpdatedEvent } from './events/balances-updated.event';
+import { WalletsUpdatedEvent } from './events/wallets-updated.event';
 import { IWalletAccount } from './types/wallet-account.interface';
+import { WalletGateway } from './wallet.gateway';
+import { extractUSDTEquity, fromBalancesToWalletContractAccount, fromWalletDataToWalletAccount } from './wallet.utils';
 
 @Injectable()
-export class BalanceService implements IAccountTracker {
-  private logger = new Logger(BalanceService.name);
-  private balances: Map<string, IWalletAccount> = new Map();
+export class WalletService implements IAccountTracker {
+  private logger = new Logger(WalletService.name);
+  private wallets: Map<string, IWalletAccount> = new Map();
 
   constructor(
     private eventEmitter: EventEmitter2,
     private exchangeService: ExchangeService,
-    private balanceGateway: BalanceGateway
+    private walletGateway: WalletGateway
   ) {}
 
   async startTrackingAccount(accountId: string) {
-    if (!this.balances.has(accountId)) {
+    if (!this.wallets.has(accountId)) {
       this.logger.log(`Tracking Initiated - AccountID: ${accountId}`);
       await this.fetchWallet(accountId);
     } else {
@@ -32,63 +32,63 @@ export class BalanceService implements IAccountTracker {
   }
 
   stopTrackingAccount(accountId: string) {
-    if (this.balances.delete(accountId)) {
+    if (this.wallets.delete(accountId)) {
       this.logger.log(`Tracking Stopped - AccountID: ${accountId}`);
     } else {
       this.logger.warn(`Tracking Removal Attempt Failed - AccountID: ${accountId}, Reason: Not tracked`);
     }
   }
 
-  getBalances(accountId: string): IWalletAccount {
-    this.logger.log(`Balances - Fetch Initiated - AccountID: ${accountId}`);
+  getWallets(accountId: string): IWalletAccount {
+    this.logger.log(`Wallets - Fetch Initiated - AccountID: ${accountId}`);
 
-    if (!this.balances.has(accountId)) {
-      this.logger.error(`Balances - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
+    if (!this.wallets.has(accountId)) {
+      this.logger.error(`Wallets - Fetch Failed - AccountID: ${accountId}, Reason: Account not found`);
       throw new AccountNotFoundException(accountId);
     }
-    return this.balances.get(accountId);
+    return this.wallets.get(accountId);
   }
 
   getUSDTBalance(accountId: string): number {
-    return extractUSDTEquity(this.getBalances(accountId), this.logger);
+    return extractUSDTEquity(this.getWallets(accountId), this.logger);
   }
 
   processWalletData(accountId: string, walletData: IWalletData) {
     this.logger.log(`Wallet Data - Update Initiated - AccountID: ${accountId}`);
 
-    const existingBalances = this.balances.get(accountId);
+    const existingWallets = this.wallets.get(accountId);
 
-    if (!existingBalances) {
+    if (!existingWallets) {
       this.logger.error(`Wallet Data - Update Failed - AccountID: ${accountId}, Reason: Account not found`);
       throw new AccountNotFoundException(accountId);
     }
 
     const updatedBalances = fromWalletDataToWalletAccount(walletData);
-    this.balances.set(accountId, updatedBalances);
-    this.balanceGateway.sendBalancesUpdate(accountId, updatedBalances);
+    this.wallets.set(accountId, updatedBalances);
+    // this.walletGateway.sendWalletsUpdate(accountId, updatedBalances);
     const usdtEquity = extractUSDTEquity(updatedBalances, this.logger);
     this.logger.log(
       `Wallet Data - Updated - AccountID: ${accountId}, Balance (USDT): ${usdtEquity.toFixed(2) ?? 'N/A'} $`
     );
-    this.eventEmitter.emit(Events.BALANCES_UPDATED, new BalancesUpdatedEvent(accountId, usdtEquity));
+    this.eventEmitter.emit(Events.WALLETS_UPDATED, new WalletsUpdatedEvent(accountId, usdtEquity));
   }
 
   async fetchWallet(accountId: string): Promise<IWalletAccount> {
-    this.logger.log(`Balances - Refresh Initiated - AccountID: ${accountId}`);
+    this.logger.log(`Wallets - Refresh Initiated - AccountID: ${accountId}`);
 
     try {
       const balances = await this.exchangeService.getBalances(accountId);
       const walletAccounts = fromBalancesToWalletContractAccount(balances);
-      this.balances.set(accountId, walletAccounts);
-      this.balanceGateway.sendBalancesUpdate(accountId, walletAccounts);
+      this.wallets.set(accountId, walletAccounts);
+      // this.walletGateway.sendWalletsUpdate(accountId, walletAccounts);
       const usdtEquity = extractUSDTEquity(walletAccounts, this.logger);
-      this.eventEmitter.emit(Events.BALANCES_UPDATED, new BalancesUpdatedEvent(accountId, usdtEquity));
+      this.eventEmitter.emit(Events.WALLETS_UPDATED, new WalletsUpdatedEvent(accountId, usdtEquity));
       this.logger.log(
-        `Balances - Updated - AccountID: ${accountId}, Balance (USDT): ${usdtEquity.toFixed(2) ?? 'N/A'} $`
+        `Wallets - Updated - AccountID: ${accountId}, Balance (USDT): ${usdtEquity.toFixed(2) ?? 'N/A'} $`
       );
       return walletAccounts;
     } catch (error) {
-      this.logger.error(`Balances - Update Failed - AccountID: ${accountId}, Reason: ${error.message}`);
+      this.logger.error(`Wallets - Update Failed - AccountID: ${accountId}, Reason: ${error.message}`);
       throw error;
     }
   }
@@ -96,24 +96,24 @@ export class BalanceService implements IAccountTracker {
   //   fetchWallet = (accountId: string): TE.TaskEither<Error, IWalletAccount> =>
   //     pipe(
   //       TE.right(accountId),
-  //       TE.tapIO(() => logEffect(this.logger, `Balances - Refresh Initiated - AccountID: ${accountId}`)(accountId)),
+  //       TE.tapIO(() => logEffect(this.logger, `Wallets - Refresh Initiated - AccountID: ${accountId}`)(accountId)),
   //       TE.chain(() => this.exchangeService.getBalances(accountId)),
   //       TE.map((balances) => BalanceConverter.fromBalancesToWalletContractAccount(balances)),
   //       TE.tapIO((newBalances) => {
-  //         this.balances.set(accountId, newBalances);
-  //         this.balanceGateway.sendBalancesUpdate(accountId, newBalances);
+  //         this.wallets.set(accountId, newBalances);
+  //         this.walletGateway.sendBalancesUpdate(accountId, newBalances);
   //         const usdtEquity = extractUSDTEquity(newBalances, this.logger);
   //         return () => {
   //           logEffect(
   //             this.logger,
-  //             `Balances - Updated - AccountID: ${accountId}, Balance (USDT): ${usdtEquity.toFixed(2) ?? 'N/A'} $`
+  //             `Wallets - Updated - AccountID: ${accountId}, Balance (USDT): ${usdtEquity.toFixed(2) ?? 'N/A'} $`
   //           )(newBalances);
-  //           this.eventEmitter.emit(Events.BALANCES_UPDATED, new BalancesUpdatedEvent(accountId, usdtEquity));
+  //           this.eventEmitter.emit(Events.WALLETS_UPDATED, new BalancesUpdatedEvent(accountId, usdtEquity));
   //         };
   //       }),
   //       TE.mapError((error) => new ExchangeOperationFailedException('refreshOne', error.message)),
   //       TE.tapError((error) =>
-  //         logError(this.logger, `Balances - Update Failed - AccountID: ${accountId}, Error: ${error.message}`)(error)
+  //         logError(this.logger, `Wallets - Update Failed - AccountID: ${accountId}, Error: ${error.message}`)(error)
   //       )
   //     );
 }

@@ -4,6 +4,7 @@ import { Balances } from 'ccxt';
 import { IWalletData } from '../core/types/wallet-data.interface';
 import { ICoinData } from './types/coin-data.interface';
 import { IWalletAccount } from './types/wallet-account.interface';
+import { WalletAccountType } from './types/wallet-account-type.enum';
 
 export const fromBalancestoWalletAccount = (balances: Balances): IWalletAccount[] => balances.info?.result?.list;
 
@@ -11,7 +12,7 @@ export const fromWalletDataToWalletAccount = (walletData: IWalletData): IWalletA
 
 export const fromBalancesToWalletContractAccount = (balances: Balances): IWalletAccount =>
   fromBalancestoWalletAccount(balances).find(
-    (walletAccount: IWalletAccount) => walletAccount.accountType === 'CONTRACT'
+    (walletAccount: IWalletAccount) => walletAccount.accountType === WalletAccountType.CONTRACT
   );
 
 export const extractUSDTEquity = (walletAccount: IWalletAccount, logger: Logger): number => {

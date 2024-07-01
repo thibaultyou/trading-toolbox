@@ -1,4 +1,4 @@
-export class BalancesUpdatedEvent {
+export class WalletsUpdatedEvent {
   public readonly accountId: string;
 
   public readonly usdtEquity: number;

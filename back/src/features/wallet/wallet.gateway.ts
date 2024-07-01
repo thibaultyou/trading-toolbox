@@ -5,11 +5,11 @@ import { websocketConfig } from '../../config';
 import { IWalletAccount } from './types/wallet-account.interface';
 
 @WebSocketGateway(websocketConfig)
-export class BalanceGateway {
+export class WalletGateway {
   @WebSocketServer()
   server: Server;
 
-  sendBalancesUpdate(accountId: string, walletAccount: IWalletAccount) {
-    this.server.emit('balancesUpdate', { accountId, walletAccount });
+  sendWalletsUpdate(accountId: string, walletAccount: IWalletAccount) {
+    this.server.emit('walletsUpdate', { accountId, walletAccount });
   }
 }

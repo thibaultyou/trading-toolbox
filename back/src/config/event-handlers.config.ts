@@ -1,5 +1,5 @@
 export enum EventHandlersContext {
-  BalanceModuleEventHandler = 'BalanceModuleEventHandler',
+  WalletModuleEventHandler = 'WalletModuleEventHandler',
   CoreModuleEventHandler = 'CoreModuleEventHandler',
   ExchangeModuleEventHandler = 'ExchangeModuleEventHandler',
   MarketModuleEventHandler = 'MarketModuleEventHandler',
