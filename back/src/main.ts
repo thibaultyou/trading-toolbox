@@ -3,7 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
-import { Urls } from './config';
+import { envConfig, Urls } from './config';
 import { AccountExceptionsFilter } from './features/account/exceptions/account.exceptions.filter';
 import { AppLogger } from './features/logger/logger.service';
 import { MarketExceptionsFilter } from './features/market/exceptions/market.exceptions.filter';
@@ -15,10 +15,16 @@ import { WalletExceptionsFilter } from './features/wallet/exceptions/wallet.exce
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useLogger(new AppLogger());
+  app.useLogger(new AppLogger(envConfig));
 
-  const options = new DocumentBuilder().setTitle('Trading toolbox').setVersion('1.0').build();
-  const document = SwaggerModule.createDocument(app, options);
+  const options = new DocumentBuilder()
+    .setTitle('Trading toolbox')
+    .setVersion('1.0')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'access-token'
+    )
+    .build();  const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup(Urls.SWAGGER_DOCS, app, document);
 
   app.useGlobalFilters(

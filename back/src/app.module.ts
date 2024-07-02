@@ -3,9 +3,11 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { databaseConfig } from './config';
+import { Config, CONFIG_TOKEN } from './config';
 import { AccountModule } from './features/account/account.module';
+import { AuthModule } from './features/auth/auth.module';
 import { CoreModule } from './features/core/core.module';
+import { EnvModule } from './features/env/env.module';
 import { ExchangeModule } from './features/exchange/exchange.module';
 import { HealthModule } from './features/health/health.module';
 import { LoggerModule } from './features/logger/logger.module';
@@ -18,19 +20,25 @@ import { WalletModule } from './features/wallet/wallet.module';
 
 @Module({
   imports: [
+    EnvModule, // Global
     LoggerModule, // Global
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: databaseConfig.DATABASE_HOST,
-      port: +databaseConfig.DATABASE_PORT,
-      username: databaseConfig.DATABASE_USER,
-      password: databaseConfig.DATABASE_PASSWORD,
-      database: databaseConfig.DATABASE_NAME,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true
+    TypeOrmModule.forRootAsync({
+      imports: [EnvModule],
+      useFactory: (config: Config) => ({
+        type: 'postgres',
+        host: config.DATABASE_HOST,
+        port: config.DATABASE_PORT,
+        username: config.DATABASE_USER,
+        password: config.DATABASE_PASSWORD,
+        database: config.DATABASE_NAME,
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: config.NODE_ENV === 'test' || config.NODE_ENV === 'development'
+      }),
+      inject: [CONFIG_TOKEN]
     }),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
+    AuthModule,
     AccountModule,
     MarketModule,
     OrderModule,
@@ -39,11 +47,7 @@ import { WalletModule } from './features/wallet/wallet.module';
     TickerModule,
     WalletModule,
     ExchangeModule, // Global
-    // SetupModule,
-    // ActionModule,
-    // AlertModule,
     CoreModule,
-    // GridModule,
     HealthModule
   ]
 })

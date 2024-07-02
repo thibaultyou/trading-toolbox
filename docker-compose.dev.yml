@@ -28,25 +28,9 @@ services:
       DATABASE_USER: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       DATABASE_NAME: ${DATABASE_NAME}
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       - db
-
-  # client:
-  #   build:
-  #     context: ./front
-  #     dockerfile: Dockerfile.dev
-  #   command: npm run start
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ./front:/app
-  #     - /app/node_modules
-  #   ports:
-  #     - "0.0.0.0:3000:3000"
-  #     - "0.0.0.0:35729:35729"
-  #   environment:
-  #     NODE_ENV: development
-  #   depends_on:
-  #     - server
 
   db:
     image: postgres:16.2-alpine3.19
@@ -68,3 +52,20 @@ services:
 
 volumes:
   db-data:
+
+  # client:
+  #   build:
+  #     context: ./front
+  #     dockerfile: Dockerfile.dev
+  #   command: npm run start
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./front:/app
+  #     - /app/node_modules
+  #   ports:
+  #     - "0.0.0.0:3000:3000"
+  #     - "0.0.0.0:35729:35729"
+  #   environment:
+  #     NODE_ENV: development
+  #   depends_on:
+  #     - server

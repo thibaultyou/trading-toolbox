@@ -48,6 +48,7 @@ Follow these instructions to set up the project on your local machine for develo
    DATABASE_USER=postgres
    DATABASE_PASSWORD=postgres
    DATABASE_NAME=app
+   JWT_SECRET=some_secret
    ```
 
 3. Launch the application:
