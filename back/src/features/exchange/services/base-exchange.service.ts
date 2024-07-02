@@ -7,8 +7,8 @@ import { OrderType } from '../../order/types/order-type.enum';
 import {
   ExchangeOperationFailedException,
   ExchangeTerminationFailedException
-} from '../exceptions/exchange.exceptions';
-import { IExchangeService } from '../exchange.interfaces';
+} from '../exchange.exceptions';
+import { IExchangeService } from '../exchange-service.interface';
 
 // TODO improve logging, error handling, custom exceptions
 

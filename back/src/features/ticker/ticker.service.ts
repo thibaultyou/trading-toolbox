@@ -136,10 +136,10 @@ export class TickerService implements OnModuleInit, IAccountTracker {
     this.logger.debug('Refreshing all accounts tickers watch list');
     const accountIds = Array.from(this.tickerValues.keys());
     await Promise.all(accountIds.map((accountId) => this.refreshAccountTickersWatchList(accountId)));
-    this.logger.log(`Refreshed all accounts tickers watch list`);
+    this.logger.debug(`Refreshed all accounts tickers watch list`);
   }
 
-  private async refreshAccountTickersWatchList(accountId: string): Promise<void> {
+  private async refreshAccountTickersWatchList(accountId: string) {
     this.logger.debug(`Refreshing tickers watch list - AccountID: ${accountId}`);
     const ordersTickers = new Set(this.orderService.getOpenOrders(accountId).map((order) => order.info.symbol));
     const positionsTickers = new Set(this.positionService.getPositions(accountId).map((position) => position.marketId));

@@ -10,7 +10,7 @@ import { OrderSide } from '../order/types/order-side.enum';
 import { PositionClosedEvent } from './events/position-closed.event';
 import { PositionsUpdatedEvent } from './events/positions-updated.event';
 import { PositionNotFoundException, PositionsUpdateAggregatedException } from './exceptions/position.exceptions';
-import { IPosition } from './position.interface';
+import { IPosition } from './types/position.interface';
 import { fromPositionToInternalPosition } from './position.utils';
 
 // TODO improve logging, error handling, custom exceptions

@@ -73,7 +73,7 @@ export class SetupController extends BaseController {
   // async deleteSetup(
   //     @Param('accountId') accountId: string,
   //     @Param('setupId') setupId: string
-  // ): Promise<void> {
+  // ) {
   //     await this.setupService.deleteSetup(accountId, setupId);
   // }
 }

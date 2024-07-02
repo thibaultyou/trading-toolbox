@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
 import { Account } from '../../account/entities/account.entity';
-import { UnsupportedExchangeException } from '../exceptions/exchange.exceptions';
-import { IExchangeService } from '../exchange.interfaces';
+import { UnsupportedExchangeException } from '../exchange.exceptions';
+import { IExchangeService } from '../exchange-service.interface';
 import { ExchangeType } from '../exchange.types';
 import { BybitExchangeService } from './bybit-exchange.service';
 

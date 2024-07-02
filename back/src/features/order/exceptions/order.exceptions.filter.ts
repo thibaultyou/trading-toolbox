@@ -5,8 +5,8 @@ import {
   OrderCancellationFailedException,
   OrderCreationFailedException,
   OrderNotFoundException,
-  OrderUpdateFailedException,
-  OrdersUpdateAggregatedException
+  OrdersUpdateAggregatedException,
+  OrderUpdateFailedException
 } from './order.exceptions';
 
 @Catch(
@@ -14,7 +14,7 @@ import {
   OrderCreationFailedException,
   OrderUpdateFailedException,
   OrderCancellationFailedException,
-  OrdersUpdateAggregatedException,
+  OrdersUpdateAggregatedException
 )
 export class OrderExceptionsFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {

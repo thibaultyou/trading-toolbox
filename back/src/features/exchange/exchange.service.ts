@@ -8,8 +8,8 @@ import { OrderSide } from '../order/types/order-side.enum';
 import { OrderType } from '../order/types/order-type.enum';
 import { ExchangeInitializedEvent } from './events/exchange-initialized.event';
 import { ExchangeTerminatedEvent } from './events/exchange-terminated.event';
-import { ExchangeNotFoundException, ExchangeOperationFailedException } from './exceptions/exchange.exceptions';
-import { IExchangeService } from './exchange.interfaces';
+import { ExchangeNotFoundException, ExchangeOperationFailedException } from './exchange.exceptions';
+import { IExchangeService } from './exchange-service.interface';
 import { ExchangeFactory } from './services/exchange-service.factory';
 
 // TODO move bybit related content out of here

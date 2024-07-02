@@ -65,7 +65,7 @@
 //     });
 //   }
 
-//   async delete(id: string): Promise<void> {
+//   async delete(id: string) {
 //     const action = await this.findOne(id);
 
 //     await this.actionRepository.remove(action).catch((error) => {

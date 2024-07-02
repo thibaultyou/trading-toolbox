@@ -14,7 +14,7 @@ export class CoreService implements OnModuleInit {
 
   async onModuleInit() {
     this.logger.debug('Initializing module');
-    const accounts = await this.accountService.getAllAccounts();
+    const accounts = await this.accountService.getAllAccountsForSystem();
     this.logger.debug(`Fetched accounts for initialization - Count: ${accounts.length}`);
     // NOTE 1s delay to allow other modules to init and listen to exchange events
     setTimeout(async () => {

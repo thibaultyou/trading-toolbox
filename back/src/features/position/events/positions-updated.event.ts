@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { IPosition } from '../position.interface';
+import { IPosition } from '../types/position.interface';
 
 export class PositionsUpdatedEvent {
   @ApiProperty()

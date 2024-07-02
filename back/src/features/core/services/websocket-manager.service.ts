@@ -32,7 +32,7 @@ export class WebsocketManagerService implements IAccountTracker {
     }
 
     try {
-      const account = await this.accountService.getAccountById(accountId);
+      const account = await this.accountService.getAccountByIdForSystem(accountId);
       const options: WSClientConfigurableOptions = {
         key: account.key,
         secret: account.secret,

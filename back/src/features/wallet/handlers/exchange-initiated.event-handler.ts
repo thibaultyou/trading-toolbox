@@ -12,7 +12,7 @@ export class WalletModuleExchangeInitializedEventHandler {
   constructor(private walletService: WalletService) {}
 
   @OnEvent(Events.EXCHANGE_INITIALIZED)
-  async handle(event: ExchangeInitializedEvent): Promise<void> {
+  async handle(event: ExchangeInitializedEvent) {
     const actionContext = `${Events.EXCHANGE_INITIALIZED} | AccountID: ${event.accountId}`;
 
     try {

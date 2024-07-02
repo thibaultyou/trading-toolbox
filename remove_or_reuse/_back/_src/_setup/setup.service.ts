@@ -102,7 +102,7 @@
 //     }
 //   }
 
-//   async delete(id: string): Promise<void> {
+//   async delete(id: string) {
 //     try {
 //       this.logger.log(`Deleting setup with id: ${id}`);
 //       const setup = await this.setupRepository.findOne({

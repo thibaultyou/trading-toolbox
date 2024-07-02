@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Market } from 'ccxt';
 
 import { Limits, Precision } from '../../exchange/exchange.types';
-import { MarketType } from '../market.types';
+import { MarketType } from '../types/market-type.enum';
 
 export class MarketReadResponseDto {
   @ApiProperty({

@@ -210,7 +210,7 @@ export class SetupService implements OnModuleInit, IAccountTracker {
   }
 }
 
-// async deleteSetup(accountId: string, setupId: string): Promise<void> {
+// async deleteSetup(accountId: string, setupId: string) {
 //     this.logger.log(`Deleting setup with ID: ${setupId} for account ID: ${accountId}`);
 //     const setups = this.trackedSetups.get(accountId);
 //     if (!setups) {

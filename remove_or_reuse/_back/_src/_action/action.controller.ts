@@ -74,7 +74,7 @@
 
 //   @Delete(':id')
 //   @ApiOperation({ summary: 'Delete an action by ID' })
-//   async delete(@Param('id') id: string): Promise<void> {
+//   async delete(@Param('id') id: string) {
 //     await this.actionService.delete(id);
 //   }
 // }

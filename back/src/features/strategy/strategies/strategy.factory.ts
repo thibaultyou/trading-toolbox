@@ -3,11 +3,11 @@ import { Injectable } from '@nestjs/common';
 import { OrderService } from '../../order/order.service';
 import { TickerService } from '../../ticker/ticker.service';
 import { WalletService } from '../../wallet/wallet.service';
+import { UnknownStrategyTypeException } from '../exceptions/strategy.exceptions';
 import { StrategyType } from '../types/strategy-type.enum';
 import { StrategyOptionsValidator } from '../validators/strategy-options.validator';
 import { BaseStrategy } from './base-strategy';
 import { FibonacciMartingaleStrategy } from './fibonacci-martingale-strategy';
-import { UnknownStrategyTypeException } from '../exceptions/strategy.exceptions';
 
 @Injectable()
 export class StrategyFactory {

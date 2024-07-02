@@ -12,7 +12,7 @@ import { BaseStrategy } from './base-strategy';
 export class FibonacciMartingaleStrategy extends BaseStrategy {
   protected readonly logger = new Logger(FibonacciMartingaleStrategy.name);
 
-  async process(accountId: string, strategy: IStrategy, executionData?: IExecutionData): Promise<void> {
+  async process(accountId: string, strategy: IStrategy, _executionData?: IExecutionData) {
     this.logger.debug(`Processing strategy - AccountID: ${accountId} - StrategyID: ${strategy.id}`);
 
     try {
@@ -71,7 +71,7 @@ export class FibonacciMartingaleStrategy extends BaseStrategy {
     strategy: IStrategy,
     options: IFibonacciMartingaleStrategyOptions,
     marketId: string
-  ): Promise<void> {
+  ) {
     this.logger.debug(
       `Placing initial orders - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
     );
@@ -100,7 +100,7 @@ export class FibonacciMartingaleStrategy extends BaseStrategy {
     options: IFibonacciMartingaleStrategyOptions,
     marketId: string,
     baseOrderPrice: number
-  ): Promise<void> {
+  ) {
     this.logger.debug(
       `Placing base order - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
     );
@@ -126,7 +126,7 @@ export class FibonacciMartingaleStrategy extends BaseStrategy {
     options: IFibonacciMartingaleStrategyOptions,
     marketId: string,
     baseOrderPrice: number
-  ): Promise<void> {
+  ) {
     this.logger.debug(
       `Placing take profit order - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
     );
@@ -161,7 +161,7 @@ export class FibonacciMartingaleStrategy extends BaseStrategy {
     options: IFibonacciMartingaleStrategyOptions,
     marketId: string,
     baseOrderPrice: number
-  ): Promise<void> {
+  ) {
     this.logger.debug(
       `Placing safety orders - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
     );
@@ -201,7 +201,7 @@ export class FibonacciMartingaleStrategy extends BaseStrategy {
     );
   }
 
-  private async handleExistingOrders(accountId: string, strategy: IStrategy): Promise<void> {
+  private async handleExistingOrders(accountId: string, strategy: IStrategy) {
     this.logger.warn(
       `Existing orders found, MISSING logic here - AccountID: ${accountId} - StrategyID: ${strategy.id}`
     );

@@ -57,7 +57,7 @@
 
 //   @Delete(':id')
 //   @ApiOperation({ summary: 'Delete a setup by ID' })
-//   async delete(@Param('id') id: string): Promise<void> {
+//   async delete(@Param('id') id: string) {
 //     await this.setupService.delete(id);
 //   }
 // }

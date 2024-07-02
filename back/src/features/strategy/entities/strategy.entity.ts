@@ -12,6 +12,10 @@ export class Strategy {
 
   @ApiProperty()
   @Column()
+  userId: string;
+
+  @ApiProperty()
+  @Column()
   accountId: string;
 
   @ApiProperty()
