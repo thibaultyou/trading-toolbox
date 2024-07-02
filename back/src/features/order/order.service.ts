@@ -118,6 +118,12 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     this.logger.debug(`Creating order - AccountID: ${accountId} - MarketID: ${dto.marketId}`);
 
     try {
+      const params = {
+        ...dto.params,
+        orderLinkId: dto.linkId,
+        tpslMode: dto.tpslMode || 'Partial',
+        positionIdx: dto.side === OrderSide.BUY ? 1 : 2
+      };
       const order = await this.exchangeService.openOrder(
         accountId,
         dto.marketId,
@@ -127,7 +133,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         dto.price,
         dto.takeProfitPrice,
         dto.stopLossPrice,
-        { ...dto.params, orderLinkId: dto.linkId }
+        params
       );
       this.logger.log(`Created order - AccountID: ${accountId} - OrderID: ${order.id}`);
       return order;
@@ -206,6 +212,12 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     }
 
     try {
+      const params: Record<string, any> = {};
+
+      if (dto.takeProfitPrice !== undefined) params.takeProfit = dto.takeProfitPrice;
+
+      if (dto.stopLossPrice !== undefined) params.stopLoss = dto.stopLossPrice;
+
       const order = await this.exchangeService.updateOrder(
         accountId,
         orderId,
@@ -214,7 +226,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         OrderSide[orderToUpdate.side],
         dto.quantity,
         dto.price,
-        {}
+        params
       );
       this.eventEmitter.emit(
         Events.ORDER_UPDATED,

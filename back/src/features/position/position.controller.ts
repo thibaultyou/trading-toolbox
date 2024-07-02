@@ -31,7 +31,7 @@ export class PositionController extends BaseController {
     return this.positionService.getPositions(accountId, symbol, side).map((p) => new PositionReadResponseDto(p));
   }
 
-  @Delete('/accounts/:accountId/positions/:marketId/:side')
+  @Delete('/accounts/:accountId/markets/:marketId/positions/:side')
   @ApiOperation({ summary: 'Close a position' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   @ApiParam({

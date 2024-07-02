@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import { OrderSide } from '../../order/types/order-side.enum';
 import { IPosition } from '../position.interface';
+import { TPSLMode } from 'src/features/order/types/tpsl-mode.enum';
 
 export class PositionReadResponseDto implements IPosition {
   // FIXME where's my id ?
@@ -91,10 +92,10 @@ export class PositionReadResponseDto implements IPosition {
 
   @ApiProperty({
     description: 'Stop loss mode used on the position',
-    example: 'Partial',
-    type: String
+    example: TPSLMode.PARTIAL,
+    enum: TPSLMode
   })
-  tpslMode: string;
+  tpslMode: TPSLMode;
 
   constructor(position: IPosition) {
     this.marketId = position.marketId;

@@ -94,7 +94,7 @@ export class OrderController extends BaseController {
     return new OrderCreateResponseDto(await this.orderService.createOrder(accountId, createOrderRequestDto));
   }
 
-  @Get('/accounts/:accountId/orders/:orderId')
+  @Get('/accounts/:accountId/markets/:marketId/orders/:orderId')
   @ApiOperation({ summary: 'Fetch an Order by ID' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   @ApiParam({ name: 'marketId', required: true, description: 'The ID of the market symbol' })
@@ -139,7 +139,7 @@ export class OrderController extends BaseController {
     return new OrderDeleteResponseDto(await this.orderService.cancelOrder(accountId, orderId));
   }
 
-  @Delete('/accounts/:accountId/ordersByMarket/:marketId')
+  @Delete('/accounts/:accountId/markets/:marketId')
   @ApiOperation({ summary: 'Cancel multiple orders by market ID' })
   @ApiParam({
     name: 'accountId',

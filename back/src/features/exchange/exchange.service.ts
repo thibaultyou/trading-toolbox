@@ -186,11 +186,16 @@ export class ExchangeService {
     const exchange = this.getExchange(accountId);
 
     try {
-      const order = await exchange.openOrder(symbol, type, side, quantity, price, takeProfitPrice, stopLossPrice, {
-        tpslMode: 'Partial',
-        ...params,
-        positionIdx: side === OrderSide.BUY ? 1 : 2
-      });
+      const order = await exchange.openOrder(
+        symbol,
+        type,
+        side,
+        quantity,
+        price,
+        takeProfitPrice,
+        stopLossPrice,
+        params
+      );
       this.logger.log(`Opened order - AccountID: ${accountId} - OrderID: ${order.id} - Symbol: ${symbol}`);
       return order;
     } catch (error) {
@@ -336,49 +341,3 @@ export class ExchangeService {
 //     TE.mapError((error) => new ExchangeOperationFailedException('getBalances', error.message)),
 //     TE.tapError((error) => logError(this.logger, `Balances Fetch Failed - AccountID: ${accountId}`)(error))
 //   );
-
-// async updateStopLoss(
-//   accountId: string,
-//   orderId: string,
-//   symbol: string,
-//   amount: number,
-//   stopLossPrice: number
-// ): Promise<Order> {
-//   this.logger.debug(
-//     `Stop Loss Update Initiated - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`
-//   );
-//   const exchange = this.getExchange(accountId);
-
-//   try {
-//     const order = await exchange.updateStopLoss(orderId, symbol, amount, stopLossPrice);
-//     this.logger.log(`Stop Loss Updated - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Stop Loss Price: ${stopLossPrice}`);
-//     return order;
-//   } catch (error) {
-//     this.logger.error(`Stop Loss Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
-//     throw new ExchangeOperationFailedException('updateStopLoss', error);
-//   }
-// }
-
-// async updateTakeProfit(
-//   accountId: string,
-//   orderId: string,
-//   symbol: string,
-//   amount: number,
-//   takeProfitPrice: number
-// ): Promise<Order> {
-//   this.logger.debug(
-//     `Take Profit Update Initiated - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`
-//   );
-//   const exchange = this.getExchange(accountId);
-
-//   try {
-//     const order = await exchange.updateTakeProfit(orderId, symbol, amount, takeProfitPrice);
-//     this.logger.log(
-//       `Take Profit Updated - AccountID: ${accountId}, OrderID: ${orderId}, Symbol: ${symbol}, Amount: ${amount}, Take Profit Price: ${takeProfitPrice}`
-//     );
-//     return order;
-//   } catch (error) {
-//     this.logger.error(`Take Profit Update Failed - AccountID: ${accountId}, Error: ${error.message}`, error.stack);
-//     throw new ExchangeOperationFailedException('updateTakeProfit', error);
-//   }
-// }

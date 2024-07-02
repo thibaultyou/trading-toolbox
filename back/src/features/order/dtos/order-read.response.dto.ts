@@ -5,6 +5,7 @@ import { fromOrdertoInternalOrder } from '../order.utils';
 import { IOrder } from '../types/order.interface';
 import { OrderSide } from '../types/order-side.enum';
 import { OrderType } from '../types/order-type.enum';
+import { TPSLMode } from '../types/tpsl-mode.enum';
 
 export class OrderReadResponseDto {
   @ApiProperty({
@@ -68,9 +69,10 @@ export class OrderReadResponseDto {
 
   @ApiProperty({
     description: 'Mode for Take Profit and Stop Loss',
-    example: 'Partial'
+    example: TPSLMode.PARTIAL,
+    enum: TPSLMode
   })
-  tpslMode: Order['info']['tpslMode'];
+  tpslMode: TPSLMode;
 
   @ApiProperty({
     description: 'Price at which the order is triggered',

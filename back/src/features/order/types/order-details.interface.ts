@@ -1,5 +1,6 @@
 import { OrderSide } from './order-side.enum';
 import { OrderType } from './order-type.enum';
+import { TPSLMode } from './tpsl-mode.enum';
 
 export interface IOrderDetails {
   marketId: string;
@@ -9,4 +10,5 @@ export interface IOrderDetails {
   price?: number;
   takeProfitPrice?: number;
   stopLossPrice?: number;
+  tpslMode?: TPSLMode;
 }

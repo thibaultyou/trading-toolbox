@@ -1,7 +1,9 @@
 import { Logger } from '@nestjs/common';
 
 import { IExecutionData } from '../../core/types/execution-data.interface';
-import { CurrencyMode } from '../types/currency-mode.enum';
+import { OrderSide } from '../../order/types/order-side.enum';
+import { OrderType } from '../../order/types/order-type.enum';
+import { calculateOrderSize } from '../strategy.utils';
 import { IFibonacciMartingaleStrategyOptions } from '../types/options/fibonacci-martingale-strategy-options.interface';
 import { IStrategy } from '../types/strategy.interface';
 import { StrategyType } from '../types/strategy-type.enum';
@@ -10,7 +12,48 @@ import { BaseStrategy } from './base-strategy';
 export class FibonacciMartingaleStrategy extends BaseStrategy {
   protected readonly logger = new Logger(FibonacciMartingaleStrategy.name);
 
-  isFibonacciMartingaleOptions(options: any): options is IFibonacciMartingaleStrategyOptions {
+  async process(accountId: string, strategy: IStrategy, executionData?: IExecutionData): Promise<void> {
+    this.logger.debug(`Processing strategy - AccountID: ${accountId} - StrategyID: ${strategy.id}`);
+
+    try {
+      if (!this.validateStrategy(strategy)) {
+        return;
+      }
+
+      const options = strategy.options as IFibonacciMartingaleStrategyOptions;
+      const marketId = strategy.marketId;
+
+      if (strategy.orders.length === 0) {
+        await this.placeInitialOrders(accountId, strategy, options, marketId);
+      } else {
+        await this.handleExistingOrders(accountId, strategy);
+      }
+    } catch (error) {
+      this.logger.error(
+        `Strategy processing failed - AccountID: ${accountId} - StrategyID: ${strategy.id} - Error: ${error.message}`,
+        error.stack
+      );
+    }
+  }
+
+  private validateStrategy(strategy: IStrategy): boolean {
+    this.logger.debug(`Validating strategy - StrategyID: ${strategy.id}`);
+
+    if (!this.validateStrategyOptions(StrategyType.FIBONACCI_MARTINGALE, strategy.options)) {
+      this.logger.warn(`Invalid strategy options - StrategyID: ${strategy.id}`);
+      return false;
+    }
+
+    if (!this.isFibonacciMartingaleOptions(strategy.options)) {
+      this.logger.warn(`Invalid strategy options type - StrategyID: ${strategy.id}`);
+      return false;
+    }
+
+    this.logger.debug(`Strategy validated successfully - StrategyID: ${strategy.id}`);
+    return true;
+  }
+
+  private isFibonacciMartingaleOptions(options: any): options is IFibonacciMartingaleStrategyOptions {
     return (
       'baseOrderSize' in options &&
       'safetyOrderSize' in options &&
@@ -23,110 +66,146 @@ export class FibonacciMartingaleStrategy extends BaseStrategy {
     );
   }
 
-  async process(accountId: string, strategy: IStrategy, executionData?: IExecutionData): Promise<void> {
+  private async placeInitialOrders(
+    accountId: string,
+    strategy: IStrategy,
+    options: IFibonacciMartingaleStrategyOptions,
+    marketId: string
+  ): Promise<void> {
     this.logger.debug(
-      `Processing Fibonacci Martingale Strategy - AccountID: ${accountId} - StrategyID: ${strategy.id}`
+      `Placing initial orders - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
     );
 
-    if (!this.validateStrategyOptions(StrategyType.FIBONACCI_MARTINGALE, strategy.options)) {
-      this.logger.warn(`Invalid strategy options - AccountID: ${accountId} - StrategyID: ${strategy.id}`);
-      return;
-    }
+    const baseOrderPrice = await this.tickerService.getTickerPrice(accountId, marketId);
 
-    if (!this.isFibonacciMartingaleOptions(strategy.options)) {
-      this.logger.warn(`Invalid strategy options type - AccountID: ${accountId} - StrategyID: ${strategy.id}`);
-      return;
-    }
-
-    if (strategy.orders.length === 0) {
-      const {
-        baseOrderSize,
-        safetyOrderSize,
-        safetyOrderStepScale,
-        safetyOrderVolumeScale,
-        initialSafetyOrderDistancePct,
-        takeProfitPercentage,
-        maxSafetyOrdersCount,
-        currencyMode
-      } = strategy.options;
-      const marketId = strategy.marketId;
-      const calculateOrderSize = (size: number, price: number) =>
-        currencyMode === CurrencyMode.BASE ? size : size / price;
-      const baseOrderPrice = await this.tickerService.getTickerPrice(accountId, marketId);
-
-      if (baseOrderPrice) {
-        // Place base order
-        const baseOrderSizeInBase = calculateOrderSize(baseOrderSize, baseOrderPrice);
-        // const baseOrder = await this.orderService.createOrder(accountId, {
-        //   marketId: marketId,
-        //   type: OrderType.MARKET,
-        //   side: OrderSide.BUY,
-        //   quantity: baseOrderSizeInBase
-        // });
-        // strategy.orders.push(baseOrder.id);
-        this.logOrder(currencyMode, marketId, 'Base Order', baseOrderPrice, baseOrderSizeInBase);
-
-        // Place take profit order
-        const takeProfitPrice = baseOrderPrice * (1 + takeProfitPercentage / 100);
-        // const takeProfitOrder = await this.orderService.createOrder(accountId, {
-        //   marketId: marketId,
-        //   type: OrderType.LIMIT,
-        //   side: OrderSide.SELL,
-        //   quantity: baseOrderSize,
-        //   price: takeProfitPrice
-        // });
-        // strategy.takeProfitOrderId = takeProfitOrder.id;
-        // strategy.orders.push(takeProfitOrder.id);
-        this.logOrder(
-          currencyMode,
-          marketId,
-          'Take Profit Order',
-          takeProfitPrice,
-          baseOrderSizeInBase,
-          takeProfitPercentage
-        );
-
-        // Place safety orders
-        let currentDeviation = initialSafetyOrderDistancePct;
-        let currentSafetyOrderSize = safetyOrderSize;
-        for (let i = 0; i < maxSafetyOrdersCount; i++) {
-          const safetyOrderPrice = baseOrderPrice * (1 - currentDeviation / 100);
-          const safetyOrderSizeInBase = calculateOrderSize(currentSafetyOrderSize, safetyOrderPrice);
-          //   const safetyOrder = await this.orderService.createOrder(accountId, {
-          //     marketId: marketId,
-          //     type: OrderType.LIMIT,
-          //     side: OrderSide.BUY,
-          //     quantity: safetyOrderSizeInBase,
-          //     price: safetyOrderPrice
-          //   });
-          //   strategy.orders.push(safetyOrder.id);
-          this.logOrder(
-            currencyMode,
-            marketId,
-            `Safety Order ${i + 1}`,
-            safetyOrderPrice,
-            safetyOrderSizeInBase,
-            currentDeviation
-          );
-
-          currentSafetyOrderSize *= safetyOrderVolumeScale;
-          currentDeviation = currentDeviation * safetyOrderStepScale + initialSafetyOrderDistancePct;
-        }
-
-        this.logger.log(
-          `Placed all orders for Fibonacci Martingale Strategy - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
-        );
-      } else {
-        this.logger.warn(
-          `Failed to get base order price - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
-        );
-      }
-    } else {
+    if (!baseOrderPrice) {
       this.logger.warn(
-        `Existing orders found, MISSING logic here - AccountID: ${accountId} - StrategyID: ${strategy.id}`
+        `Failed to get base order price - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
       );
-      // TODO: Implement logic for handling existing orders
+      return;
     }
+
+    // await this.placeBaseOrder(accountId, strategy, options, marketId, baseOrderPrice);
+    // await this.placeTakeProfitOrder(accountId, strategy, options, marketId, baseOrderPrice);
+    // await this.placeSafetyOrders(accountId, strategy, options, marketId, baseOrderPrice);
+
+    this.logger.log(
+      `Placed all initial orders - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
+    );
+  }
+
+  private async placeBaseOrder(
+    accountId: string,
+    strategy: IStrategy,
+    options: IFibonacciMartingaleStrategyOptions,
+    marketId: string,
+    baseOrderPrice: number
+  ): Promise<void> {
+    this.logger.debug(
+      `Placing base order - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
+    );
+
+    const baseOrderSizeInBase = calculateOrderSize(options.baseOrderSize, baseOrderPrice, options.currencyMode);
+    const baseOrder = await this.orderService.createOrder(accountId, {
+      marketId: marketId,
+      type: OrderType.MARKET,
+      side: OrderSide.BUY,
+      quantity: baseOrderSizeInBase
+    });
+    strategy.orders.push(baseOrder.id);
+    this.logOrder(options.currencyMode, marketId, 'Base Order', baseOrderPrice, baseOrderSizeInBase);
+
+    this.logger.debug(
+      `Placed base order - AccountID: ${accountId} - StrategyID: ${strategy.id} - OrderID: ${baseOrder.id}`
+    );
+  }
+
+  private async placeTakeProfitOrder(
+    accountId: string,
+    strategy: IStrategy,
+    options: IFibonacciMartingaleStrategyOptions,
+    marketId: string,
+    baseOrderPrice: number
+  ): Promise<void> {
+    this.logger.debug(
+      `Placing take profit order - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
+    );
+
+    const takeProfitPrice = baseOrderPrice * (1 + options.takeProfitPercentage / 100);
+    const takeProfitOrder = await this.orderService.createOrder(accountId, {
+      marketId: marketId,
+      type: OrderType.LIMIT,
+      side: OrderSide.SELL,
+      quantity: options.baseOrderSize,
+      price: takeProfitPrice
+    });
+    strategy.takeProfitOrderId = takeProfitOrder.id;
+    strategy.orders.push(takeProfitOrder.id);
+    this.logOrder(
+      options.currencyMode,
+      marketId,
+      'Take Profit Order',
+      takeProfitPrice,
+      options.baseOrderSize,
+      options.takeProfitPercentage
+    );
+
+    this.logger.debug(
+      `Placed take profit order - AccountID: ${accountId} - StrategyID: ${strategy.id} - OrderID: ${takeProfitOrder.id}`
+    );
+  }
+
+  private async placeSafetyOrders(
+    accountId: string,
+    strategy: IStrategy,
+    options: IFibonacciMartingaleStrategyOptions,
+    marketId: string,
+    baseOrderPrice: number
+  ): Promise<void> {
+    this.logger.debug(
+      `Placing safety orders - AccountID: ${accountId} - StrategyID: ${strategy.id} - MarketID: ${marketId}`
+    );
+
+    let currentDeviation = options.initialSafetyOrderDistancePct;
+    let currentSafetyOrderSize = options.safetyOrderSize;
+    for (let i = 0; i < options.maxSafetyOrdersCount; i++) {
+      const safetyOrderPrice = baseOrderPrice * (1 - currentDeviation / 100);
+      const safetyOrderSizeInBase = calculateOrderSize(currentSafetyOrderSize, safetyOrderPrice, options.currencyMode);
+      const safetyOrder = await this.orderService.createOrder(accountId, {
+        marketId: marketId,
+        type: OrderType.LIMIT,
+        side: OrderSide.BUY,
+        quantity: safetyOrderSizeInBase,
+        price: safetyOrderPrice
+      });
+      strategy.orders.push(safetyOrder.id);
+      this.logOrder(
+        options.currencyMode,
+        marketId,
+        `Safety Order ${i + 1}`,
+        safetyOrderPrice,
+        safetyOrderSizeInBase,
+        currentDeviation
+      );
+
+      this.logger.debug(
+        `Placed safety order ${i + 1} - AccountID: ${accountId} - StrategyID: ${strategy.id} - OrderID: ${safetyOrder.id}`
+      );
+
+      currentSafetyOrderSize *= options.safetyOrderVolumeScale;
+      currentDeviation = currentDeviation * options.safetyOrderStepScale + options.initialSafetyOrderDistancePct;
+    }
+
+    this.logger.debug(
+      `Placed all safety orders - AccountID: ${accountId} - StrategyID: ${strategy.id} - Count: ${options.maxSafetyOrdersCount}`
+    );
+  }
+
+  private async handleExistingOrders(accountId: string, strategy: IStrategy): Promise<void> {
+    this.logger.warn(
+      `Existing orders found, MISSING logic here - AccountID: ${accountId} - StrategyID: ${strategy.id}`
+    );
+    // TODO: Implement logic for handling existing orders
   }
 }
 

@@ -4,6 +4,7 @@ import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from '
 import { IOrderDetails } from '../types/order-details.interface';
 import { OrderSide } from '../types/order-side.enum';
 import { OrderType } from '../types/order-type.enum';
+import { TPSLMode } from '../types/tpsl-mode.enum';
 
 export class OrderCreateRequestDto implements IOrderDetails {
   @ApiProperty({
@@ -84,8 +85,20 @@ export class OrderCreateRequestDto implements IOrderDetails {
   takeProfitPrice?: number;
 
   @ApiProperty({
+    description: 'Mode for Take Profit and Stop Loss',
+    example: TPSLMode.PARTIAL,
+    enum: TPSLMode,
+    default: TPSLMode.PARTIAL,
+    required: false
+  })
+  @IsOptional()
+  @IsEnum(TPSLMode)
+  @IsEnum(TPSLMode, { message: 'Invalid take profit / stop loss mode.' })
+  tpslMode?: TPSLMode = TPSLMode.PARTIAL;
+
+  @ApiProperty({
     description: 'The additional parameters for the order, optional.',
-    example: { tpslMode: 'Partial' },
+    example: { something: 'test' },
     type: 'object',
     required: false
   })
