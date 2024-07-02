@@ -1,9 +1,9 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-import { StrategyNotFoundException } from './strategy.exceptions';
+import { StrategyNotFoundException, UnknownStrategyTypeException } from './strategy.exceptions';
 
-@Catch(StrategyNotFoundException)
+@Catch(StrategyNotFoundException, UnknownStrategyTypeException)
 export class StrategyExceptionsFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();

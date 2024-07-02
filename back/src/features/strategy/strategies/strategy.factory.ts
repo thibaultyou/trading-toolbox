@@ -7,6 +7,7 @@ import { StrategyType } from '../types/strategy-type.enum';
 import { StrategyOptionsValidator } from '../validators/strategy-options.validator';
 import { BaseStrategy } from './base-strategy';
 import { FibonacciMartingaleStrategy } from './fibonacci-martingale-strategy';
+import { UnknownStrategyTypeException } from '../exceptions/strategy.exceptions';
 
 @Injectable()
 export class StrategyFactory {
@@ -27,7 +28,7 @@ export class StrategyFactory {
           this.optionsValidator
         );
       default:
-        throw new Error(`Unknown strategy type: ${type}`);
+        throw new UnknownStrategyTypeException(type);
     }
   }
 }

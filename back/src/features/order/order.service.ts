@@ -15,6 +15,7 @@ import {
   OrderCancellationFailedException,
   OrderCreationFailedException,
   OrderNotFoundException,
+  OrderUpdateFailedException,
   OrdersUpdateAggregatedException
 } from './exceptions/order.exceptions';
 import { haveOrdersChanged } from './order.utils';
@@ -157,7 +158,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       this.logger.warn(
         `Order cancellation failed - AccountID: ${accountId} - OrderID: ${orderId} - Reason: Order not found`
       );
-      throw new Error(`Order cancellation failed - AccountID: ${accountId} - Reason: Order not found`);
+      throw new OrderNotFoundException(accountId, orderId);
     }
 
     try {
@@ -208,7 +209,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
     if (!orderToUpdate) {
       this.logger.warn(`Order update failed - AccountID: ${accountId} - OrderID: ${orderId} - Reason: Order not found`);
-      throw new Error(`Order update failed - AccountID: ${accountId} - Reason: Order not found`);
+      throw new OrderNotFoundException(accountId, orderId);
     }
 
     try {
@@ -239,7 +240,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         `Order update failed - AccountID: ${accountId} - OrderID: ${orderId} - Error: ${error.message}`,
         error.stack
       );
-      throw new OrderCreationFailedException(accountId, error.message);
+      throw new OrderUpdateFailedException(accountId, orderId, error.message);
     }
   }
 

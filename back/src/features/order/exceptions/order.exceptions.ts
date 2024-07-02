@@ -13,6 +13,15 @@ export class OrderCreationFailedException extends HttpException {
   }
 }
 
+export class OrderUpdateFailedException extends HttpException {
+  constructor(accountId: string, orderId: string, reason: string) {
+    super(
+      `Orders - Update Failed - AccountID: ${accountId}, OrderID: ${orderId}, Reason: ${reason}`,
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+  }
+}
+
 export class OrderCancellationFailedException extends HttpException {
   constructor(accountId: string, orderId: string, reason: string) {
     super(
