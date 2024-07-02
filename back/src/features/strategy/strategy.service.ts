@@ -18,9 +18,8 @@ export class StrategyService implements OnModuleInit {
   constructor(
     @InjectRepository(Strategy)
     private strategyRepository: Repository<Strategy>,
-    private strategyFactory: StrategyFactory,
-    private accountService: AccountService
-  ) {}
+    private strategyFactory: StrategyFactory
+    ) {}
 
   async onModuleInit() {
     this.logger.debug('Initializing module');
@@ -139,9 +138,7 @@ export class StrategyService implements OnModuleInit {
 
       const strategyPromises = strategies.map(async (strategy) => {
         try {
-          this.logger.debug(`Processing strategy - StrategyID: ${strategy.id}`);
           await this.processStrategy(strategy);
-          this.logger.debug(`Processed strategy - StrategyID: ${strategy.id}`);
         } catch (strategyError) {
           this.logger.error(`Error processing strategy - StrategyID: ${strategy.id}`, strategyError.stack);
         }

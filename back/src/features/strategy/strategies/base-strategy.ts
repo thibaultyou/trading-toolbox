@@ -19,7 +19,7 @@ export abstract class BaseStrategy {
     protected optionsValidator: StrategyOptionsValidator
   ) {}
 
-  abstract process(accountId: string, strategy: IStrategy, executionData?: IExecutionData);
+  abstract process(accountId: string, strategy: IStrategy, executionData?: IExecutionData): Promise<void>;
 
   protected validateStrategyOptions(type: StrategyType, options: any): boolean {
     return this.optionsValidator.validateOptions(type, options);

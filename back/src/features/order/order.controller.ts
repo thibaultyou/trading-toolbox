@@ -25,12 +25,13 @@ import { OrderUpdateResponseDto } from './dtos/order-update.response.dto';
 import { OrderService } from './order.service';
 import { OrderSide } from './types/order-side.enum';
 import { OrderType } from './types/order-type.enum';
+import { API_BEARER_AUTH_NAME } from '../auth/auth.constants';
 
 // TODO add create many
 // TODO add cancel many by order id
 
 @ApiTags('Orders')
-@ApiBearerAuth('access-token')
+@ApiBearerAuth(API_BEARER_AUTH_NAME)
 @Controller('orders')
 @UseGuards(JwtAuthGuard)
 export class OrderController extends BaseController {
