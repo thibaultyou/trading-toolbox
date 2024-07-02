@@ -1,7 +1,7 @@
 import { Balances, Market, Order, Position, Ticker } from 'ccxt';
 
-import { OrderSide } from '../order/types/order-side.enum';
-import { OrderType } from '../order/types/order-type.enum';
+import { OrderSide } from '../../order/types/order-side.enum';
+import { OrderType } from '../../order/types/order-type.enum';
 
 export interface IExchangeService {
   initialize(): Promise<boolean>;

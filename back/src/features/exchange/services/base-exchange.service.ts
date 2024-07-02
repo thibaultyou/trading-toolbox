@@ -4,11 +4,8 @@ import { Balances, Exchange, Market, Order, Position, Ticker } from 'ccxt';
 import { Account } from '../../account/entities/account.entity';
 import { OrderSide } from '../../order/types/order-side.enum';
 import { OrderType } from '../../order/types/order-type.enum';
-import {
-  ExchangeOperationFailedException,
-  ExchangeTerminationFailedException
-} from '../exchange.exceptions';
-import { IExchangeService } from '../exchange-service.interface';
+import { ExchangeOperationFailedException, ExchangeTerminationFailedException } from '../exchange.exceptions';
+import { IExchangeService } from '../types/exchange-service.interface';
 
 // TODO improve logging, error handling, custom exceptions
 

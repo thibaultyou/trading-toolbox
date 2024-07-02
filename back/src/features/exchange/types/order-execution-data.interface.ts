@@ -1,11 +1,4 @@
-import { MinMax } from 'ccxt';
-
-export enum ExchangeType {
-  // TODO Replace with CamelCase
-  Bybit = 'bybit'
-}
-
-export type OrderExecutionData = {
+export interface IOrderExecutionData {
   blockTradeId: string;
   category: string;
   execFee: string;
@@ -33,16 +26,4 @@ export type OrderExecutionData = {
   tradeIv: string;
   underlyingPrice: string;
   closedSize: string;
-};
-
-export interface Precision {
-  amount: number | undefined;
-  price: number | undefined;
-}
-
-export interface Limits {
-  amount?: MinMax;
-  cost?: MinMax;
-  price?: MinMax;
-  leverage?: MinMax;
 }

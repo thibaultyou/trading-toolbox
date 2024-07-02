@@ -9,7 +9,7 @@ import { OrderType } from '../order/types/order-type.enum';
 import { ExchangeInitializedEvent } from './events/exchange-initialized.event';
 import { ExchangeTerminatedEvent } from './events/exchange-terminated.event';
 import { ExchangeNotFoundException, ExchangeOperationFailedException } from './exchange.exceptions';
-import { IExchangeService } from './exchange-service.interface';
+import { IExchangeService } from './types/exchange-service.interface';
 import { ExchangeFactory } from './services/exchange-service.factory';
 
 // TODO move bybit related content out of here

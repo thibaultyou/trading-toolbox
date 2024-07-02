@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Market } from 'ccxt';
 
-import { Limits, Precision } from '../../exchange/exchange.types';
+import { IExchangeLimits } from '../../exchange/types/exchange-limits.interface';
+import { IMarketPrecision } from '../types/market-precision.interface';
 import { MarketType } from '../types/market-type.enum';
 
 export class MarketReadResponseDto {
@@ -33,13 +34,13 @@ export class MarketReadResponseDto {
     description: 'The precision levels for amount and price in the market.',
     example: { amount: 8, price: 2 }
   })
-  precision: Precision;
+  precision: IMarketPrecision;
 
   @ApiProperty({
     description: 'The minimum and maximum limits for amount, price, and cost in the market.',
     example: { amount: { min: 0.01, max: 100 }, price: { min: 0.01, max: 100000 }, cost: { min: 10, max: 1000000 } }
   })
-  limits: Limits;
+  limits: IExchangeLimits;
 
   @ApiProperty({
     description: 'Indicates whether the market is currently active.',
