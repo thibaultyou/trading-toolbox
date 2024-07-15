@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 
-import { CONFIG_TOKEN, envConfig } from '../../config';
+import { CONFIG_TOKEN, envConfig } from '@config/env.config';
 
 @Global()
 @Module({

@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Market } from 'ccxt';
 
-import { IExchangeLimits } from '../../exchange/types/exchange-limits.interface';
+import { IExchangeLimits } from '@exchange/types/exchange-limits.interface';
+
 import { IMarketPrecision } from '../types/market-precision.interface';
 import { MarketType } from '../types/market-type.enum';
 

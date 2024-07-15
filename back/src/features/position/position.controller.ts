@@ -1,12 +1,13 @@
 import { Controller, Delete, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { BaseController } from '../../common/base/base.controller';
-import { API_BEARER_AUTH_NAME } from '../auth/auth.constants';
-import { ValidateAccount } from '../auth/decorators/account-auth.decorator';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { OrderReadResponseDto } from '../order/dtos/order-read.response.dto';
-import { OrderSide } from '../order/types/order-side.enum';
+import { API_BEARER_AUTH_NAME } from '@auth/auth.constants';
+import { ValidateAccount } from '@auth/decorators/account-auth.decorator';
+import { JwtAuthGuard } from '@auth/jwt-auth.guard';
+import { BaseController } from '@common/base/base.controller';
+import { OrderReadResponseDto } from '@order/dtos/order-read.response.dto';
+import { OrderSide } from '@order/types/order-side.enum';
+
 import { PositionReadResponseDto } from './dtos/position-read.response.dto';
 import { PositionService } from './position.service';
 

@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
-import { AccountService } from '../account/account.service';
-import { ExchangeService } from '../exchange/exchange.service';
+import { AccountService } from '@account/account.service';
+import { ExchangeService } from '@exchange/exchange.service';
 
 @Injectable()
 export class CoreService implements OnModuleInit {

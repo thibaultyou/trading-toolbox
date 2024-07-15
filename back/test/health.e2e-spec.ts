@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
-import { HealthController } from '../src/features/health/health.controller';
-import { BybitHealthIndicator } from '../src/features/health/indicators/bybit.health.indicator';
+import { HealthController } from '@health/health.controller';
+import { BybitHealthIndicator } from '@health/indicators/bybit.health.indicator';
 
 describe('HealthController (e2e)', () => {
   let app: INestApplication;

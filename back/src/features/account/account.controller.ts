@@ -13,11 +13,12 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { BaseController } from '../../common/base/base.controller';
-import { RequestWithUser } from '../../common/types/request-with-user.interface';
-import { API_BEARER_AUTH_NAME } from '../auth/auth.constants';
-import { UserId } from '../auth/decorators/user-id.decorator';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { API_BEARER_AUTH_NAME } from '@auth/auth.constants';
+import { UserId } from '@auth/decorators/user-id.decorator';
+import { JwtAuthGuard } from '@auth/jwt-auth.guard';
+import { BaseController } from '@common/base/base.controller';
+import { RequestWithUser } from '@common/types/request-with-user.interface';
+
 import { AccountService } from './account.service';
 import { AccountCreateRequestDto } from './dtos/account-create.request.dto';
 import { AccountDeleteResponseDto } from './dtos/account-delete.response.dto';

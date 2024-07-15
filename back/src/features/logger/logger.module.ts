@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 
-import { CONFIG_TOKEN } from '../../config';
+import { CONFIG_TOKEN } from '@config/env.config';
+
 import { AppLogger } from './logger.service';
 
 @Global()

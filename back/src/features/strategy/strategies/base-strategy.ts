@@ -1,12 +1,13 @@
 import { Logger } from '@nestjs/common';
 
-import { IExecutionData } from '../../core/types/execution-data.interface';
-import { OrderService } from '../../order/order.service';
-import { TickerService } from '../../ticker/ticker.service';
-import { WalletService } from '../../wallet/wallet.service';
+import { IExecutionData } from '@core/types/execution-data.interface';
+import { OrderService } from '@order/order.service';
+import { TickerService } from '@ticker/ticker.service';
+import { WalletService } from '@wallet/wallet.service';
+
 import { CurrencyMode } from '../types/currency-mode.enum';
-import { IStrategy } from '../types/strategy.interface';
 import { StrategyType } from '../types/strategy-type.enum';
+import { IStrategy } from '../types/strategy.interface';
 import { StrategyOptionsValidator } from '../validators/strategy-options.validator';
 
 export abstract class BaseStrategy {

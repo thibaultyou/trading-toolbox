@@ -2,9 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Order } from 'ccxt';
 
 import { fromOrdertoInternalOrder } from '../order.utils';
-import { IOrder } from '../types/order.interface';
 import { OrderSide } from '../types/order-side.enum';
 import { OrderType } from '../types/order-type.enum';
+import { IOrder } from '../types/order.interface';
 import { TPSLMode } from '../types/tpsl-mode.enum';
 
 export class OrderReadResponseDto {

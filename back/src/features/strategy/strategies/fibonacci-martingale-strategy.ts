@@ -1,13 +1,14 @@
 import { Logger } from '@nestjs/common';
 
-import { IExecutionData } from '../../core/types/execution-data.interface';
-import { OrderSide } from '../../order/types/order-side.enum';
-import { OrderType } from '../../order/types/order-type.enum';
+import { IExecutionData } from '@core/types/execution-data.interface';
+import { OrderSide } from '@order/types/order-side.enum';
+import { OrderType } from '@order/types/order-type.enum';
+
+import { BaseStrategy } from './base-strategy';
 import { calculateOrderSize } from '../strategy.utils';
 import { IFibonacciMartingaleStrategyOptions } from '../types/options/fibonacci-martingale-strategy-options.interface';
-import { IStrategy } from '../types/strategy.interface';
 import { StrategyType } from '../types/strategy-type.enum';
-import { BaseStrategy } from './base-strategy';
+import { IStrategy } from '../types/strategy.interface';
 
 export class FibonacciMartingaleStrategy extends BaseStrategy {
   protected readonly logger = new Logger(FibonacciMartingaleStrategy.name);

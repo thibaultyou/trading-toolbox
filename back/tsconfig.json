@@ -11,7 +11,6 @@
     "target": "es2017",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": false,
@@ -19,6 +18,25 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "allowJs": true
+    "allowJs": true,
+    "baseUrl": "./",
+    "paths": {
+      "@common/*": ["src/common/*"],
+      "@config/*": ["src/config/*"],
+      "@account/*": ["src/features/account/*"],
+      "@auth/*": ["src/features/auth/*"],
+      "@core/*": ["src/features/core/*"],
+      "@env/*": ["src/features/env/*"],
+      "@exchange/*": ["src/features/exchange/*"],
+      "@health/*": ["src/features/health/*"],
+      "@logger/*": ["src/features/logger/*"],
+      "@market/*": ["src/features/market/*"],
+      "@order/*": ["src/features/order/*"],
+      "@position/*": ["src/features/position/*"],
+      "@strategy/*": ["src/features/strategy/*"],
+      "@ticker/*": ["src/features/ticker/*"],
+      "@wallet/*": ["src/features/wallet/*"],
+      "@test/*": ["test/*"]
+    }
   }
 }

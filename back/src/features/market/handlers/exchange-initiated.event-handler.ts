@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { EventHandlersContext, Events } from '../../../config';
-import { ExchangeInitializedEvent } from '../../exchange/events/exchange-initialized.event';
+import { EventHandlersContext } from '@config/event-handlers.config';
+import { Events } from '@config/events.config';
+import { ExchangeInitializedEvent } from '@exchange/events/exchange-initialized.event';
+
 import { MarketService } from '../market.service';
 
 @Injectable()

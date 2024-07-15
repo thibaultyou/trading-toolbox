@@ -1,10 +1,10 @@
 export enum EventHandlersContext {
-  WalletModuleEventHandler = 'WalletModuleEventHandler',
   CoreModuleEventHandler = 'CoreModuleEventHandler',
   ExchangeModuleEventHandler = 'ExchangeModuleEventHandler',
   MarketModuleEventHandler = 'MarketModuleEventHandler',
   OrderModuleEventHandler = 'OrderModuleEventHandler',
   PositionModuleEventHandler = 'PositionModuleEventHandler',
+  StrategyModuleEventHandler = 'StrategyModuleEventHandler',
   TickerModuleEventHandler = 'TickerModuleEventHandler',
-  StrategyModuleEventHandler = 'StrategyModuleEventHandler'
+  WalletModuleEventHandler = 'WalletModuleEventHandler'
 }

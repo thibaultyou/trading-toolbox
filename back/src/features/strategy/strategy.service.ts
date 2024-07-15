@@ -2,9 +2,9 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Timers } from '../../config';
-import { AccountService } from '../account/account.service';
-import { IExecutionData } from '../core/types/execution-data.interface';
+import { Timers } from '@config/timers.config';
+import { IExecutionData } from '@core/types/execution-data.interface';
+
 import { StrategyCreateRequestDto } from './dtos/strategy-create.request.dto';
 import { StrategyUpdateRequestDto } from './dtos/strategy-update.request.dto';
 import { Strategy } from './entities/strategy.entity';
@@ -19,7 +19,7 @@ export class StrategyService implements OnModuleInit {
     @InjectRepository(Strategy)
     private strategyRepository: Repository<Strategy>,
     private strategyFactory: StrategyFactory
-    ) {}
+  ) {}
 
   async onModuleInit() {
     this.logger.debug('Initializing module');

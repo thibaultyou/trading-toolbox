@@ -1,15 +1,17 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
-import { IAccountTracker } from '../../common/types/account-tracker.interface';
-import { Events, Timers } from '../../config';
-import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
-import { WebSocketSubscribeEvent } from '../core/events/websocket-subscribe.event';
-import { WebSocketUnsubscribeEvent } from '../core/events/websocket-unsubscribe.event';
-import { ITickerData } from '../core/types/ticker-data.interface';
-import { ExchangeService } from '../exchange/exchange.service';
-import { OrderService } from '../order/order.service';
-import { PositionService } from '../position/position.service';
+import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
+import { IAccountTracker } from '@common/types/account-tracker.interface';
+import { Events } from '@config/events.config';
+import { Timers } from '@config/timers.config';
+import { WebSocketSubscribeEvent } from '@core/events/websocket-subscribe.event';
+import { WebSocketUnsubscribeEvent } from '@core/events/websocket-unsubscribe.event';
+import { ITickerData } from '@core/types/ticker-data.interface';
+import { ExchangeService } from '@exchange/exchange.service';
+import { OrderService } from '@order/order.service';
+import { PositionService } from '@position/position.service';
+
 import { TickerPriceNotFoundException } from './exceptions/ticker.exceptions';
 import { fromTickerDataToPrice, haveTickerDataChanged } from './ticker.utils';
 

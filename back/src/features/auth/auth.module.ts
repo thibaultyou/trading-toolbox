@@ -3,7 +3,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Config, CONFIG_TOKEN } from '../../config';
+import { CONFIG_TOKEN, Config } from '@config/env.config';
+
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from './entities/user.entity';

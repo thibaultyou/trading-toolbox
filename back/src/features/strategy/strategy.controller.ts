@@ -1,10 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
-import { BaseController } from '../../common/base/base.controller';
-import { API_BEARER_AUTH_NAME } from '../auth/auth.constants';
-import { UserId } from '../auth/decorators/user-id.decorator';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { API_BEARER_AUTH_NAME } from '@auth/auth.constants';
+import { UserId } from '@auth/decorators/user-id.decorator';
+import { JwtAuthGuard } from '@auth/jwt-auth.guard';
+import { BaseController } from '@common/base/base.controller';
+
 import { StrategyCreateRequestDto } from './dtos/strategy-create.request.dto';
 import { StrategyReadResponseDto } from './dtos/strategy-read.response.dto';
 import { StrategyUpdateRequestDto } from './dtos/strategy-update.request.dto';

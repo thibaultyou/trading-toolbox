@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
-import { User } from '../../auth/entities/user.entity';
-import { ExchangeType } from '../../exchange/types/exchange-type.enum';
+import { User } from '@auth/entities/user.entity';
+import { ExchangeType } from '@exchange/types/exchange-type.enum';
+
 import { AccountCreateRequestDto } from '../dtos/account-create.request.dto';
 import { AccountUpdateRequestDto } from '../dtos/account-update.request.dto';
 
@@ -45,7 +46,7 @@ export class Account {
     return new Account(data.name, data.key, data.secret, data.exchange, user);
   }
 
-  updateFromDto(data: Partial<AccountUpdateRequestDto>): void {
+  updateFromDto(data: Partial<AccountUpdateRequestDto>) {
     if (data.name) this.name = data.name;
 
     if (data.key) this.key = data.key;

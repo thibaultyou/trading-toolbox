@@ -1,5 +1,5 @@
-import { OrderSide } from '../../order/types/order-side.enum';
-import { TPSLMode } from '../../order/types/tpsl-mode.enum';
+import { OrderSide } from '@order/types/order-side.enum';
+import { TPSLMode } from '@order/types/tpsl-mode.enum';
 
 export interface IPosition {
   marketId: string;

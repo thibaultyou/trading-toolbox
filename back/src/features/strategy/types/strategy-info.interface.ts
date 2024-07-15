@@ -1,5 +1,5 @@
-import { BaseStrategy } from '../strategies/base-strategy';
 import { IStrategy } from './strategy.interface';
+import { BaseStrategy } from '../strategies/base-strategy';
 
 export interface IStrategyInfo {
   config: IStrategy;

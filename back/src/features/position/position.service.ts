@@ -2,11 +2,13 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Order } from 'ccxt';
 
-import { IAccountTracker } from '../../common/types/account-tracker.interface';
-import { Events, Timers } from '../../config';
-import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
-import { ExchangeService } from '../exchange/exchange.service';
-import { OrderSide } from '../order/types/order-side.enum';
+import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
+import { IAccountTracker } from '@common/types/account-tracker.interface';
+import { Events } from '@config/events.config';
+import { Timers } from '@config/timers.config';
+import { ExchangeService } from '@exchange/exchange.service';
+import { OrderSide } from '@order/types/order-side.enum';
+
 import { PositionClosedEvent } from './events/position-closed.event';
 import { PositionsUpdatedEvent } from './events/positions-updated.event';
 import { PositionNotFoundException, PositionsUpdateAggregatedException } from './exceptions/position.exceptions';

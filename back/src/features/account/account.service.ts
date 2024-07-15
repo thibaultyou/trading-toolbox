@@ -3,10 +3,11 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository } from 'typeorm';
 
-import { Events } from '../../config';
-import { UserId } from '../auth/decorators/user-id.decorator';
-import { User } from '../auth/entities/user.entity';
-import { ExchangeFactory } from '../exchange/services/exchange-service.factory';
+import { UserId } from '@auth/decorators/user-id.decorator';
+import { User } from '@auth/entities/user.entity';
+import { Events } from '@config/events.config';
+import { ExchangeFactory } from '@exchange/services/exchange-service.factory';
+
 import { maskString } from './account.utils';
 import { AccountCreateRequestDto } from './dtos/account-create.request.dto';
 import { AccountUpdateRequestDto } from './dtos/account-update.request.dto';

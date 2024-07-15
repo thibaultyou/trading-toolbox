@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { EventHandlersContext, Events } from '../../../config';
-import { WalletDataUpdatedEvent } from '../../core/events/wallet-data-updated.event';
+import { EventHandlersContext } from '@config/event-handlers.config';
+import { Events } from '@config/events.config';
+import { WalletDataUpdatedEvent } from '@core/events/wallet-data-updated.event';
+
 import { WalletService } from '../wallet.service';
 
 @Injectable()

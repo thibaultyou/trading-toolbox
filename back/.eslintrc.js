@@ -27,9 +27,43 @@ module.exports = {
       'warn',
       { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_' }
     ],
-    'simple-import-sort/imports': 'error',
+    'simple-import-sort/imports': 'off',
     'simple-import-sort/exports': 'error',
-    'import/order': 'off',
+    'import/order': [
+      'error',
+      {
+        'groups': [
+          ['builtin', 'external'],
+          ['internal'],
+          ['parent', 'sibling', 'index']
+        ],
+        'pathGroups': [
+          { 'pattern': '@app/**', 'group': 'internal' },
+          { 'pattern': '@common/**', 'group': 'internal' },
+          { 'pattern': '@config/**', 'group': 'internal' },
+          { 'pattern': '@account/**', 'group': 'internal' },
+          { 'pattern': '@auth/**', 'group': 'internal' },
+          { 'pattern': '@core/**', 'group': 'internal' },
+          { 'pattern': '@env/**', 'group': 'internal' },
+          { 'pattern': '@exchange/**', 'group': 'internal' },
+          { 'pattern': '@health/**', 'group': 'internal' },
+          { 'pattern': '@logger/**', 'group': 'internal' },
+          { 'pattern': '@market/**', 'group': 'internal' },
+          { 'pattern': '@order/**', 'group': 'internal' },
+          { 'pattern': '@position/**', 'group': 'internal' },
+          { 'pattern': '@strategy/**', 'group': 'internal' },
+          { 'pattern': '@ticker/**', 'group': 'internal' },
+          { 'pattern': '@wallet/**', 'group': 'internal' },
+          { 'pattern': '@test/**', 'group': 'internal' }
+        ],
+        'pathGroupsExcludedImportTypes': ['builtin'],
+        'alphabetize': {
+          'order': 'asc',
+          'caseInsensitive': true
+        },
+        'newlines-between': 'always'
+      }
+    ],
     'padding-line-between-statements': [
       'warn',
       { blankLine: 'never', prev: '*', next: 'throw' },
@@ -40,6 +74,7 @@ module.exports = {
       { blankLine: 'never', prev: '*', next: 'return' },
     ],
     'arrow-body-style': ['error', 'as-needed'],
-    'prefer-arrow-callback': 'error'
+    'prefer-arrow-callback': ['error', { 'allowNamedFunctions': true }],
+    'func-style': ['error', 'expression', { 'allowArrowFunctions': true }]
   },
 };

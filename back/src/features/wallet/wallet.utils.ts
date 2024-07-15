@@ -1,10 +1,11 @@
 import { Logger } from '@nestjs/common';
 import { Balances } from 'ccxt';
 
-import { IWalletData } from '../core/types/wallet-data.interface';
+import { IWalletData } from '@core/types/wallet-data.interface';
+
 import { ICoinData } from './types/coin-data.interface';
-import { IWalletAccount } from './types/wallet-account.interface';
 import { WalletAccountType } from './types/wallet-account-type.enum';
+import { IWalletAccount } from './types/wallet-account.interface';
 
 export const fromBalancestoWalletAccount = (balances: Balances): IWalletAccount[] => balances.info?.result?.list;
 

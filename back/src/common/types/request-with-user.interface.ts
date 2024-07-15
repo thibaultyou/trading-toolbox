@@ -1,4 +1,4 @@
-import { User } from '../../features/auth/entities/user.entity';
+import { User } from '@auth/entities/user.entity';
 
 export interface RequestWithUser extends Express.Request {
   user: User;

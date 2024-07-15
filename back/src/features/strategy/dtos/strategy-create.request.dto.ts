@@ -2,9 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsObject, IsString, IsUUID, ValidateNested } from 'class-validator';
 
+import { FibonacciMartingaleStrategyOptions } from './options/fibonacci-martingale-strategy-options.dto';
 import { CurrencyMode } from '../types/currency-mode.enum';
 import { StrategyType } from '../types/strategy-type.enum';
-import { FibonacciMartingaleStrategyOptions } from './options/fibonacci-martingale-strategy-options.dto';
 
 export class StrategyCreateRequestDto {
   @ApiProperty({

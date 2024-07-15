@@ -2,10 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WebsocketClient, WSClientConfigurableOptions } from 'bybit-api';
 
-import { TrackingFailedException } from '../../../common/exceptions/tracking.exceptions';
-import { IAccountTracker } from '../../../common/types/account-tracker.interface';
-import { Events } from '../../../config';
-import { AccountService } from '../../account/account.service';
+import { AccountService } from '@account/account.service';
+import { TrackingFailedException } from '@common/exceptions/tracking.exceptions';
+import { IAccountTracker } from '@common/types/account-tracker.interface';
+import { Events } from '@config/events.config';
+
 import { ExecutionDataReceivedEvent } from '../events/execution-data-received.event';
 import { OrderDataUpdatedEvent } from '../events/order-data-updated.event';
 import { PositionDataUpdatedEvent } from '../events/position-data-updated.event';

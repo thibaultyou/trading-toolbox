@@ -1,7 +1,8 @@
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 
-import { websocketConfig } from '../../config';
+import { websocketConfig } from '@config/websocket.config';
+
 import { IWalletAccount } from './types/wallet-account.interface';
 
 @WebSocketGateway(websocketConfig)

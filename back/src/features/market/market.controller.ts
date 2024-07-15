@@ -1,10 +1,11 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { BaseController } from '../../common/base/base.controller';
-import { API_BEARER_AUTH_NAME } from '../auth/auth.constants';
-import { ValidateAccount } from '../auth/decorators/account-auth.decorator';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { API_BEARER_AUTH_NAME } from '@auth/auth.constants';
+import { ValidateAccount } from '@auth/decorators/account-auth.decorator';
+import { JwtAuthGuard } from '@auth/jwt-auth.guard';
+import { BaseController } from '@common/base/base.controller';
+
 import { MarketReadResponseDto } from './dtos/market-read.response.dto';
 import { MarketService } from './market.service';
 

@@ -13,9 +13,11 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { BaseController } from '../../common/base/base.controller';
-import { ValidateAccount } from '../auth/decorators/account-auth.decorator';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { API_BEARER_AUTH_NAME } from '@auth/auth.constants';
+import { ValidateAccount } from '@auth/decorators/account-auth.decorator';
+import { JwtAuthGuard } from '@auth/jwt-auth.guard';
+import { BaseController } from '@common/base/base.controller';
+
 import { OrderCreateRequestDto } from './dtos/order-create.request.dto';
 import { OrderCreateResponseDto } from './dtos/order-create.response.dto';
 import { OrderDeleteResponseDto } from './dtos/order-delete.response.dto';
@@ -25,7 +27,6 @@ import { OrderUpdateResponseDto } from './dtos/order-update.response.dto';
 import { OrderService } from './order.service';
 import { OrderSide } from './types/order-side.enum';
 import { OrderType } from './types/order-type.enum';
-import { API_BEARER_AUTH_NAME } from '../auth/auth.constants';
 
 // TODO add create many
 // TODO add cancel many by order id

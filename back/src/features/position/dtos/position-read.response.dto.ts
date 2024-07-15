@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { OrderSide } from '../../order/types/order-side.enum';
-import { TPSLMode } from '../../order/types/tpsl-mode.enum';
+import { OrderSide } from '@order/types/order-side.enum';
+import { TPSLMode } from '@order/types/tpsl-mode.enum';
+
 import { IPosition } from '../types/position.interface';
 
 export class PositionReadResponseDto implements IPosition {

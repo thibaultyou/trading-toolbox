@@ -3,7 +3,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Config, CONFIG_TOKEN } from './config';
+import { CONFIG_TOKEN, Config } from '@config/env.config';
+
 import { AccountModule } from './features/account/account.module';
 import { AuthModule } from './features/auth/auth.module';
 import { CoreModule } from './features/core/core.module';

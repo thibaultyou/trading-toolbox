@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsPositive } from 'class-validator';
 
-import { IFibonacciMartingaleStrategyOptions } from '../../types/options/fibonacci-martingale-strategy-options.interface';
 import { BaseStrategyOptions } from './base-strategy-options.dto';
+import { IFibonacciMartingaleStrategyOptions } from '../../types/options/fibonacci-martingale-strategy-options.interface';
 
 export class FibonacciMartingaleStrategyOptions
   extends BaseStrategyOptions

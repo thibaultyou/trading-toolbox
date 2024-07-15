@@ -2,12 +2,14 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Order } from 'ccxt';
 
-import { IAccountTracker } from '../../common/types/account-tracker.interface';
-import { IDataRefresher } from '../../common/types/data-refresher.interface';
-import { Events, Timers } from '../../config';
-import { AccountService } from '../account/account.service';
-import { AccountNotFoundException } from '../account/exceptions/account.exceptions';
-import { ExchangeService } from '../exchange/exchange.service';
+import { AccountService } from '@account/account.service';
+import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
+import { IAccountTracker } from '@common/types/account-tracker.interface';
+import { IDataRefresher } from '@common/types/data-refresher.interface';
+import { Events } from '@config/events.config';
+import { Timers } from '@config/timers.config';
+import { ExchangeService } from '@exchange/exchange.service';
+
 import { OrderCreateRequestDto } from './dtos/order-create.request.dto';
 import { OrderUpdateRequestDto } from './dtos/order-update.request.dto';
 import { OrderUpdatedEvent } from './events/order-updated.event';

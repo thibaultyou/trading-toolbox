@@ -1,6 +1,7 @@
 import { Position } from 'ccxt';
 
-import { OrderSide } from '../order/types/order-side.enum';
+import { OrderSide } from '@order/types/order-side.enum';
+
 import { IPosition } from './types/position.interface';
 
 export const fromPositionToInternalPosition = (position: Position): IPosition => ({

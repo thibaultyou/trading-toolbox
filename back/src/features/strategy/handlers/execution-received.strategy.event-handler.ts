@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { EventHandlersContext, Events } from '../../../config';
-import { ExecutionDataReceivedEvent } from '../../core/events/execution-data-received.event';
+import { EventHandlersContext } from '@config/event-handlers.config';
+import { Events } from '@config/events.config';
+import { ExecutionDataReceivedEvent } from '@core/events/execution-data-received.event';
+
 import { StrategyService } from '../strategy.service';
 
 @Injectable()

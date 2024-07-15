@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
-import { ExchangeType } from '../../exchange/types/exchange-type.enum';
+import { ExchangeType } from '@exchange/types/exchange-type.enum';
 
 export class AccountCreateRequestDto {
   @ApiProperty()

@@ -1,8 +1,8 @@
 import { Order } from 'ccxt';
 
-import { IOrder } from './types/order.interface';
 import { OrderSide } from './types/order-side.enum';
 import { OrderType } from './types/order-type.enum';
+import { IOrder } from './types/order.interface';
 
 export const fromOrdertoInternalOrder = (order: Order): IOrder => ({
   id: order.info.orderId,

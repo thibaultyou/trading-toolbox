@@ -2,15 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Balances, Market, Order, Position, Ticker } from 'ccxt';
 
-import { Events } from '../../config';
-import { Account } from '../account/entities/account.entity';
-import { OrderSide } from '../order/types/order-side.enum';
-import { OrderType } from '../order/types/order-type.enum';
+import { Account } from '@account/entities/account.entity';
+import { Events } from '@config/events.config';
+import { OrderSide } from '@order/types/order-side.enum';
+import { OrderType } from '@order/types/order-type.enum';
+
 import { ExchangeInitializedEvent } from './events/exchange-initialized.event';
 import { ExchangeTerminatedEvent } from './events/exchange-terminated.event';
 import { ExchangeNotFoundException, ExchangeOperationFailedException } from './exchange.exceptions';
-import { IExchangeService } from './types/exchange-service.interface';
 import { ExchangeFactory } from './services/exchange-service.factory';
+import { IExchangeService } from './types/exchange-service.interface';
 
 // TODO move bybit related content out of here
 // TODO improve logging, error handling, custom exceptions

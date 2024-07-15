@@ -1,6 +1,6 @@
 import { createParamDecorator, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 
-import { AccountService } from '../../account/account.service';
+import { AccountService } from '@account/account.service';
 
 export const ValidateAccount = createParamDecorator(async (data: unknown, ctx: ExecutionContext) => {
   console.log('ValidateAccount');

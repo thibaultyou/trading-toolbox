@@ -1,9 +1,10 @@
 import { Logger } from '@nestjs/common';
 import { Balances, Exchange, Market, Order, Position, Ticker } from 'ccxt';
 
-import { Account } from '../../account/entities/account.entity';
-import { OrderSide } from '../../order/types/order-side.enum';
-import { OrderType } from '../../order/types/order-type.enum';
+import { Account } from '@account/entities/account.entity';
+import { OrderSide } from '@order/types/order-side.enum';
+import { OrderType } from '@order/types/order-type.enum';
+
 import { ExchangeOperationFailedException, ExchangeTerminationFailedException } from '../exchange.exceptions';
 import { IExchangeService } from '../types/exchange-service.interface';
 

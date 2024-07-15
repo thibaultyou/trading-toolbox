@@ -2,25 +2,27 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-import { AppModule } from './app.module';
-import { envConfig, Urls } from './config';
-import { AccountExceptionsFilter } from './features/account/exceptions/account.exceptions.filter';
-import { AppLogger } from './features/logger/logger.service';
-import { MarketExceptionsFilter } from './features/market/exceptions/market.exceptions.filter';
-import { OrderExceptionsFilter } from './features/order/exceptions/order.exceptions.filter';
-import { PositionExceptionsFilter } from './features/position/exceptions/position.exceptions.filter';
-import { StrategyExceptionsFilter } from './features/strategy/exceptions/strategy.exceptions.filter';
-import { TickerExceptionsFilter } from './features/ticker/exceptions/ticker.exceptions.filter';
-import { WalletExceptionsFilter } from './features/wallet/exceptions/wallet.exceptions.filter';
+import { AccountExceptionsFilter } from '@account/exceptions/account.exceptions.filter';
+import { envConfig } from '@config/env.config';
+import { Urls } from '@config/urls.config';
+import { AppLogger } from '@logger/logger.service';
+import { MarketExceptionsFilter } from '@market/exceptions/market.exceptions.filter';
+import { OrderExceptionsFilter } from '@order/exceptions/order.exceptions.filter';
+import { PositionExceptionsFilter } from '@position/exceptions/position.exceptions.filter';
+import { StrategyExceptionsFilter } from '@strategy/exceptions/strategy.exceptions.filter';
+import { TickerExceptionsFilter } from '@ticker/exceptions/ticker.exceptions.filter';
+import { WalletExceptionsFilter } from '@wallet/exceptions/wallet.exceptions.filter';
 
-async function bootstrap() {
+import { AppModule } from './app.module';
+
+const bootstrap = async () => {
   const app = await NestFactory.create(AppModule);
   app.useLogger(new AppLogger(envConfig));
 
   const options = new DocumentBuilder()
     .setTitle('Trading toolbox')
     .setVersion('1.0')
-    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, )
+    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })
     .build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup(Urls.SWAGGER_DOCS, app, document);
@@ -38,6 +40,5 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors();
   await app.listen(4000);
-}
-
+};
 bootstrap();

@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { EventHandlersContext, Events } from '../../../config';
+import { EventHandlersContext } from '@config/event-handlers.config';
+import { Events } from '@config/events.config';
+
 import { WebSocketSubscribeEvent } from '../events/websocket-subscribe.event';
 import { WebsocketManagerService } from '../services/websocket-manager.service';
 
