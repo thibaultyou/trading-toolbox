@@ -3,13 +3,13 @@ import { OnEvent } from '@nestjs/event-emitter';
 
 import { EventHandlersContext } from '@config/event-handlers.config';
 import { Events } from '@config/events.config';
-import { ExchangeInitializedEvent } from '@exchange/events/exchange-initialized.event';
 
+import { ExchangeInitializedEvent } from '../events/exchange-initialized.event';
 import { WebsocketManagerService } from '../services/websocket-manager.service';
 
 @Injectable()
-export class CoreModuleExchangeInitializedEventHandler {
-  private logger = new Logger(EventHandlersContext.CoreModuleEventHandler);
+export class ExchangeModuleExchangeInitializedEventHandler {
+  private logger = new Logger(EventHandlersContext.ExchangeModuleEventHandler);
 
   constructor(private websocketManagerService: WebsocketManagerService) {}
 

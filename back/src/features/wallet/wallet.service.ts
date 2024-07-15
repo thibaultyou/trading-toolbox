@@ -4,8 +4,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
 import { IAccountTracker } from '@common/types/account-tracker.interface';
 import { Events } from '@config/events.config';
-import { IWalletData } from '@core/types/wallet-data.interface';
 import { ExchangeService } from '@exchange/exchange.service';
+import { IWalletData } from '@exchange/types/wallet-data.interface';
 
 import { WalletsUpdatedEvent } from './events/wallets-updated.event';
 import { IWalletAccount } from './types/wallet-account.interface';

@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 
-import { IExecutionData } from '@core/types/execution-data.interface';
+import { IExecutionData } from '@exchange/types/execution-data.interface';
 import { OrderService } from '@order/order.service';
 import { TickerService } from '@ticker/ticker.service';
 import { WalletService } from '@wallet/wallet.service';

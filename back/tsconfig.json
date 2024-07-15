@@ -25,7 +25,6 @@
       "@config/*": ["src/config/*"],
       "@account/*": ["src/features/account/*"],
       "@auth/*": ["src/features/auth/*"],
-      "@core/*": ["src/features/core/*"],
       "@env/*": ["src/features/env/*"],
       "@exchange/*": ["src/features/exchange/*"],
       "@health/*": ["src/features/health/*"],

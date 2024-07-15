@@ -3,7 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 
 import { EventHandlersContext } from '@config/event-handlers.config';
 import { Events } from '@config/events.config';
-import { ExecutionDataReceivedEvent } from '@core/events/execution-data-received.event';
+import { ExecutionDataReceivedEvent } from '@exchange/events/execution-data-received.event';
 
 import { StrategyService } from '../strategy.service';
 

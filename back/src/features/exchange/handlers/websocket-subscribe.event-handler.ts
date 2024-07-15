@@ -8,8 +8,8 @@ import { WebSocketSubscribeEvent } from '../events/websocket-subscribe.event';
 import { WebsocketManagerService } from '../services/websocket-manager.service';
 
 @Injectable()
-export class CoreModuleWebSocketSubscribeEventEventHandler {
-  private logger = new Logger(EventHandlersContext.CoreModuleEventHandler);
+export class ExchangeModuleWebSocketSubscribeEventEventHandler {
+  private logger = new Logger(EventHandlersContext.ExchangeModuleEventHandler);
 
   constructor(private websocketManagerService: WebsocketManagerService) {}
 

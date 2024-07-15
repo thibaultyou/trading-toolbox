@@ -7,7 +7,6 @@ import { CONFIG_TOKEN, Config } from '@config/env.config';
 
 import { AccountModule } from './features/account/account.module';
 import { AuthModule } from './features/auth/auth.module';
-import { CoreModule } from './features/core/core.module';
 import { EnvModule } from './features/env/env.module';
 import { ExchangeModule } from './features/exchange/exchange.module';
 import { HealthModule } from './features/health/health.module';
@@ -48,7 +47,6 @@ import { WalletModule } from './features/wallet/wallet.module';
     TickerModule,
     WalletModule,
     ExchangeModule, // Global
-    CoreModule,
     HealthModule
   ]
 })

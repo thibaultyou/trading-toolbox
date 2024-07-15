@@ -5,10 +5,10 @@ import { AccountNotFoundException } from '@account/exceptions/account.exceptions
 import { IAccountTracker } from '@common/types/account-tracker.interface';
 import { Events } from '@config/events.config';
 import { Timers } from '@config/timers.config';
-import { WebSocketSubscribeEvent } from '@core/events/websocket-subscribe.event';
-import { WebSocketUnsubscribeEvent } from '@core/events/websocket-unsubscribe.event';
-import { ITickerData } from '@core/types/ticker-data.interface';
+import { WebSocketSubscribeEvent } from '@exchange/events/websocket-subscribe.event';
+import { WebSocketUnsubscribeEvent } from '@exchange/events/websocket-unsubscribe.event';
 import { ExchangeService } from '@exchange/exchange.service';
+import { ITickerData } from '@exchange/types/ticker-data.interface';
 import { OrderService } from '@order/order.service';
 import { PositionService } from '@position/position.service';
 

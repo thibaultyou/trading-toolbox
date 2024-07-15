@@ -43,7 +43,6 @@ module.exports = {
           { 'pattern': '@config/**', 'group': 'internal' },
           { 'pattern': '@account/**', 'group': 'internal' },
           { 'pattern': '@auth/**', 'group': 'internal' },
-          { 'pattern': '@core/**', 'group': 'internal' },
           { 'pattern': '@env/**', 'group': 'internal' },
           { 'pattern': '@exchange/**', 'group': 'internal' },
           { 'pattern': '@health/**', 'group': 'internal' },

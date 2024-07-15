@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Balances, Market, Order, Position, Ticker } from 'ccxt';
 
+import { AccountService } from '@account/account.service';
 import { Account } from '@account/entities/account.entity';
 import { Events } from '@config/events.config';
 import { OrderSide } from '@order/types/order-side.enum';
@@ -17,14 +18,26 @@ import { IExchangeService } from './types/exchange-service.interface';
 // TODO improve logging, error handling, custom exceptions
 
 @Injectable()
-export class ExchangeService {
+export class ExchangeService implements OnModuleInit {
   private logger = new Logger(ExchangeService.name);
   private exchanges: Map<string, IExchangeService> = new Map();
 
   constructor(
     private eventEmitter: EventEmitter2,
-    private exchangeFactory: ExchangeFactory
+    private exchangeFactory: ExchangeFactory,
+    private accountService: AccountService
   ) {}
+
+  async onModuleInit() {
+    this.logger.debug('Initializing module');
+    const accounts = await this.accountService.getAllAccountsForSystem();
+    this.logger.debug(`Fetched accounts for initialization - Count: ${accounts.length}`);
+    // NOTE 1s delay to allow other modules to init and listen to exchange events
+    setTimeout(async () => {
+      await Promise.all(accounts.map((account) => this.initializeExchange(account)));
+    }, 1000);
+    this.logger.log('Module initialized successfully');
+  }
 
   async initializeExchange(account: Account) {
     this.logger.debug(`Initializing exchange - AccountID: ${account.id}`);

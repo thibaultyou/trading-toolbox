@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 
-import { IExecutionData } from '@core/types/execution-data.interface';
+import { IExecutionData } from '@exchange/types/execution-data.interface';
 import { OrderSide } from '@order/types/order-side.enum';
 import { OrderType } from '@order/types/order-type.enum';
 

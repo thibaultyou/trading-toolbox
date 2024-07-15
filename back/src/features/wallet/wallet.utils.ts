@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { Balances } from 'ccxt';
 
-import { IWalletData } from '@core/types/wallet-data.interface';
+import { IWalletData } from '@exchange/types/wallet-data.interface';
 
 import { ICoinData } from './types/coin-data.interface';
 import { WalletAccountType } from './types/wallet-account-type.enum';

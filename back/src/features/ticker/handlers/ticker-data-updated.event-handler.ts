@@ -3,7 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 
 import { EventHandlersContext } from '@config/event-handlers.config';
 import { Events } from '@config/events.config';
-import { TickerDataUpdatedEvent } from '@core/events/ticker-data-updated.event';
+import { TickerDataUpdatedEvent } from '@exchange/events/ticker-data-updated.event';
 
 import { TickerService } from '../ticker.service';
 

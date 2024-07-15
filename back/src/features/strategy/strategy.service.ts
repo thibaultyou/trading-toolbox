@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Timers } from '@config/timers.config';
-import { IExecutionData } from '@core/types/execution-data.interface';
+import { IExecutionData } from '@exchange/types/execution-data.interface';
 
 import { StrategyCreateRequestDto } from './dtos/strategy-create.request.dto';
 import { StrategyUpdateRequestDto } from './dtos/strategy-update.request.dto';

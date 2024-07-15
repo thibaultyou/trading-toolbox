@@ -8,7 +8,7 @@ import { Events } from '@config/events.config';
 import { ExchangeService } from '../exchange.service';
 
 @Injectable()
-export class ExchangeAccountUpdatedEventHandler {
+export class ExchangeModuleAccountUpdatedEventHandler {
   private logger = new Logger(EventHandlersContext.ExchangeModuleEventHandler);
 
   constructor(private exchangeService: ExchangeService) {}

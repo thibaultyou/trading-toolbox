@@ -1,4 +1,4 @@
-import { ITickerData } from '@core/types/ticker-data.interface';
+import { ITickerData } from '@exchange/types/ticker-data.interface';
 
 export const fromTickerDataToPrice = (data: ITickerData): number | null => {
   const { bid1Price, ask1Price } = data;
