@@ -68,6 +68,54 @@ Follow these instructions to set up the project on your local machine for develo
    docker-compose down
    ```
 
+## 🔧 Using the API
+
+After setting up the project, you can interact with the Trading Toolbox using its API. Here's a guide to get you started:
+
+### Accessing the API
+
+1. **API Client (e.g., Postman)**:
+   - Base URL: `http://localhost:1234/api`
+   - Use POST, GET, PUT, PATCH, DELETE methods as required by each endpoint
+   - Set `Content-Type: application/json` header for requests with a body
+   - For authenticated endpoints, include the JWT token in the `Authorization` header:
+     `Authorization: Bearer YOUR_JWT_TOKEN`
+
+2. **Swagger UI**:
+   - Access the interactive API documentation at `http://localhost:1234/api/docs`
+   - Click on an endpoint to expand its details
+   - Use the "Try it out" button to send requests directly from the browser
+   - For authenticated endpoints, use the "Authorize" button to enter your JWT token
+
+### Basic Workflow
+
+1. Create a user account:
+   - Endpoint: POST `/users/register`
+   - Provide email and password
+
+2. Log in to get an authentication token:
+   - Endpoint: POST `/users/login`
+   - Use the received JWT token for subsequent requests
+
+3. Configure a trading account:
+   - Endpoint: POST `/accounts`
+   - Link your Bybit account by providing API key and secret
+
+4. Choose your next steps:
+
+   Option A: Use exchange features
+   - Examples of available endpoints:
+     - Fetch markets: GET `/markets/accounts/{accountId}`
+     - Create an order: POST `/orders/accounts/{accountId}/orders`
+     - Fetch positions: GET `/positions/accounts/{accountId}/positions`
+
+   Option B: Set up trading strategies
+   - Create a strategy: POST `/strategies`
+   - Fetch strategies: GET `/strategies`
+   - Update a strategy: PATCH `/strategies/{id}`
+
+Refer to the Swagger UI documentation for detailed information on request/response formats for each endpoint.
+
 ## 🧪 Testing
 
 Currently, the project lacks a comprehensive test suite. This is a known issue and a priority for future development.
