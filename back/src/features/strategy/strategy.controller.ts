@@ -1,10 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
-import { API_BEARER_AUTH_NAME } from '@auth/auth.constants';
-import { UserId } from '@auth/decorators/user-id.decorator';
-import { JwtAuthGuard } from '@auth/jwt-auth.guard';
-import { BaseController } from '@common/base/base.controller';
+import { AccountValidationGuard } from '@account/guards/account-validation.guard';
+import { BaseController } from '@common/base.controller';
+import { ExtractUserId } from '@user/decorators/user-id-extractor.decorator';
+import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
 import { StrategyCreateRequestDto } from './dtos/strategy-create.request.dto';
 import { StrategyReadResponseDto } from './dtos/strategy-read.response.dto';
@@ -13,9 +13,9 @@ import { StrategyNotFoundException } from './exceptions/strategy.exceptions';
 import { StrategyService } from './strategy.service';
 
 @ApiTags('Strategies')
-@ApiBearerAuth(API_BEARER_AUTH_NAME)
+@UseGuards(JwtAuthGuard, AccountValidationGuard)
+@ApiBearerAuth()
 @Controller('strategies')
-@UseGuards(JwtAuthGuard)
 export class StrategyController extends BaseController {
   constructor(private readonly strategyService: StrategyService) {
     super('Strategies');
@@ -23,7 +23,7 @@ export class StrategyController extends BaseController {
 
   @Get()
   @ApiOperation({ summary: 'Fetch all strategies' })
-  async getAllStrategies(@UserId() userId: string): Promise<StrategyReadResponseDto[]> {
+  async getAllStrategies(@ExtractUserId() userId: string): Promise<StrategyReadResponseDto[]> {
     const strategies = await this.strategyService.getAllStrategies(userId);
     return strategies.map((strategy) => new StrategyReadResponseDto(strategy));
   }
@@ -31,7 +31,7 @@ export class StrategyController extends BaseController {
   @Get(':id')
   @ApiOperation({ summary: 'Fetch a single strategy' })
   @ApiParam({ name: 'id', required: true, description: 'The ID of the strategy' })
-  async getStrategyById(@UserId() userId: string, @Param('id') id: string): Promise<StrategyReadResponseDto> {
+  async getStrategyById(@ExtractUserId() userId: string, @Param('id') id: string): Promise<StrategyReadResponseDto> {
     const strategy = await this.strategyService.getStrategyById(userId, id);
 
     if (!strategy) throw new StrategyNotFoundException(id);
@@ -43,7 +43,7 @@ export class StrategyController extends BaseController {
   @ApiBody({ description: 'Strategy creation details', type: StrategyCreateRequestDto })
   @UsePipes(new ValidationPipe({ transform: true }))
   async createStrategy(
-    @UserId() userId: string,
+    @ExtractUserId() userId: string,
     @Body() strategyCreateRequestDto: StrategyCreateRequestDto
   ): Promise<StrategyReadResponseDto> {
     return new StrategyReadResponseDto(await this.strategyService.createStrategy(userId, strategyCreateRequestDto));
@@ -55,7 +55,7 @@ export class StrategyController extends BaseController {
   @ApiBody({ description: 'Strategy update details', type: StrategyUpdateRequestDto })
   @UsePipes(new ValidationPipe({ transform: true, skipMissingProperties: true }))
   async updateStrategy(
-    @UserId() userId: string,
+    @ExtractUserId() userId: string,
     @Param('id') id: string,
     @Body() strategyUpdateRequestDto: StrategyUpdateRequestDto
   ): Promise<StrategyReadResponseDto> {
@@ -70,7 +70,7 @@ export class StrategyController extends BaseController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a strategy' })
   @ApiParam({ name: 'id', required: true, description: 'The ID of the strategy' })
-  async deleteStrategy(@UserId() userId: string, @Param('id') id: string) {
+  async deleteStrategy(@ExtractUserId() userId: string, @Param('id') id: string) {
     const wasDeleted = await this.strategyService.deleteStrategy(userId, id);
 
     if (!wasDeleted) {

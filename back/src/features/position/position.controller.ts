@@ -1,26 +1,27 @@
 import { Controller, Delete, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { API_BEARER_AUTH_NAME } from '@auth/auth.constants';
-import { ValidateAccount } from '@auth/decorators/account-auth.decorator';
-import { JwtAuthGuard } from '@auth/jwt-auth.guard';
-import { BaseController } from '@common/base/base.controller';
+import { ValidateAccount } from '@account/decorators/account-validation.decorator';
+import { AccountValidationGuard } from '@account/guards/account-validation.guard';
+import { BaseController } from '@common/base.controller';
 import { OrderReadResponseDto } from '@order/dtos/order-read.response.dto';
 import { OrderSide } from '@order/types/order-side.enum';
+import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
 import { PositionReadResponseDto } from './dtos/position-read.response.dto';
 import { PositionService } from './position.service';
 
 @ApiTags('Positions')
-@ApiBearerAuth(API_BEARER_AUTH_NAME)
+@UseGuards(JwtAuthGuard, AccountValidationGuard)
+@ApiBearerAuth()
 @Controller('positions')
-@UseGuards(JwtAuthGuard)
 export class PositionController extends BaseController {
   constructor(private readonly positionService: PositionService) {
     super('Positions');
   }
 
   @Get('/accounts/:accountId/positions')
+  @ValidateAccount()
   @ApiOperation({ summary: 'Fetch open positions for a specific account, optionally filtered by symbol and/or side' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   @ApiQuery({
@@ -30,7 +31,7 @@ export class PositionController extends BaseController {
   })
   @ApiQuery({ name: 'side', required: false, description: 'Optional side to filter positions (e.g., buy or sell)' })
   getAccountOpenPositions(
-    @ValidateAccount() accountId: string,
+    @Param('accountId') accountId: string,
     @Query('symbol') symbol?: string,
     @Query('side') side?: OrderSide
   ): PositionReadResponseDto[] {
@@ -38,6 +39,7 @@ export class PositionController extends BaseController {
   }
 
   @Delete('/accounts/:accountId/markets/:marketId/positions/:side')
+  @ValidateAccount()
   @ApiOperation({ summary: 'Close a position' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   @ApiParam({
@@ -47,7 +49,7 @@ export class PositionController extends BaseController {
   })
   @ApiParam({ name: 'side', required: true, description: 'The side of the position to close (e.g., buy or sell)' })
   async closePosition(
-    @ValidateAccount() accountId: string,
+    @Param('accountId') accountId: string,
     @Param('marketId') marketId: string,
     @Param('side') side: OrderSide
   ): Promise<OrderReadResponseDto> {

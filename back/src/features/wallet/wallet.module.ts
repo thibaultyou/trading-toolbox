@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 
+import { AccountModule } from '@account/account.module';
+
 import { WalletModuleExchangeInitializedEventHandler } from './handlers/exchange-initiated.event-handler';
 import { WalletModuleExchangeTerminatedEventHandler } from './handlers/exchange-terminated.event-handler';
 import { WalletModuleWalletDataUpdatedEventHandler } from './handlers/wallet-data-updated.event-handler';
@@ -8,6 +10,7 @@ import { WalletGateway } from './wallet.gateway';
 import { WalletService } from './wallet.service';
 
 @Module({
+  imports: [AccountModule],
   controllers: [WalletController],
   exports: [WalletService],
   providers: [

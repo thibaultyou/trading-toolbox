@@ -1,27 +1,28 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
-import { API_BEARER_AUTH_NAME } from '@auth/auth.constants';
-import { ValidateAccount } from '@auth/decorators/account-auth.decorator';
-import { JwtAuthGuard } from '@auth/jwt-auth.guard';
-import { BaseController } from '@common/base/base.controller';
+import { ValidateAccount } from '@account/decorators/account-validation.decorator';
+import { AccountValidationGuard } from '@account/guards/account-validation.guard';
+import { BaseController } from '@common/base.controller';
+import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
 import { WalletReadResponseDto } from './dtos/wallet-read.response.dto';
 import { WalletService } from './wallet.service';
 
 @ApiTags('Wallets')
-@ApiBearerAuth(API_BEARER_AUTH_NAME)
+@UseGuards(JwtAuthGuard, AccountValidationGuard)
+@ApiBearerAuth()
 @Controller('wallets')
-@UseGuards(JwtAuthGuard)
 export class WalletController extends BaseController {
   constructor(private readonly walletService: WalletService) {
     super('Wallets');
   }
 
   @Get('/accounts/:accountId/wallets')
+  @ValidateAccount()
   @ApiOperation({ summary: 'Fetch wallets' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
-  getAccountWallets(@ValidateAccount() accountId: string): WalletReadResponseDto {
+  getAccountWallets(@Param('accountId') accountId: string): WalletReadResponseDto {
     return new WalletReadResponseDto(this.walletService.getWallets(accountId));
   }
 }

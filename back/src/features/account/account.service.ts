@@ -3,10 +3,9 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository } from 'typeorm';
 
-import { UserId } from '@auth/decorators/user-id.decorator';
-import { User } from '@auth/entities/user.entity';
 import { Events } from '@config/events.config';
 import { ExchangeFactory } from '@exchange/services/exchange-service.factory';
+import { User } from '@user/entities/user.entity';
 
 import { maskString } from './account.utils';
 import { AccountCreateRequestDto } from './dtos/account-create.request.dto';
@@ -28,7 +27,7 @@ export class AccountService {
     private exchangeFactory: ExchangeFactory
   ) {}
 
-  async getUserAccounts(@UserId() userId: string): Promise<Account[]> {
+  async getUserAccounts(userId: string): Promise<Account[]> {
     this.logger.debug(`Fetching all accounts - UserID: ${userId}`);
     const accounts = await this.accountRepository.find({ where: { user: { id: userId } } });
     this.logger.log(`Fetched accounts - Count: ${accounts.length}`);
@@ -42,7 +41,7 @@ export class AccountService {
     return accounts;
   }
 
-  async getAccountById(@UserId() userId: string, id: string): Promise<Account> {
+  async getAccountById(userId: string, id: string): Promise<Account> {
     this.logger.debug(`Fetching account - AccountID: ${id}`);
     const account = await this.accountRepository.findOne({ where: { id, user: { id: userId } } });
 
@@ -55,7 +54,7 @@ export class AccountService {
     return account;
   }
 
-  async validateUserAccount(@UserId() userId: string, accountId: string): Promise<Account> {
+  async validateUserAccount(userId: string, accountId: string): Promise<Account> {
     this.logger.debug(`Validating user account - UserID: ${userId} - AccountID: ${accountId}`);
     const account = await this.getAccountById(userId, accountId);
 
@@ -121,7 +120,7 @@ export class AccountService {
     return savedAccount;
   }
 
-  async updateAccount(@UserId() userId: string, id: string, dto: AccountUpdateRequestDto): Promise<Account> {
+  async updateAccount(userId: string, id: string, dto: AccountUpdateRequestDto): Promise<Account> {
     this.logger.debug(`Updating account - AccountID: ${id}`);
     const account = await this.getAccountById(userId, id);
 
@@ -171,7 +170,7 @@ export class AccountService {
     return savedAccount;
   }
 
-  async deleteAccount(@UserId() userId: string, id: string): Promise<Account> {
+  async deleteAccount(userId: string, id: string): Promise<Account> {
     this.logger.debug(`Deleting account - AccountID: ${id}`);
     const account = await this.getAccountById(userId, id);
 

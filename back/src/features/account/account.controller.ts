@@ -13,11 +13,10 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { API_BEARER_AUTH_NAME } from '@auth/auth.constants';
-import { UserId } from '@auth/decorators/user-id.decorator';
-import { JwtAuthGuard } from '@auth/jwt-auth.guard';
-import { BaseController } from '@common/base/base.controller';
+import { BaseController } from '@common/base.controller';
 import { RequestWithUser } from '@common/types/request-with-user.interface';
+import { ExtractUserId } from '@user/decorators/user-id-extractor.decorator';
+import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
 import { AccountService } from './account.service';
 import { AccountCreateRequestDto } from './dtos/account-create.request.dto';
@@ -26,9 +25,9 @@ import { AccountReadResponseDto } from './dtos/account-read.response.dto';
 import { AccountUpdateRequestDto } from './dtos/account-update.request.dto';
 
 @ApiTags('Accounts')
-@ApiBearerAuth(API_BEARER_AUTH_NAME)
-@Controller('accounts')
 @UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
+@Controller('accounts')
 export class AccountController extends BaseController {
   constructor(private readonly accountService: AccountService) {
     super('Accounts');
@@ -37,7 +36,7 @@ export class AccountController extends BaseController {
   @Get()
   @ApiOperation({ summary: 'Fetch all accounts' })
   @ApiResponse({ status: 200, description: 'List of accounts', type: [AccountReadResponseDto] })
-  async getAllAccounts(@UserId() userId: string): Promise<AccountReadResponseDto[]> {
+  async getAllAccounts(@ExtractUserId() userId: string): Promise<AccountReadResponseDto[]> {
     const accounts = await this.accountService.getUserAccounts(userId);
     return accounts.map((account) => new AccountReadResponseDto(account));
   }
@@ -47,7 +46,7 @@ export class AccountController extends BaseController {
   @ApiParam({ name: 'id', required: true, description: 'The ID of the account' })
   @ApiResponse({ status: 200, description: 'The account', type: AccountReadResponseDto })
   @ApiResponse({ status: 404, description: 'Account not found' })
-  async getAccountById(@UserId() userId: string, @Param('id') id: string): Promise<AccountReadResponseDto> {
+  async getAccountById(@ExtractUserId() userId: string, @Param('id') id: string): Promise<AccountReadResponseDto> {
     const account = await this.accountService.getAccountById(userId, id);
     return new AccountReadResponseDto(account);
   }
@@ -86,7 +85,7 @@ export class AccountController extends BaseController {
   @ApiResponse({ status: 404, description: 'Account not found' })
   @UsePipes(new ValidationPipe({ transform: true, skipMissingProperties: true }))
   async updateAccount(
-    @UserId() userId: string,
+    @ExtractUserId() userId: string,
     @Param('id') id: string,
     @Body() accountUpdateRequestDto: AccountUpdateRequestDto
   ): Promise<AccountReadResponseDto> {
@@ -99,7 +98,7 @@ export class AccountController extends BaseController {
   @ApiParam({ name: 'id', required: true, description: 'The ID of the account' })
   @ApiResponse({ status: 200, description: 'The deleted account ID', type: AccountDeleteResponseDto })
   @ApiResponse({ status: 404, description: 'Account not found' })
-  async deleteAccount(@UserId() userId: string, @Param('id') id: string): Promise<AccountDeleteResponseDto> {
+  async deleteAccount(@ExtractUserId() userId: string, @Param('id') id: string): Promise<AccountDeleteResponseDto> {
     const account = await this.accountService.deleteAccount(userId, id);
     return new AccountDeleteResponseDto(account);
   }

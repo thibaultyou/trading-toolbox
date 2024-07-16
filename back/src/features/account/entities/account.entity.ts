@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
-import { User } from '@auth/entities/user.entity';
 import { ExchangeType } from '@exchange/types/exchange-type.enum';
+import { User } from '@user/entities/user.entity';
 
 import { AccountCreateRequestDto } from '../dtos/account-create.request.dto';
 import { AccountUpdateRequestDto } from '../dtos/account-update.request.dto';

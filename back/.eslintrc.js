@@ -42,7 +42,6 @@ module.exports = {
           { 'pattern': '@common/**', 'group': 'internal' },
           { 'pattern': '@config/**', 'group': 'internal' },
           { 'pattern': '@account/**', 'group': 'internal' },
-          { 'pattern': '@auth/**', 'group': 'internal' },
           { 'pattern': '@env/**', 'group': 'internal' },
           { 'pattern': '@exchange/**', 'group': 'internal' },
           { 'pattern': '@health/**', 'group': 'internal' },
@@ -52,6 +51,7 @@ module.exports = {
           { 'pattern': '@position/**', 'group': 'internal' },
           { 'pattern': '@strategy/**', 'group': 'internal' },
           { 'pattern': '@ticker/**', 'group': 'internal' },
+          { 'pattern': '@user/**', 'group': 'internal' },
           { 'pattern': '@wallet/**', 'group': 'internal' },
           { 'pattern': '@test/**', 'group': 'internal' }
         ],

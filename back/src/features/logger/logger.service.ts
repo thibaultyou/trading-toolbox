@@ -2,7 +2,7 @@ import { LoggerService } from '@nestjs/common';
 import { createLogger, format, transports } from 'winston';
 
 import { InjectConfig } from '@common/decorators/inject-env.decorator';
-import { Config } from '@config/env.config';
+import { IEnvConfiguration } from '@config/env.config';
 
 import { ILogger } from './logger.interface';
 
@@ -11,7 +11,7 @@ export class AppLogger implements LoggerService {
   private context = '';
 
   constructor(
-    @InjectConfig() private config: Config,
+    @InjectConfig() private config: IEnvConfiguration,
     context?: string
   ) {
     this.context = context;

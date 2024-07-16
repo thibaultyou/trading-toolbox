@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { CONFIG_TOKEN, Config } from '@config/env.config';
+import { GlobalExceptionFilter } from '@common/filters/global-exception.filter';
+import { CONFIG_TOKEN, IEnvConfiguration } from '@config/env.config';
 
 import { AccountModule } from './features/account/account.module';
-import { AuthModule } from './features/auth/auth.module';
 import { EnvModule } from './features/env/env.module';
 import { ExchangeModule } from './features/exchange/exchange.module';
 import { HealthModule } from './features/health/health.module';
@@ -16,6 +17,7 @@ import { OrderModule } from './features/order/order.module';
 import { PositionModule } from './features/position/position.module';
 import { StrategyModule } from './features/strategy/strategy.module';
 import { TickerModule } from './features/ticker/ticker.module';
+import { UserModule } from './features/user/user.module';
 import { WalletModule } from './features/wallet/wallet.module';
 
 @Module({
@@ -24,7 +26,7 @@ import { WalletModule } from './features/wallet/wallet.module';
     LoggerModule, // Global
     TypeOrmModule.forRootAsync({
       imports: [EnvModule],
-      useFactory: (config: Config) => ({
+      useFactory: (config: IEnvConfiguration) => ({
         type: 'postgres',
         host: config.DATABASE_HOST,
         port: config.DATABASE_PORT,
@@ -38,7 +40,7 @@ import { WalletModule } from './features/wallet/wallet.module';
     }),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
-    AuthModule,
+    UserModule,
     AccountModule,
     MarketModule,
     OrderModule,
@@ -48,6 +50,12 @@ import { WalletModule } from './features/wallet/wallet.module';
     WalletModule,
     ExchangeModule, // Global
     HealthModule
+  ],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter
+    }
   ]
 })
 export class AppModule {}

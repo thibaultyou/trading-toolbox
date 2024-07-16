@@ -1,4 +1,4 @@
-export interface Config {
+export interface IEnvConfiguration {
   NODE_ENV: 'development' | 'production' | 'test';
   DATABASE_HOST: string;
   DATABASE_PORT: number;
@@ -10,8 +10,8 @@ export interface Config {
   WS_NAMESPACE: string;
 }
 
-export const envConfig: Config = {
-  NODE_ENV: (process.env.NODE_ENV as Config['NODE_ENV']) || 'development',
+export const envConfig: IEnvConfiguration = {
+  NODE_ENV: (process.env.NODE_ENV as IEnvConfiguration['NODE_ENV']) || 'development',
   DATABASE_HOST: process.env.DATABASE_HOST || 'db',
   DATABASE_PORT: parseInt(process.env.DATABASE_PORT || '5432', 10),
   DATABASE_USER: process.env.DATABASE_USER || '',

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { AccountModule } from '@account/account.module';
 import { OrderModule } from '@order/order.module';
 import { PositionModule } from '@position/position.module';
 
@@ -12,7 +13,7 @@ import { TickerService } from './ticker.service';
 @Module({
   controllers: [TickerController],
   exports: [TickerService],
-  imports: [PositionModule, OrderModule],
+  imports: [AccountModule, PositionModule, OrderModule],
   providers: [
     TickerService,
     TickerModuleExchangeInitializedEventHandler,

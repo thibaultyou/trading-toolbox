@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { AccountModule } from '@account/account.module';
 import { OrderModule } from '@order/order.module';
 import { TickerModule } from '@ticker/ticker.module';
 import { WalletModule } from '@wallet/wallet.module';
@@ -15,7 +16,7 @@ import { StrategyOptionsValidator } from './validators/strategy-options.validato
 @Module({
   controllers: [StrategyController],
   exports: [StrategyService],
-  imports: [TypeOrmModule.forFeature([Strategy]), OrderModule, TickerModule, WalletModule],
+  imports: [TypeOrmModule.forFeature([Strategy]), AccountModule, OrderModule, TickerModule, WalletModule],
   providers: [StrategyService, StrategyOptionsValidator, StrategyFactory, StrategyModuleExecutionReceivedEventHandler]
 })
 export class StrategyModule {}

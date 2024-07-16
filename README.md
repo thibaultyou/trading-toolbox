@@ -1,6 +1,6 @@
 # Trading Toolbox
 
-Trading Toolbox is a sophisticated application designed for executing trading operations on exchanges. It leverages cutting-edge technologies to monitor trades, execute actions based on predefined conditions, and apply advanced trading strategies.
+Trading Toolbox is an application designed for executing trading operations on exchanges. It aims to monitor trades, execute actions based on predefined conditions, and apply advanced trading strategies.
 
 **Note: The frontend component of this application is currently deactivated. Any files or directories prefixed with `_` are flagged for review.**
 

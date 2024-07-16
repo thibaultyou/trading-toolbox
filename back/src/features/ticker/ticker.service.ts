@@ -82,7 +82,7 @@ export class TickerService implements OnModuleInit, IAccountTracker {
     return price;
   }
 
-  updateTickerData(accountId: string, marketId: string, data: ITickerData): void {
+  updateTickerData(accountId: string, marketId: string, data: ITickerData) {
     this.logger.debug(`Updating ticker data - AccountID: ${accountId} - MarketID: ${marketId}`);
 
     if (!this.tickerValues.has(accountId)) {

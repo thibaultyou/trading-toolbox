@@ -29,10 +29,12 @@ export class BybitExchangeService extends BaseExchangeService {
       // )();
     } catch (error) {
       if (error instanceof ccxt.AuthenticationError) {
-        throw new InvalidCredentialsException(this.account.name);
+        throw new InvalidCredentialsException(this.account.id);
+      } else if (error instanceof ccxt.ExchangeError) {
+        throw new ExchangeInitializationException(error.message);
+      } else {
+        throw error;
       }
-
-      throw new ExchangeInitializationException(error.message);
     }
   }
 }

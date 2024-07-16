@@ -1,23 +1,24 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
-import { API_BEARER_AUTH_NAME } from '@auth/auth.constants';
-import { ValidateAccount } from '@auth/decorators/account-auth.decorator';
-import { JwtAuthGuard } from '@auth/jwt-auth.guard';
-import { BaseController } from '@common/base/base.controller';
+import { ValidateAccount } from '@account/decorators/account-validation.decorator';
+import { AccountValidationGuard } from '@account/guards/account-validation.guard';
+import { BaseController } from '@common/base.controller';
+import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
 import { TickerService } from './ticker.service';
 
 @ApiTags('Tickers')
-@ApiBearerAuth(API_BEARER_AUTH_NAME)
+@UseGuards(JwtAuthGuard, AccountValidationGuard)
+@ApiBearerAuth()
 @Controller('tickers')
-@UseGuards(JwtAuthGuard)
 export class TickerController extends BaseController {
   constructor(private readonly tickerService: TickerService) {
     super('TickerController');
   }
 
   @Get('/accounts/:accountId/markets/:marketId')
+  @ValidateAccount()
   @ApiOperation({ summary: 'Get ticker price' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
   @ApiParam({
@@ -25,7 +26,7 @@ export class TickerController extends BaseController {
     required: true,
     description: 'The trading symbol of the ticker (e.g., BTCUSDT)'
   })
-  async getTickerPrice(@ValidateAccount() accountId: string, @Param('marketId') marketId: string): Promise<number> {
+  async getTickerPrice(@Param('accountId') accountId: string, @Param('marketId') marketId: string): Promise<number> {
     return await this.tickerService.getTickerPrice(accountId, marketId);
   }
 }

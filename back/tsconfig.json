@@ -24,7 +24,6 @@
       "@common/*": ["src/common/*"],
       "@config/*": ["src/config/*"],
       "@account/*": ["src/features/account/*"],
-      "@auth/*": ["src/features/auth/*"],
       "@env/*": ["src/features/env/*"],
       "@exchange/*": ["src/features/exchange/*"],
       "@health/*": ["src/features/health/*"],
@@ -34,6 +33,7 @@
       "@position/*": ["src/features/position/*"],
       "@strategy/*": ["src/features/strategy/*"],
       "@ticker/*": ["src/features/ticker/*"],
+      "@user/*": ["src/features/user/*"],
       "@wallet/*": ["src/features/wallet/*"],
       "@test/*": ["test/*"]
     }
