@@ -18,11 +18,11 @@ By proceeding, you acknowledge these limitations and accept all associated risks
 
 The Trading Toolbox currently supports the following features:
 
-- User Management: Create and manage user accounts.
-- Trading Accounts Management: Link and manage Bybit trading accounts to user profiles.
-- Exchange Monitoring: Periodically check for exchange items such as markets, orders, and positions.
-- Real-time Updates: Provide real-time updates for wallets, executed orders, and ticker price fluctuations.
-- Trading Strategies: Provide a framework to implement and reference trading strategies based on certain conditions and settings (Work in Progress).
+- **User Management**: Create and manage user accounts.
+- **Trading Accounts Management**: Link and manage Bybit trading accounts to user profiles.
+- **Exchange Monitoring**: Periodically check for exchange items such as markets, orders, and positions.
+- **Real-time Updates**: Provide real-time updates for wallets, executed orders, and ticker price fluctuations.
+- **Trading Strategies**: Provide a framework to implement and reference trading strategies based on certain conditions and settings (Work in Progress).
 
 ## 🚀 Getting Started
 
@@ -36,28 +36,19 @@ Follow these instructions to set up the project on your local machine for develo
 
 ### Installation
 
-1. Clone the repository:
+1. **Clone the repository:**
    ```sh
    git clone https://github.com/yourusername/tradingtoolbox.git
    cd tradingtoolbox
    ```
 
-2. Set up environment variables:
+2. **Set up environment variables:**
    ```sh
    cp .env.example .env
    ```
-   Edit `.env` file as needed. Default values are for development:
-   ```
-   NODE_ENV=development
-   DATABASE_HOST=db
-   DATABASE_PORT=5432
-   DATABASE_USER=postgres
-   DATABASE_PASSWORD=postgres
-   DATABASE_NAME=app
-   JWT_SECRET=some_secret
-   ```
+   Edit the `.env` file as needed.
 
-3. Launch the application:
+3. **Launch the application:**
    - For production:
      ```sh
      docker-compose up -d
@@ -67,12 +58,12 @@ Follow these instructions to set up the project on your local machine for develo
      docker-compose -f docker-compose.dev.yml up -d
      ```
 
-4. Access the application:
+4. **Access the application:**
    - API Server: `http://localhost:1234/api`
    - Adminer (Database Management): `http://localhost:8080/adminer`
    - Swagger Documentation: `http://localhost:1234/api/docs`
 
-5. To stop the application:
+5. **Stop the application:**
    ```sh
    docker-compose down
    ```
