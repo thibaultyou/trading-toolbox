@@ -1,10 +1,12 @@
-export enum EventHandlersContext {
-  CoreModuleEventHandler = 'CoreModuleEventHandler',
-  ExchangeModuleEventHandler = 'ExchangeModuleEventHandler',
-  MarketModuleEventHandler = 'MarketModuleEventHandler',
-  OrderModuleEventHandler = 'OrderModuleEventHandler',
-  PositionModuleEventHandler = 'PositionModuleEventHandler',
-  StrategyModuleEventHandler = 'StrategyModuleEventHandler',
-  TickerModuleEventHandler = 'TickerModuleEventHandler',
-  WalletModuleEventHandler = 'WalletModuleEventHandler'
-}
+export const EventHandlersContext = {
+  CoreModule: 'CoreModuleEventHandler',
+  ExchangeModule: 'ExchangeModuleEventHandler',
+  MarketModule: 'MarketModuleEventHandler',
+  OrderModule: 'OrderModuleEventHandler',
+  PositionModule: 'PositionModuleEventHandler',
+  StrategyModule: 'StrategyModuleEventHandler',
+  TickerModule: 'TickerModuleEventHandler',
+  WalletModule: 'WalletModuleEventHandler'
+} as const;
+
+export type EventHandlersContextType = (typeof EventHandlersContext)[keyof typeof EventHandlersContext];

@@ -1,22 +1,28 @@
 # Trading Toolbox
 
-Trading Toolbox is an application designed for executing trading operations on exchanges. It aims to monitor trades, execute actions based on predefined conditions, and apply advanced trading strategies.
-
-**Note: The frontend component of this application is currently deactivated. Any files or directories prefixed with `_` are flagged for review.**
+Trading Toolbox is a personal project designed for executing trading operations on exchanges. It aims to monitor trades, execute actions based on predefined conditions, and apply advanced trading strategies.
 
 ## 🚨 Important Notice
 
-**WARNING: This project is in active development and NOT intended for public use or real trading.**
+**WARNING: This project is a personal endeavor, in active development, and NOT intended for public use or real trading.**
 
-- **Experimental Status**: This application is a work in progress. Features may be incomplete, unstable, or subject to significant changes without notice.
-- **Quality Concerns**: The codebase is largely untested and does not adhere to best practices. Expect bugs and performance issues.
-- **Limited Functionality**: Critical features, including automated trading strategies, are still under development and not fully implemented.
-- **Backend-Only**: The frontend is currently deactivated. Interaction is limited to API and other backend interfaces.
+- **Personal Use Only**: This application is designed for personal experimentation and learning. It is not intended for use by others or in any production environment.
+- **Experimental Status**: This project is a work in progress. Features may be incomplete, unstable, or subject to significant changes without notice.
+- **Quality Concerns**: The codebase is largely untested and may not adhere to best practices. Expect bugs and performance issues.
 - **High Risk**: This software is provided "as is", without any warranties. Any use, especially for actual trading, could result in significant financial losses.
-- **Code Review Needed**: Files and directories prefixed with `_` contain experimental or deprecated code requiring review.
 - **Not Production-Ready**: This application is not suitable for deployment in a production environment or for handling real financial transactions.
 
-By proceeding, you acknowledge these limitations and accept all associated risks. We strongly advise against using this software for any critical or financial operations at this stage.
+By proceeding, you acknowledge these limitations and accept all associated risks. The creator strongly advises against using this software for any critical or financial operations at this stage.
+
+## 🎯 Features
+
+The Trading Toolbox currently supports the following features:
+
+- User Management: Create and manage user accounts.
+- Trading Accounts Management: Link and manage Bybit trading accounts to user profiles.
+- Exchange Monitoring: Periodically check for exchange items such as markets, orders, and positions.
+- Real-time Updates: Provide real-time updates for wallets, executed orders, and ticker price fluctuations.
+- Trading Strategies: Provide a framework to implement and reference trading strategies based on certain conditions and settings (Work in Progress).
 
 ## 🚀 Getting Started
 
@@ -32,7 +38,7 @@ Follow these instructions to set up the project on your local machine for develo
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/thibaultyou/tradingtoolbox.git
+   git clone https://github.com/yourusername/tradingtoolbox.git
    cd tradingtoolbox
    ```
 
@@ -81,4 +87,4 @@ This project is licensed under the CC BY-NC-ND 4.0 License. See [LICENSE.md](LIC
 
 ---
 
-**Disclaimer**: This software is for educational and research purposes only. Do not use it for real trading or financial decisions without thorough testing and professional advice.
+**Disclaimer**: This software is for personal educational and research purposes only. Do not use it for real trading or financial decisions without thorough testing and professional advice.

@@ -4,21 +4,20 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { AccountModule } from '@account/account.module';
 import { GlobalExceptionFilter } from '@common/filters/global-exception.filter';
-import { CONFIG_TOKEN, IEnvConfiguration } from '@config/env.config';
-
-import { AccountModule } from './features/account/account.module';
-import { EnvModule } from './features/env/env.module';
-import { ExchangeModule } from './features/exchange/exchange.module';
-import { HealthModule } from './features/health/health.module';
-import { LoggerModule } from './features/logger/logger.module';
-import { MarketModule } from './features/market/market.module';
-import { OrderModule } from './features/order/order.module';
-import { PositionModule } from './features/position/position.module';
-import { StrategyModule } from './features/strategy/strategy.module';
-import { TickerModule } from './features/ticker/ticker.module';
-import { UserModule } from './features/user/user.module';
-import { WalletModule } from './features/wallet/wallet.module';
+import { CONFIG_TOKEN, IEnvConfiguration } from '@config';
+import { EnvModule } from '@env/env.module';
+import { ExchangeModule } from '@exchange/exchange.module';
+import { HealthModule } from '@health/health.module';
+import { LoggerModule } from '@logger/logger.module';
+import { MarketModule } from '@market/market.module';
+import { OrderModule } from '@order/order.module';
+import { PositionModule } from '@position/position.module';
+import { StrategyModule } from '@strategy/strategy.module';
+import { TickerModule } from '@ticker/ticker.module';
+import { UserModule } from '@user/user.module';
+import { WalletModule } from '@wallet/wallet.module';
 
 @Module({
   imports: [

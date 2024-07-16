@@ -3,8 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AccountExceptionsFilter } from '@account/exceptions/account.exceptions.filter';
-import { envConfig } from '@config/env.config';
-import { Urls } from '@config/urls.config';
+import { Urls, envConfig } from '@config';
 import { AppLogger } from '@logger/logger.service';
 import { MarketExceptionsFilter } from '@market/exceptions/market.exceptions.filter';
 import { OrderExceptionsFilter } from '@order/exceptions/order.exceptions.filter';
@@ -30,8 +29,8 @@ const bootstrap = async () => {
   app.useGlobalFilters(
     new AccountExceptionsFilter(),
     new MarketExceptionsFilter(),
-    new PositionExceptionsFilter(),
     new OrderExceptionsFilter(),
+    new PositionExceptionsFilter(),
     new StrategyExceptionsFilter(),
     new TickerExceptionsFilter(),
     new WalletExceptionsFilter()

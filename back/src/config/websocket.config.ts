@@ -5,4 +5,6 @@ export const websocketConfig = {
     origin: envConfig.WS_CORS_ORIGIN.split(',')
   },
   namespace: envConfig.WS_NAMESPACE
-};
+} as const;
+
+export type WebsocketConfigType = typeof websocketConfig;

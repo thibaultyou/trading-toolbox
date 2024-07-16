@@ -38,9 +38,8 @@ module.exports = {
           ['parent', 'sibling', 'index']
         ],
         'pathGroups': [
-          { 'pattern': '@app/**', 'group': 'internal' },
           { 'pattern': '@common/**', 'group': 'internal' },
-          { 'pattern': '@config/**', 'group': 'internal' },
+          { 'pattern': '@config', 'group': 'internal' },
           { 'pattern': '@account/**', 'group': 'internal' },
           { 'pattern': '@env/**', 'group': 'internal' },
           { 'pattern': '@exchange/**', 'group': 'internal' },
