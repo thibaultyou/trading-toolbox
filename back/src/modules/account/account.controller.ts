@@ -14,6 +14,7 @@ import {
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '@common/base.controller';
+import { UuidValidationPipe } from '@common/pipes/uuid-validation.pipe';
 import { RequestWithUser } from '@common/types/request-with-user.interface';
 import { ExtractUserId } from '@user/decorators/user-id-extractor.decorator';
 import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
@@ -41,13 +42,17 @@ export class AccountController extends BaseController {
     return accounts.map((account) => new AccountReadResponseDto(account));
   }
 
-  @Get(':id')
+  @Get(':accountId')
   @ApiOperation({ summary: 'Fetch a single account' })
-  @ApiParam({ name: 'id', required: true, description: 'The ID of the account' })
+  @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account (UUID format)' })
   @ApiResponse({ status: 200, description: 'The account', type: AccountReadResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid UUID format' })
   @ApiResponse({ status: 404, description: 'Account not found' })
-  async getAccountById(@ExtractUserId() userId: string, @Param('id') id: string): Promise<AccountReadResponseDto> {
-    const account = await this.accountService.getAccountById(userId, id);
+  async getAccountById(
+    @ExtractUserId() userId: string,
+    @Param('accountId', UuidValidationPipe) accountId: string
+  ): Promise<AccountReadResponseDto> {
+    const account = await this.accountService.getAccountById(userId, accountId);
     return new AccountReadResponseDto(account);
   }
 
@@ -77,29 +82,34 @@ export class AccountController extends BaseController {
     return new AccountReadResponseDto(await this.accountService.createAccount(req.user, accountCreateRequestDto));
   }
 
-  @Patch(':id')
+  @Patch(':accountId')
   @ApiOperation({ summary: 'Update an account' })
-  @ApiParam({ name: 'id', required: true, description: 'The ID of the account' })
+  @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account (UUID format)' })
   @ApiBody({ type: AccountUpdateRequestDto })
   @ApiResponse({ status: 200, description: 'The updated account', type: AccountReadResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid UUID format' })
   @ApiResponse({ status: 404, description: 'Account not found' })
   @UsePipes(new ValidationPipe({ transform: true, skipMissingProperties: true }))
   async updateAccount(
     @ExtractUserId() userId: string,
-    @Param('id') id: string,
+    @Param('accountId', UuidValidationPipe) accountId: string,
     @Body() accountUpdateRequestDto: AccountUpdateRequestDto
   ): Promise<AccountReadResponseDto> {
-    const account = await this.accountService.updateAccount(userId, id, accountUpdateRequestDto);
+    const account = await this.accountService.updateAccount(userId, accountId, accountUpdateRequestDto);
     return new AccountReadResponseDto(account);
   }
 
-  @Delete(':id')
+  @Delete(':accountId')
   @ApiOperation({ summary: 'Delete an account' })
-  @ApiParam({ name: 'id', required: true, description: 'The ID of the account' })
+  @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account (UUID format)' })
   @ApiResponse({ status: 200, description: 'The deleted account ID', type: AccountDeleteResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid UUID format' })
   @ApiResponse({ status: 404, description: 'Account not found' })
-  async deleteAccount(@ExtractUserId() userId: string, @Param('id') id: string): Promise<AccountDeleteResponseDto> {
-    const account = await this.accountService.deleteAccount(userId, id);
+  async deleteAccount(
+    @ExtractUserId() userId: string,
+    @Param('accountId', UuidValidationPipe) accountId: string
+  ): Promise<AccountDeleteResponseDto> {
+    const account = await this.accountService.deleteAccount(userId, accountId);
     return new AccountDeleteResponseDto(account);
   }
 }

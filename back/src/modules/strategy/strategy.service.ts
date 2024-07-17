@@ -44,15 +44,20 @@ export class StrategyService implements OnModuleInit {
   }
 
   async getStrategyById(userId: string, id: string): Promise<Strategy> {
-    this.logger.debug(`Fetching strategyUserID: ${userId}StrategyID: ${id}`);
-    const strategy = await this.strategyRepository.findOne({ where: { id, userId } });
+    this.logger.debug(`Fetching strategy - UserID: ${userId} - StrategyID: ${id}`);
+    const strategy = await this.strategyRepository.findOne({
+      where: {
+        id: id,
+        userId: userId
+      }
+    });
 
     if (!strategy) {
-      this.logger.warn(`Strategy not found - UserID: ${userId}, StrategyID: ${id}`);
+      this.logger.warn(`Strategy not found - UserID: ${userId} - StrategyID: ${id}`);
       throw new StrategyNotFoundException(id);
     }
 
-    this.logger.debug(`Fetched strategy - UserID: ${userId}, StrategyID: ${id}`);
+    this.logger.debug(`Fetched strategy - UserID: ${userId} - StrategyID: ${id}`);
     return strategy;
   }
 
@@ -61,22 +66,22 @@ export class StrategyService implements OnModuleInit {
     const strategy = new Strategy({ ...dto, userId, orders: [] });
     const savedStrategy = await this.strategyRepository.save(strategy);
     this.logger.log(
-      `Created new strategy - UserID: ${userId}, StrategyID: ${savedStrategy.id}, Type: ${savedStrategy.type}`
+      `Created new strategy - UserID: ${userId} - StrategyID: ${savedStrategy.id} - Type: ${savedStrategy.type}`
     );
     return savedStrategy;
   }
 
   async updateStrategy(userId: string, id: string, dto: StrategyUpdateRequestDto): Promise<Strategy> {
-    this.logger.debug(`Updating strategy - UserID: ${userId}, StrategyID: ${id}`);
+    this.logger.debug(`Updating strategy - UserID: ${userId} - StrategyID: ${id}`);
     const strategy = await this.getStrategyById(userId, id);
     Object.assign(strategy, dto);
     const updatedStrategy = await this.strategyRepository.save(strategy);
-    this.logger.log(`Updated strategy - UserID: ${userId}, StrategyID: ${id}`);
+    this.logger.log(`Updated strategy - UserID: ${userId} - StrategyID: ${id}`);
     return updatedStrategy;
   }
 
   async deleteStrategy(userId: string, id: string): Promise<boolean> {
-    this.logger.debug(`Deleting strategy - UserID: ${userId}, StrategyID: ${id}`);
+    this.logger.debug(`Deleting strategy - UserID: ${userId} - StrategyID: ${id}`);
     const strategy = await this.getStrategyById(userId, id);
     await this.strategyRepository.remove(strategy);
     this.logger.log(`Deleted strategy - UserID: ${userId}, StrategyID: ${id}`);

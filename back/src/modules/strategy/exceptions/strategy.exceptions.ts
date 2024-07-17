@@ -8,6 +8,6 @@ export class StrategyNotFoundException extends HttpException {
 
 export class UnknownStrategyTypeException extends HttpException {
   constructor(type: string) {
-    super(`Unknown strategy type: ${type}`, HttpStatus.BAD_REQUEST);
+    super(`Unknown strategy type - Type: ${type}`, HttpStatus.BAD_REQUEST);
   }
 }

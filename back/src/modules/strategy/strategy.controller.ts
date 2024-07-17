@@ -1,15 +1,15 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiTags, ApiResponse } from '@nestjs/swagger';
 
 import { AccountValidationGuard } from '@account/guards/account-validation.guard';
 import { BaseController } from '@common/base.controller';
+import { UuidValidationPipe } from '@common/pipes/uuid-validation.pipe';
 import { ExtractUserId } from '@user/decorators/user-id-extractor.decorator';
 import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
 import { StrategyCreateRequestDto } from './dtos/strategy-create.request.dto';
 import { StrategyReadResponseDto } from './dtos/strategy-read.response.dto';
 import { StrategyUpdateRequestDto } from './dtos/strategy-update.request.dto';
-import { StrategyNotFoundException } from './exceptions/strategy.exceptions';
 import { StrategyService } from './strategy.service';
 
 @ApiTags('Strategies')
@@ -23,58 +23,66 @@ export class StrategyController extends BaseController {
 
   @Get()
   @ApiOperation({ summary: 'Fetch all strategies' })
+  @ApiResponse({ status: 200, description: 'List of strategies', type: [StrategyReadResponseDto] })
   async getAllStrategies(@ExtractUserId() userId: string): Promise<StrategyReadResponseDto[]> {
     const strategies = await this.strategyService.getAllStrategies(userId);
     return strategies.map((strategy) => new StrategyReadResponseDto(strategy));
   }
 
-  @Get(':id')
+  @Get(':strategyId')
   @ApiOperation({ summary: 'Fetch a single strategy' })
-  @ApiParam({ name: 'id', required: true, description: 'The ID of the strategy' })
-  async getStrategyById(@ExtractUserId() userId: string, @Param('id') id: string): Promise<StrategyReadResponseDto> {
-    const strategy = await this.strategyService.getStrategyById(userId, id);
-
-    if (!strategy) throw new StrategyNotFoundException(id);
+  @ApiParam({ name: 'strategyId', required: true, description: 'The ID of the strategy (UUID format)' })
+  @ApiResponse({ status: 200, description: 'The strategy', type: StrategyReadResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid UUID format' })
+  @ApiResponse({ status: 404, description: 'Strategy not found' })
+  async getStrategyById(
+    @ExtractUserId() userId: string,
+    @Param('strategyId', UuidValidationPipe) strategyId: string
+  ): Promise<StrategyReadResponseDto> {
+    const strategy = await this.strategyService.getStrategyById(userId, strategyId);
     return new StrategyReadResponseDto(strategy);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new strategy' })
   @ApiBody({ description: 'Strategy creation details', type: StrategyCreateRequestDto })
+  @ApiResponse({ status: 201, description: 'The created strategy', type: StrategyReadResponseDto })
   @UsePipes(new ValidationPipe({ transform: true }))
   async createStrategy(
     @ExtractUserId() userId: string,
     @Body() strategyCreateRequestDto: StrategyCreateRequestDto
   ): Promise<StrategyReadResponseDto> {
-    return new StrategyReadResponseDto(await this.strategyService.createStrategy(userId, strategyCreateRequestDto));
+    const createdStrategy = await this.strategyService.createStrategy(userId, strategyCreateRequestDto);
+    return new StrategyReadResponseDto(createdStrategy);
   }
 
-  @Patch(':id')
+  @Patch(':strategyId')
   @ApiOperation({ summary: 'Update a strategy' })
-  @ApiParam({ name: 'id', required: true, description: 'The ID of the strategy' })
+  @ApiParam({ name: 'strategyId', required: true, description: 'The ID of the strategy (UUID format)' })
   @ApiBody({ description: 'Strategy update details', type: StrategyUpdateRequestDto })
+  @ApiResponse({ status: 200, description: 'The updated strategy', type: StrategyReadResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid UUID format' })
+  @ApiResponse({ status: 404, description: 'Strategy not found' })
   @UsePipes(new ValidationPipe({ transform: true, skipMissingProperties: true }))
   async updateStrategy(
     @ExtractUserId() userId: string,
-    @Param('id') id: string,
+    @Param('strategyId', UuidValidationPipe) strategyId: string,
     @Body() strategyUpdateRequestDto: StrategyUpdateRequestDto
   ): Promise<StrategyReadResponseDto> {
-    const strategy = await this.strategyService.updateStrategy(userId, id, strategyUpdateRequestDto);
-
-    if (!strategy) {
-      throw new StrategyNotFoundException(id);
-    }
-    return new StrategyReadResponseDto(strategy);
+    const updatedStrategy = await this.strategyService.updateStrategy(userId, strategyId, strategyUpdateRequestDto);
+    return new StrategyReadResponseDto(updatedStrategy);
   }
 
-  @Delete(':id')
+  @Delete(':strategyId')
   @ApiOperation({ summary: 'Delete a strategy' })
-  @ApiParam({ name: 'id', required: true, description: 'The ID of the strategy' })
-  async deleteStrategy(@ExtractUserId() userId: string, @Param('id') id: string) {
-    const wasDeleted = await this.strategyService.deleteStrategy(userId, id);
-
-    if (!wasDeleted) {
-      throw new StrategyNotFoundException(id);
-    }
+  @ApiParam({ name: 'strategyId', required: true, description: 'The ID of the strategy (UUID format)' })
+  @ApiResponse({ status: 204, description: 'Strategy successfully deleted' })
+  @ApiResponse({ status: 400, description: 'Invalid UUID format' })
+  @ApiResponse({ status: 404, description: 'Strategy not found' })
+  async deleteStrategy(
+    @ExtractUserId() userId: string,
+    @Param('strategyId', UuidValidationPipe) strategyId: string
+  ): Promise<void> {
+    await this.strategyService.deleteStrategy(userId, strategyId);
   }
 }

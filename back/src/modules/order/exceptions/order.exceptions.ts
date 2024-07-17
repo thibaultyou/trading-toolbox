@@ -2,21 +2,21 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 
 export class OrderNotFoundException extends HttpException {
   constructor(accountId: string, orderId?: string) {
-    const orderInfo = orderId ? `, OrderID: ${orderId}` : '';
-    super(`Orders - Fetch Failed - AccountID: ${accountId}${orderInfo}, Reason: Order not found`, HttpStatus.NOT_FOUND);
+    const orderInfo = orderId ? ` - OrderID: ${orderId}` : '';
+    super(`Order not found - AccountID: ${accountId}${orderInfo}`, HttpStatus.NOT_FOUND);
   }
 }
 
 export class OrderCreationFailedException extends HttpException {
   constructor(accountId: string, reason: string) {
-    super(`Orders - Creation Failed - AccountID: ${accountId}, Reason: ${reason}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    super(`Order creation failed - AccountID: ${accountId} - Reason: ${reason}`, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }
 
 export class OrderUpdateFailedException extends HttpException {
   constructor(accountId: string, orderId: string, reason: string) {
     super(
-      `Orders - Update Failed - AccountID: ${accountId}, OrderID: ${orderId}, Reason: ${reason}`,
+      `Order update failed - AccountID: ${accountId} - OrderID: ${orderId} - Reason: ${reason}`,
       HttpStatus.INTERNAL_SERVER_ERROR
     );
   }
@@ -25,7 +25,7 @@ export class OrderUpdateFailedException extends HttpException {
 export class OrderCancellationFailedException extends HttpException {
   constructor(accountId: string, orderId: string, reason: string) {
     super(
-      `Orders - Cancellation Failed - AccountID: ${accountId}, OrderID: ${orderId}, Reason: ${reason}`,
+      `Order cancellation failed - AccountID: ${accountId} - OrderID: ${orderId} - Reason: ${reason}`,
       HttpStatus.INTERNAL_SERVER_ERROR
     );
   }
@@ -36,9 +36,9 @@ export class OrdersUpdateAggregatedException extends HttpException {
     const message = errors
       .map(
         ({ accountId, orderId, error }) =>
-          `AccountID: ${accountId}${orderId ? `, OrderID: ${orderId}` : ''}, Error: ${error.message}`
+          `AccountID: ${accountId}${orderId ? ` - OrderID: ${orderId}` : ''} - Error: ${error.message}`
       )
       .join('; ');
-    super(`Orders - Multiple Updates Failed - Errors: ${message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    super(`Multiple order updates failed - Errors: ${message}`, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }

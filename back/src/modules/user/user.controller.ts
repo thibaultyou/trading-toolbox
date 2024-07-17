@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { ExtractUserId } from './decorators/user-id-extractor.decorator';
@@ -32,18 +32,7 @@ export class UserController {
     return this.userService.authenticateUser(loginDto);
   }
 
-  @Delete()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete a user', description: "Delete the authenticated user's account" })
-  @ApiResponse({ status: 200, description: 'User successfully deleted' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  async deleteUser(@ExtractUserId() userId: string) {
-    await this.userService.deleteUser(userId);
-  }
-
-  @Put()
+  @Patch()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a user', description: "Update the authenticated user's account details" })
@@ -56,5 +45,16 @@ export class UserController {
     @Body() updateData: Partial<UserLoginRequestDto>
   ): Promise<UserDto> {
     return this.userService.updateUser(userId, updateData);
+  }
+
+  @Delete()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a user', description: "Delete the authenticated user's account" })
+  @ApiResponse({ status: 200, description: 'User successfully deleted' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async deleteUser(@ExtractUserId() userId: string) {
+    await this.userService.deleteUser(userId);
   }
 }
