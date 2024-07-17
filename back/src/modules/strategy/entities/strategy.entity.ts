@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 import { StrategyOptions } from '../types/strategy-options.type';
@@ -12,18 +13,23 @@ export class Strategy {
 
   @ApiProperty()
   @Column()
+  @IsUUID()
   userId: string;
 
   @ApiProperty()
   @Column()
+  @IsUUID()
   accountId: string;
 
   @ApiProperty()
   @Column({ type: 'enum', enum: StrategyType })
+  @IsEnum(StrategyType)
   type: StrategyType;
 
   @ApiProperty()
   @Column()
+  @IsNotEmpty()
+  @IsString()
   marketId: string;
 
   @ApiProperty()
@@ -32,9 +38,18 @@ export class Strategy {
 
   @ApiProperty()
   @Column('simple-array')
+  @IsString({ each: true })
   orders: string[];
 
-  constructor(data: Partial<Strategy>) {
-    Object.assign(this, data);
-  }
+  @ApiProperty({ required: false })
+  @Column({ nullable: true })
+  @IsOptional()
+  @IsString()
+  takeProfitOrderId?: string;
+
+  @ApiProperty({ required: false })
+  @Column({ nullable: true })
+  @IsOptional()
+  @IsString()
+  stopLossOrderId?: string;
 }

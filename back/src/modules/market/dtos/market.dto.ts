@@ -1,69 +1,78 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Market } from 'ccxt';
+import { MarketType } from 'ccxt';
+import { IsBoolean, IsEnum, IsObject, IsString } from 'class-validator';
 
 import { IExchangeLimits } from '@exchange/types/exchange-limits.interface';
+import { IMarket } from '@market/types/market.interface';
 
 import { IMarketPrecision } from '../types/market-precision.interface';
-import { MarketType } from '../types/market-type.enum';
 
-export class MarketReadResponseDto {
+export class MarketDto implements IMarket {
   @ApiProperty({
     description: 'The unique identifier for the market.',
     example: 'BTCUSDT'
   })
+  @IsString()
   id: string;
 
   @ApiProperty({
     description: 'The trading symbol for the market.',
     example: 'BTC/USD'
   })
+  @IsString()
   symbol: string;
 
   @ApiProperty({
     description: 'The base currency of the market pair.',
     example: 'BTC'
   })
+  @IsString()
   base: string;
 
   @ApiProperty({
     description: 'The quote currency of the market pair.',
     example: 'USD'
   })
+  @IsString()
   quote: string;
 
   @ApiProperty({
     description: 'The precision levels for amount and price in the market.',
     example: { amount: 8, price: 2 }
   })
+  @IsObject()
   precision: IMarketPrecision;
 
   @ApiProperty({
     description: 'The minimum and maximum limits for amount, price, and cost in the market.',
     example: { amount: { min: 0.01, max: 100 }, price: { min: 0.01, max: 100000 }, cost: { min: 10, max: 1000000 } }
   })
+  @IsObject()
   limits: IExchangeLimits;
 
   @ApiProperty({
     description: 'Indicates whether the market is currently active.',
     example: true
   })
+  @IsBoolean()
   active: boolean;
 
   @ApiProperty({
     description: 'The type of the market (e.g., spot, margin, swap, future, option).',
-    enum: MarketType,
-    example: MarketType.Spot
+    enum: ['spot', 'margin', 'swap', 'future', 'option', 'delivery', 'index'],
+    example: 'spot'
   })
-  type: Market['type'];
+  @IsEnum(['spot', 'margin', 'swap', 'future', 'option', 'delivery', 'index'])
+  type: MarketType;
 
-  constructor(market: Market) {
-    this.id = market.id;
-    this.symbol = market.symbol;
-    this.base = market.base;
-    this.quote = market.quote;
-    this.precision = market.precision;
-    this.limits = market.limits;
-    this.active = market.active;
-    this.type = market.type;
+  @ApiProperty({
+    description: 'Indicates whether the market is a contract market.',
+    example: true
+  })
+  @IsBoolean()
+  contract: boolean;
+
+  constructor(market: IMarket) {
+    Object.assign(this, market);
   }
 }

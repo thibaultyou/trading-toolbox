@@ -1,15 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
 import { ExchangeType } from '@exchange/types/exchange-type.enum';
 import { User } from '@user/entities/user.entity';
 
-import { AccountCreateRequestDto } from '../dtos/account-create.request.dto';
-import { AccountUpdateRequestDto } from '../dtos/account-update.request.dto';
-
 @Entity()
-@Unique(['name', 'user']) // Ensure account names are unique per user
-@Unique(['key', 'user']) // Ensure API keys are unique per user
+@Unique(['name', 'user'])
+@Unique(['key', 'user'])
 export class Account {
   @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
@@ -17,42 +15,27 @@ export class Account {
 
   @ApiProperty()
   @Column()
+  @IsNotEmpty()
+  @IsString()
   name: string;
 
   @ApiProperty()
   @Column()
+  @IsNotEmpty()
+  @IsString()
   key: string;
 
   @ApiProperty()
   @Column()
+  @IsNotEmpty()
+  @IsString()
   secret: string;
 
   @ApiProperty({ enum: ExchangeType, example: ExchangeType.Bybit })
   @Column({ type: 'enum', enum: ExchangeType })
+  @IsEnum(ExchangeType)
   exchange: ExchangeType;
 
   @ManyToOne(() => User, (user) => user.accounts, { nullable: false })
   user: User;
-
-  constructor(name: string, key: string, secret: string, exchange: ExchangeType, user: User) {
-    this.name = name;
-    this.key = key;
-    this.secret = secret;
-    this.exchange = exchange;
-    this.user = user;
-  }
-
-  static fromDto(data: AccountCreateRequestDto, user: User): Account {
-    return new Account(data.name, data.key, data.secret, data.exchange, user);
-  }
-
-  updateFromDto(data: Partial<AccountUpdateRequestDto>) {
-    if (data.name) this.name = data.name;
-
-    if (data.key) this.key = data.key;
-
-    if (data.secret) this.secret = data.secret;
-
-    if (data.exchange) this.exchange = data.exchange;
-  }
 }

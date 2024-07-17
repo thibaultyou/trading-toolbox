@@ -1,17 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsEnum, IsNumber } from 'class-validator';
 
 import { OrderSide } from '@order/types/order-side.enum';
 import { TPSLMode } from '@order/types/tpsl-mode.enum';
 
 import { IPosition } from '../types/position.interface';
 
-export class PositionReadResponseDto implements IPosition {
-  // FIXME where's my id ?
-
+export class PositionDto implements IPosition {
   @ApiProperty({
     description: 'Market identifier for the traded symbol',
     example: 'XRPUSDT'
   })
+  @IsString()
   marketId: string;
 
   @ApiProperty({
@@ -19,6 +19,7 @@ export class PositionReadResponseDto implements IPosition {
     example: OrderSide.BUY,
     enum: OrderSide
   })
+  @IsEnum(OrderSide)
   side: OrderSide;
 
   @ApiProperty({
@@ -26,6 +27,7 @@ export class PositionReadResponseDto implements IPosition {
     example: 0.61372149,
     type: Number
   })
+  @IsNumber()
   avgPrice: number;
 
   @ApiProperty({
@@ -33,6 +35,7 @@ export class PositionReadResponseDto implements IPosition {
     example: 74.2603,
     type: Number
   })
+  @IsNumber()
   positionValue: number;
 
   @ApiProperty({
@@ -40,6 +43,7 @@ export class PositionReadResponseDto implements IPosition {
     example: 25,
     type: Number
   })
+  @IsNumber()
   leverage: number;
 
   @ApiProperty({
@@ -47,6 +51,7 @@ export class PositionReadResponseDto implements IPosition {
     example: -3.4632,
     type: Number
   })
+  @IsNumber()
   unrealisedPnl: number;
 
   @ApiProperty({
@@ -54,6 +59,7 @@ export class PositionReadResponseDto implements IPosition {
     example: 0.5851,
     type: Number
   })
+  @IsNumber()
   markPrice: number;
 
   @ApiProperty({
@@ -61,7 +67,16 @@ export class PositionReadResponseDto implements IPosition {
     example: 121,
     type: Number
   })
+  @IsNumber()
   amount: number;
+
+  @ApiProperty({
+    description: 'Stop loss mode used on the position',
+    example: TPSLMode.PARTIAL,
+    enum: TPSLMode
+  })
+  @IsEnum(TPSLMode)
+  tpslMode: TPSLMode;
 
   // @ApiProperty({
   //   description: 'Price at which the position will automatically close in profit',
@@ -77,38 +92,7 @@ export class PositionReadResponseDto implements IPosition {
   // })
   // stopLossPrice: number;
 
-  // @ApiProperty({
-  //   description: 'Timestamp when the position was created',
-  //   example: 1678071047066,
-  //   type: Number
-  // })
-  // createdTime: number;
-
-  // @ApiProperty({
-  //   description: 'Timestamp when the position was last updated',
-  //   example: 1712131200564,
-  //   type: Number
-  // })
-  // updatedTime: number;
-
-  @ApiProperty({
-    description: 'Stop loss mode used on the position',
-    example: TPSLMode.PARTIAL,
-    enum: TPSLMode
-  })
-  tpslMode: TPSLMode;
-
   constructor(position: IPosition) {
-    this.marketId = position.marketId;
-    this.side = position.side;
-    this.avgPrice = position.avgPrice;
-    this.positionValue = position.positionValue;
-    this.leverage = position.leverage;
-    this.unrealisedPnl = position.unrealisedPnl;
-    this.markPrice = position.markPrice;
-    this.amount = position.amount;
-    this.tpslMode = position.tpslMode;
-    // this.takeProfitPrice = position.takeProfitPrice;
-    // this.stopLossPrice = position.stopLossPrice;
+    Object.assign(this, position);
   }
 }

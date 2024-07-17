@@ -22,38 +22,43 @@ import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 import { AccountService } from './account.service';
 import { AccountCreateRequestDto } from './dtos/account-create.request.dto';
 import { AccountDeleteResponseDto } from './dtos/account-delete.response.dto';
-import { AccountReadResponseDto } from './dtos/account-read.response.dto';
 import { AccountUpdateRequestDto } from './dtos/account-update.request.dto';
+import { AccountDto } from './dtos/account.dto';
+import { AccountMapperService } from './services/account-mapper.service';
 
 @ApiTags('Accounts')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 @Controller('accounts')
+@UsePipes(new ValidationPipe({ transform: true }))
 export class AccountController extends BaseController {
-  constructor(private readonly accountService: AccountService) {
+  constructor(
+    private readonly accountService: AccountService,
+    private readonly accountMapper: AccountMapperService
+  ) {
     super('Accounts');
   }
 
   @Get()
   @ApiOperation({ summary: 'Fetch all accounts' })
-  @ApiResponse({ status: 200, description: 'List of accounts', type: [AccountReadResponseDto] })
-  async getAllAccounts(@ExtractUserId() userId: string): Promise<AccountReadResponseDto[]> {
+  @ApiResponse({ status: 200, description: 'List of accounts', type: [AccountDto] })
+  async getAllAccounts(@ExtractUserId() userId: string): Promise<AccountDto[]> {
     const accounts = await this.accountService.getUserAccounts(userId);
-    return accounts.map((account) => new AccountReadResponseDto(account));
+    return accounts.map((account) => this.accountMapper.toDto(account));
   }
 
   @Get(':accountId')
   @ApiOperation({ summary: 'Fetch a single account' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account (UUID format)' })
-  @ApiResponse({ status: 200, description: 'The account', type: AccountReadResponseDto })
+  @ApiResponse({ status: 200, description: 'The account', type: AccountDto })
   @ApiResponse({ status: 400, description: 'Invalid UUID format' })
   @ApiResponse({ status: 404, description: 'Account not found' })
   async getAccountById(
     @ExtractUserId() userId: string,
     @Param('accountId', UuidValidationPipe) accountId: string
-  ): Promise<AccountReadResponseDto> {
+  ): Promise<AccountDto> {
     const account = await this.accountService.getAccountById(userId, accountId);
-    return new AccountReadResponseDto(account);
+    return this.accountMapper.toDto(account);
   }
 
   @Post()
@@ -73,30 +78,29 @@ export class AccountController extends BaseController {
       }
     }
   })
-  @ApiResponse({ status: 201, description: 'The created account', type: AccountReadResponseDto })
-  @UsePipes(new ValidationPipe({ transform: true }))
+  @ApiResponse({ status: 201, description: 'The created account', type: AccountDto })
   async createAccount(
     @Request() req: RequestWithUser,
     @Body() accountCreateRequestDto: AccountCreateRequestDto
-  ): Promise<AccountReadResponseDto> {
-    return new AccountReadResponseDto(await this.accountService.createAccount(req.user, accountCreateRequestDto));
+  ): Promise<AccountDto> {
+    const account = await this.accountService.createAccount(req.user, accountCreateRequestDto);
+    return this.accountMapper.toDto(account);
   }
 
   @Patch(':accountId')
   @ApiOperation({ summary: 'Update an account' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account (UUID format)' })
   @ApiBody({ type: AccountUpdateRequestDto })
-  @ApiResponse({ status: 200, description: 'The updated account', type: AccountReadResponseDto })
+  @ApiResponse({ status: 200, description: 'The updated account', type: AccountDto })
   @ApiResponse({ status: 400, description: 'Invalid UUID format' })
   @ApiResponse({ status: 404, description: 'Account not found' })
-  @UsePipes(new ValidationPipe({ transform: true, skipMissingProperties: true }))
   async updateAccount(
     @ExtractUserId() userId: string,
     @Param('accountId', UuidValidationPipe) accountId: string,
     @Body() accountUpdateRequestDto: AccountUpdateRequestDto
-  ): Promise<AccountReadResponseDto> {
+  ): Promise<AccountDto> {
     const account = await this.accountService.updateAccount(userId, accountId, accountUpdateRequestDto);
-    return new AccountReadResponseDto(account);
+    return this.accountMapper.toDto(account);
   }
 
   @Delete(':accountId')

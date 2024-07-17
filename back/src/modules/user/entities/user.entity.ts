@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsUUID } from 'class-validator';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 import { Account } from '@account/entities/account.entity';
@@ -10,6 +11,7 @@ export class User {
     description: 'The unique identifier of the user'
   })
   @PrimaryGeneratedColumn('uuid')
+  @IsUUID()
   id: string;
 
   @ApiProperty({
@@ -17,9 +19,11 @@ export class User {
     description: 'The username of the user'
   })
   @Column({ unique: true })
+  @IsString()
   username: string;
 
   @Column()
+  @IsString()
   password: string;
 
   @OneToMany(() => Account, (account) => account.user)

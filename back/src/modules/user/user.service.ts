@@ -23,6 +23,7 @@ import { UserCreatedEvent } from './events/user-created.event';
 import { UserDeletedEvent } from './events/user-deleted.event';
 import { UserUpdatedEvent } from './events/user-updated.event';
 import { PasswordService } from './services/password.service';
+import { UserMapperService } from './services/user-mapper.service';
 
 @Injectable()
 export class UserService {
@@ -33,37 +34,39 @@ export class UserService {
     private readonly usersRepository: Repository<User>,
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
-    private readonly eventEmitter: EventEmitter2
+    private readonly eventEmitter: EventEmitter2,
+    private readonly userMapper: UserMapperService
   ) {}
 
-  async createUser(registerDto: UserCreateRequestDto): Promise<UserDto> {
-    this.logger.debug(`Creating new user - Username: ${registerDto.username}`);
+  async createUser(dto: UserCreateRequestDto): Promise<UserDto> {
+    this.logger.debug(`Creating new user - Username: ${dto.username}`);
 
     try {
-      await this.checkExistingUser(registerDto.username);
-      const hashedPassword = await this.passwordService.hashPassword(registerDto.password);
-      const user = await this.saveUser({ username: registerDto.username, password: hashedPassword });
-      const userDto = this.mapToUserDto(user);
+      await this.checkExistingUser(dto.username);
+      const hashedPassword = await this.passwordService.hashPassword(dto.password);
+      const userData = this.userMapper.fromCreateDto(dto);
+      const user = await this.saveUser({ ...userData, password: hashedPassword });
+      const userDto = this.userMapper.toDto(user);
       this.eventEmitter.emit(Events.User.CREATED, new UserCreatedEvent(userDto.id, userDto.username));
       return userDto;
     } catch (error) {
-      this.handleError(error, `Error creating user - Username: ${registerDto.username}`);
+      this.handleError(error, `Error creating user - Username: ${dto.username}`);
     }
   }
 
-  async authenticateUser(loginDto: UserLoginRequestDto): Promise<UserLoginResponseDto> {
-    this.logger.debug(`Authenticating user - Username: ${loginDto.username}`);
+  async authenticateUser(dto: UserLoginRequestDto): Promise<UserLoginResponseDto> {
+    this.logger.debug(`Authenticating user - Username: ${dto.username}`);
 
     try {
-      const user = await this.findUserWithAccounts(loginDto.username);
-      await this.verifyPassword(loginDto.password, user.password);
+      const user = await this.findUserWithAccounts(dto.username);
+      await this.verifyPassword(dto.password, user.password);
 
       const token = this.generateToken(user);
       const response = this.createLoginResponse(user, token);
       this.logger.log(`User authenticated successfully - UserID: ${user.id}, Username: ${user.username}`);
       return response;
     } catch (error) {
-      this.handleError(error, `Error authenticating user - Username: ${loginDto.username}`);
+      this.handleError(error, `Error authenticating user - Username: ${dto.username}`);
     }
   }
 
@@ -72,9 +75,29 @@ export class UserService {
 
     try {
       const user = await this.findUserById(userId);
-      return this.mapToUserDto(user);
+      return this.userMapper.toDto(user);
     } catch (error) {
       this.handleError(error, `Error fetching user - UserID: ${userId}`);
+    }
+  }
+
+  async updateUser(userId: string, dto: UserUpdateRequestDto): Promise<UserDto> {
+    this.logger.debug(`Updating user - UserID: ${userId}`);
+
+    try {
+      const user = await this.findUserById(userId);
+      const updatedUser = this.userMapper.updateFromDto(user, dto);
+
+      if (dto.password) {
+        updatedUser.password = await this.passwordService.hashPassword(dto.password);
+      }
+
+      const savedUser = await this.usersRepository.save(updatedUser);
+      const userDto = this.userMapper.toDto(savedUser);
+      this.eventEmitter.emit(Events.User.UPDATED, new UserUpdatedEvent(userDto.id, userDto.username));
+      return userDto;
+    } catch (error) {
+      this.handleError(error, `Error updating user - UserID: ${userId}`);
     }
   }
 
@@ -88,20 +111,6 @@ export class UserService {
       this.logger.log(`Deleted user - UserID: ${userId}, Username: ${user.username}`);
     } catch (error) {
       this.handleError(error, `Error deleting user - UserID: ${userId}`);
-    }
-  }
-
-  async updateUser(userId: string, updateData: UserUpdateRequestDto): Promise<UserDto> {
-    this.logger.debug(`Updating user - UserID: ${userId}`);
-
-    try {
-      const user = await this.findUserById(userId);
-      const updatedUser = await this.updateUserData(user, updateData);
-      const userDto = this.mapToUserDto(updatedUser);
-      this.eventEmitter.emit(Events.User.UPDATED, new UserUpdatedEvent(userDto.id, userDto.username));
-      return userDto;
-    } catch (error) {
-      this.handleError(error, `Error updating user - UserID: ${userId}`);
     }
   }
 
@@ -164,17 +173,6 @@ export class UserService {
     return user;
   }
 
-  private async updateUserData(user: User, updateData: UserUpdateRequestDto): Promise<User> {
-    if (updateData.password) {
-      updateData.password = await this.passwordService.hashPassword(updateData.password);
-    }
-
-    Object.assign(user, updateData);
-    const updatedUser = await this.usersRepository.save(user);
-    this.logger.log(`Updated user - UserID: ${user.id}, Username: ${updatedUser.username}`);
-    return updatedUser;
-  }
-
   private generateToken(user: User): string {
     try {
       const payload = { username: user.username, sub: user.id };
@@ -183,13 +181,6 @@ export class UserService {
       this.logger.error(`Error generating token - UserID: ${user.id} - Error: ${error.message}`, error.stack);
       throw new InternalServerErrorException('An error occurred while generating the token');
     }
-  }
-
-  private mapToUserDto(user: User): UserDto {
-    return {
-      id: user.id,
-      username: user.username
-    };
   }
 
   private handleError(error: Error, logMessage: string): never {

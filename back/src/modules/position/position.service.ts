@@ -11,10 +11,8 @@ import { OrderSide } from '@order/types/order-side.enum';
 import { PositionClosedEvent } from './events/position-closed.event';
 import { PositionsUpdatedEvent } from './events/positions-updated.event';
 import { PositionNotFoundException, PositionsUpdateAggregatedException } from './exceptions/position.exceptions';
-import { fromPositionToInternalPosition } from './position.utils';
+import { PositionMapperService } from './services/position-mapper.service';
 import { IPosition } from './types/position.interface';
-
-// TODO improve logging, error handling, custom exceptions
 
 @Injectable()
 export class PositionService implements OnModuleInit, IAccountTracker {
@@ -23,7 +21,8 @@ export class PositionService implements OnModuleInit, IAccountTracker {
 
   constructor(
     private eventEmitter: EventEmitter2,
-    private exchangeService: ExchangeService
+    private exchangeService: ExchangeService,
+    private positionMapper: PositionMapperService
   ) {}
 
   async onModuleInit() {
@@ -111,8 +110,8 @@ export class PositionService implements OnModuleInit, IAccountTracker {
     this.logger.debug(`Fetching positions - AccountID: ${accountId}`);
 
     try {
-      const positions = await this.exchangeService.getOpenPositions(accountId);
-      const newPositions = positions.map((position) => fromPositionToInternalPosition(position));
+      const externalPositions = await this.exchangeService.getOpenPositions(accountId);
+      const newPositions = externalPositions.map((position) => this.positionMapper.fromExternalPosition(position));
       this.positions.set(accountId, newPositions);
       this.eventEmitter.emit(Events.Data.POSITION_UPDATED, new PositionsUpdatedEvent(accountId, newPositions));
       this.logger.log(`Fetched positions - AccountID: ${accountId} - Count: ${newPositions.length}`);

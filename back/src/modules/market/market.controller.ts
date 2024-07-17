@@ -6,7 +6,7 @@ import { AccountValidationGuard } from '@account/guards/account-validation.guard
 import { BaseController } from '@common/base.controller';
 import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
-import { MarketReadResponseDto } from './dtos/market-read.response.dto';
+import { MarketDto } from './dtos/market.dto';
 import { MarketService } from './market.service';
 
 @ApiTags('Markets')
@@ -50,10 +50,7 @@ export class MarketController extends BaseController {
     description: 'The market ID of the contract market',
     example: 'BTCUSDT'
   })
-  findAccountMarketById(
-    @Param('accountId') accountId: string,
-    @Param('marketId') marketId: string
-  ): MarketReadResponseDto {
-    return new MarketReadResponseDto(this.marketService.findAccountContractMarketById(accountId, marketId));
+  findAccountMarketById(@Param('accountId') accountId: string, @Param('marketId') marketId: string): MarketDto {
+    return new MarketDto(this.marketService.findAccountContractMarketById(accountId, marketId));
   }
 }

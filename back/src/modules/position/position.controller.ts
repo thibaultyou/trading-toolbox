@@ -4,19 +4,25 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestj
 import { ValidateAccount } from '@account/decorators/account-validation.decorator';
 import { AccountValidationGuard } from '@account/guards/account-validation.guard';
 import { BaseController } from '@common/base.controller';
-import { OrderReadResponseDto } from '@order/dtos/order-read.response.dto';
+import { OrderDto } from '@order/dtos/order.dto';
+import { OrderMapperService } from '@order/services/order-mapper.service';
 import { OrderSide } from '@order/types/order-side.enum';
 import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
-import { PositionReadResponseDto } from './dtos/position-read.response.dto';
+import { PositionDto } from './dtos/position.dto';
 import { PositionService } from './position.service';
+import { PositionMapperService } from './services/position-mapper.service';
 
 @ApiTags('Positions')
 @UseGuards(JwtAuthGuard, AccountValidationGuard)
 @ApiBearerAuth()
 @Controller('positions')
 export class PositionController extends BaseController {
-  constructor(private readonly positionService: PositionService) {
+  constructor(
+    private readonly positionService: PositionService,
+    private readonly positionMapper: PositionMapperService,
+    private readonly orderMapper: OrderMapperService
+  ) {
     super('Positions');
   }
 
@@ -34,8 +40,9 @@ export class PositionController extends BaseController {
     @Param('accountId') accountId: string,
     @Query('symbol') symbol?: string,
     @Query('side') side?: OrderSide
-  ): PositionReadResponseDto[] {
-    return this.positionService.getPositions(accountId, symbol, side).map((p) => new PositionReadResponseDto(p));
+  ): PositionDto[] {
+    const positions = this.positionService.getPositions(accountId, symbol, side);
+    return positions.map((p) => this.positionMapper.toDto(p));
   }
 
   @Delete('/accounts/:accountId/markets/:marketId/positions/:side')
@@ -52,7 +59,8 @@ export class PositionController extends BaseController {
     @Param('accountId') accountId: string,
     @Param('marketId') marketId: string,
     @Param('side') side: OrderSide
-  ): Promise<OrderReadResponseDto> {
-    return new OrderReadResponseDto(await this.positionService.closePosition(accountId, marketId, side));
+  ): Promise<OrderDto> {
+    const order = await this.positionService.closePosition(accountId, marketId, side);
+    return this.orderMapper.fromExternalOrder(order);
   }
 }

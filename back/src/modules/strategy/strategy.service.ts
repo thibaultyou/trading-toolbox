@@ -9,6 +9,7 @@ import { StrategyCreateRequestDto } from './dtos/strategy-create.request.dto';
 import { StrategyUpdateRequestDto } from './dtos/strategy-update.request.dto';
 import { Strategy } from './entities/strategy.entity';
 import { StrategyNotFoundException } from './exceptions/strategy.exceptions';
+import { StrategyMapperService } from './services/strategy-mapper.service';
 import { StrategyFactory } from './strategies/strategy.factory';
 
 @Injectable()
@@ -18,7 +19,8 @@ export class StrategyService implements OnModuleInit {
   constructor(
     @InjectRepository(Strategy)
     private strategyRepository: Repository<Strategy>,
-    private strategyFactory: StrategyFactory
+    private strategyFactory: StrategyFactory,
+    private strategyMapper: StrategyMapperService
   ) {}
 
   async onModuleInit() {
@@ -63,7 +65,7 @@ export class StrategyService implements OnModuleInit {
 
   async createStrategy(userId: string, dto: StrategyCreateRequestDto): Promise<Strategy> {
     this.logger.debug(`Creating new strategy - UserID: ${userId}`);
-    const strategy = new Strategy({ ...dto, userId, orders: [] });
+    const strategy = this.strategyMapper.fromCreateDto(dto, userId);
     const savedStrategy = await this.strategyRepository.save(strategy);
     this.logger.log(
       `Created new strategy - UserID: ${userId} - StrategyID: ${savedStrategy.id} - Type: ${savedStrategy.type}`
@@ -74,10 +76,10 @@ export class StrategyService implements OnModuleInit {
   async updateStrategy(userId: string, id: string, dto: StrategyUpdateRequestDto): Promise<Strategy> {
     this.logger.debug(`Updating strategy - UserID: ${userId} - StrategyID: ${id}`);
     const strategy = await this.getStrategyById(userId, id);
-    Object.assign(strategy, dto);
-    const updatedStrategy = await this.strategyRepository.save(strategy);
+    const updatedStrategy = this.strategyMapper.updateFromDto(strategy, dto);
+    const savedStrategy = await this.strategyRepository.save(updatedStrategy);
     this.logger.log(`Updated strategy - UserID: ${userId} - StrategyID: ${id}`);
-    return updatedStrategy;
+    return savedStrategy;
   }
 
   async deleteStrategy(userId: string, id: string): Promise<boolean> {

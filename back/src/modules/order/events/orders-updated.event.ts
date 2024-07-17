@@ -1,11 +1,11 @@
-import { Order } from 'ccxt';
+import { IOrder } from '@order/types/order.interface';
 
 export class OrdersUpdatedEvent {
   public readonly accountId: string;
 
-  public readonly orders: Order[];
+  public readonly orders: IOrder[];
 
-  constructor(accountId: string, orders: Order[]) {
+  constructor(accountId: string, orders: IOrder[]) {
     this.accountId = accountId;
     this.orders = orders;
   }

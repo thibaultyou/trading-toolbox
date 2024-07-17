@@ -1,35 +1,25 @@
 import { Logger } from '@nestjs/common';
-import { Balances } from 'ccxt';
-
-import { IWalletData } from '@exchange/types/wallet-data.interface';
 
 import { ICoinData } from './types/coin-data.interface';
-import { WalletAccountType } from './types/wallet-account-type.enum';
 import { IWalletAccount } from './types/wallet-account.interface';
 
-export const fromBalancestoWalletAccount = (balances: Balances): IWalletAccount[] => balances.info?.result?.list;
+export class WalletUtils {
+  private static readonly logger = new Logger(WalletUtils.name);
 
-export const fromWalletDataToWalletAccount = (walletData: IWalletData): IWalletAccount => walletData;
+  static extractUSDTEquity(walletAccount: IWalletAccount): number {
+    const usdtCoinObject = walletAccount?.coin.find((coin: ICoinData) => coin.coin === 'USDT');
 
-export const fromBalancesToWalletContractAccount = (balances: Balances): IWalletAccount =>
-  fromBalancestoWalletAccount(balances).find(
-    (walletAccount: IWalletAccount) => walletAccount.accountType === WalletAccountType.CONTRACT
-  );
+    if (usdtCoinObject?.equity !== undefined) {
+      const parsedEquity = parseFloat(usdtCoinObject.equity);
 
-export const extractUSDTEquity = (walletAccount: IWalletAccount, logger: Logger): number => {
-  let usdtEquity: number = 0;
-  const usdtCoinObject = walletAccount?.coin.find((coin: ICoinData) => coin.coin === 'USDT');
-
-  if (usdtCoinObject?.equity !== undefined) {
-    const parsedEquity = parseFloat(usdtCoinObject.equity);
-
-    if (!isNaN(parsedEquity)) {
-      usdtEquity = parsedEquity;
+      if (!isNaN(parsedEquity)) {
+        return parsedEquity;
+      } else {
+        this.logger.warn(`USDT equity found but could not be parsed to a number`);
+      }
     } else {
-      logger.warn(`USDT equity found but could not be parsed to a number`);
+      this.logger.warn(`USDT equity not found or is undefined`);
     }
-  } else {
-    logger.warn(`USDT equity not found or is undefined`);
+    return 0;
   }
-  return usdtEquity;
-};
+}

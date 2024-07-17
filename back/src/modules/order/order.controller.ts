@@ -19,24 +19,22 @@ import { BaseController } from '@common/base.controller';
 import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
 import { OrderCreateRequestDto } from './dtos/order-create.request.dto';
-import { OrderCreateResponseDto } from './dtos/order-create.response.dto';
-import { OrderDeleteResponseDto } from './dtos/order-delete.response.dto';
-import { OrderReadResponseDto } from './dtos/order-read.response.dto';
 import { OrderUpdateRequestDto } from './dtos/order-update.request.dto';
-import { OrderUpdateResponseDto } from './dtos/order-update.response.dto';
+import { OrderDto } from './dtos/order.dto';
 import { OrderService } from './order.service';
+import { OrderMapperService } from './services/order-mapper.service';
 import { OrderSide } from './types/order-side.enum';
 import { OrderType } from './types/order-type.enum';
-
-// TODO add create many
-// TODO add cancel many by order id
 
 @ApiTags('Orders')
 @UseGuards(JwtAuthGuard, AccountValidationGuard)
 @ApiBearerAuth()
 @Controller('orders')
 export class OrderController extends BaseController {
-  constructor(private readonly orderService: OrderService) {
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly orderMapper: OrderMapperService
+  ) {
     super('Orders');
   }
 
@@ -52,8 +50,9 @@ export class OrderController extends BaseController {
   async getAccountOrders(
     @Param('accountId') accountId: string,
     @Query('marketId') marketId?: string
-  ): Promise<OrderReadResponseDto[]> {
-    return (await this.orderService.getOrders(accountId, marketId)).map((order) => new OrderReadResponseDto(order));
+  ): Promise<OrderDto[]> {
+    const orders = await this.orderService.getOrders(accountId, marketId);
+    return orders.map((order) => this.orderMapper.toDto(order));
   }
 
   @Get('/accounts/:accountId/orders/open')
@@ -65,11 +64,9 @@ export class OrderController extends BaseController {
     required: false,
     description: 'Optional ID of the market symbol to filter orders (e.g., BTCUSDT)'
   })
-  getAccountOpenOrders(
-    @Param('accountId') accountId: string,
-    @Query('marketId') marketId?: string
-  ): OrderReadResponseDto[] {
-    return this.orderService.getOpenOrders(accountId, marketId).map((order) => new OrderReadResponseDto(order));
+  getAccountOpenOrders(@Param('accountId') accountId: string, @Query('marketId') marketId?: string): OrderDto[] {
+    const openOrders = this.orderService.getOpenOrders(accountId, marketId);
+    return openOrders.map((order) => this.orderMapper.toDto(order));
   }
 
   @Post('/accounts/:accountId/orders')
@@ -111,8 +108,9 @@ export class OrderController extends BaseController {
   async createOrder(
     @Param('accountId') accountId: string,
     @Body() createOrderRequestDto: OrderCreateRequestDto
-  ): Promise<OrderCreateResponseDto> {
-    return new OrderCreateResponseDto(await this.orderService.createOrder(accountId, createOrderRequestDto));
+  ): Promise<OrderDto> {
+    const createdOrder = await this.orderService.createOrder(accountId, createOrderRequestDto);
+    return this.orderMapper.toDto(createdOrder);
   }
 
   @Get('/accounts/:accountId/markets/:marketId/orders/:orderId')
@@ -125,8 +123,9 @@ export class OrderController extends BaseController {
     @Param('accountId') accountId: string,
     @Param('marketId') marketId: string,
     @Param('orderId') orderId: string
-  ): Promise<OrderReadResponseDto> {
-    return new OrderReadResponseDto(await this.orderService.getOrderById(accountId, marketId, orderId));
+  ): Promise<OrderDto> {
+    const order = await this.orderService.getOrderById(accountId, marketId, orderId);
+    return this.orderMapper.toDto(order);
   }
 
   @Patch('/accounts/:accountId/orders/:orderId')
@@ -143,8 +142,9 @@ export class OrderController extends BaseController {
     @Param('accountId') accountId: string,
     @Param('orderId') orderId: string,
     @Body() updateOrderDto: OrderUpdateRequestDto
-  ): Promise<OrderUpdateResponseDto> {
-    return new OrderUpdateResponseDto(await this.orderService.updateOrder(accountId, orderId, updateOrderDto));
+  ): Promise<OrderDto> {
+    const updatedOrder = await this.orderService.updateOrder(accountId, orderId, updateOrderDto);
+    return this.orderMapper.toDto(updatedOrder);
   }
 
   @Delete('/accounts/:accountId/orders/:orderId')
@@ -156,11 +156,9 @@ export class OrderController extends BaseController {
     description: 'The ID of the account for which the order will be canceled'
   })
   @ApiParam({ name: 'orderId', required: true, description: 'The ID of the order to cancel' })
-  async cancelOrder(
-    @Param('accountId') accountId: string,
-    @Param('orderId') orderId: string
-  ): Promise<OrderDeleteResponseDto> {
-    return new OrderDeleteResponseDto(await this.orderService.cancelOrder(accountId, orderId));
+  async cancelOrder(@Param('accountId') accountId: string, @Param('orderId') orderId: string): Promise<OrderDto> {
+    const cancelledOrder = await this.orderService.cancelOrder(accountId, orderId);
+    return this.orderMapper.toDto(cancelledOrder);
   }
 
   @Delete('/accounts/:accountId/markets/:marketId/orders')
@@ -179,9 +177,8 @@ export class OrderController extends BaseController {
   async cancelOrdersByMarket(
     @Param('accountId') accountId: string,
     @Param('marketId') marketId: string
-  ): Promise<OrderDeleteResponseDto[]> {
-    return (await this.orderService.cancelOrdersByMarket(accountId, marketId)).map(
-      (order) => new OrderDeleteResponseDto(order)
-    );
+  ): Promise<OrderDto[]> {
+    const cancelledOrders = await this.orderService.cancelOrdersByMarket(accountId, marketId);
+    return cancelledOrders.map((order) => this.orderMapper.toDto(order));
   }
 }

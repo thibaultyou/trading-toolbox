@@ -15,6 +15,7 @@ import { AccountCreatedEvent } from './events/account-created.event';
 import { AccountDeletedEvent } from './events/account-deleted.event';
 import { AccountUpdatedEvent } from './events/account-updated.event';
 import { AccountAlreadyExistsException, AccountNotFoundException } from './exceptions/account.exceptions';
+import { AccountMapperService } from './services/account-mapper.service';
 
 @Injectable()
 export class AccountService {
@@ -24,7 +25,8 @@ export class AccountService {
     @InjectRepository(Account)
     private accountRepository: Repository<Account>,
     private eventEmitter: EventEmitter2,
-    private exchangeFactory: ExchangeFactory
+    private exchangeFactory: ExchangeFactory,
+    private accountMapper: AccountMapperService
   ) {}
 
   async getUserAccounts(userId: string): Promise<Account[]> {
@@ -103,7 +105,7 @@ export class AccountService {
       throw new AccountAlreadyExistsException(dto.name, dto.key);
     }
 
-    const account = Account.fromDto(dto, user);
+    const account = this.accountMapper.fromCreateDto(user, dto);
 
     try {
       this.logger.debug(`Creating exchange for account - Name: ${account.name}`);
@@ -162,9 +164,8 @@ export class AccountService {
       }
     }
 
-    account.updateFromDto(dto);
-
-    const savedAccount = await this.accountRepository.save(account);
+    const updatedAccount = this.accountMapper.updateFromDto(account, dto);
+    const savedAccount = await this.accountRepository.save(updatedAccount);
     this.eventEmitter.emit(Events.Account.UPDATED, new AccountUpdatedEvent(savedAccount));
     this.logger.log(`Updated account - AccountID: ${savedAccount.id}`);
     return savedAccount;

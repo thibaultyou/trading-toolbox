@@ -7,6 +7,7 @@ import { CONFIG_TOKEN, IEnvConfiguration } from '@config';
 
 import { User } from './entities/user.entity';
 import { PasswordService } from './services/password.service';
+import { UserMapperService } from './services/user-mapper.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
@@ -24,7 +25,7 @@ import { UserService } from './user.service';
       inject: [CONFIG_TOKEN]
     })
   ],
-  providers: [UserService, JwtStrategy, PasswordService],
+  providers: [UserService, UserMapperService, JwtStrategy, PasswordService],
   controllers: [UserController],
   exports: [UserService]
 })

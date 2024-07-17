@@ -8,9 +8,9 @@ import { ExchangeService } from '@exchange/exchange.service';
 import { IWalletData } from '@exchange/types/wallet-data.interface';
 
 import { WalletsUpdatedEvent } from './events/wallets-updated.event';
+import { WalletMapperService } from './services/wallet-mapper.service';
 import { IWalletAccount } from './types/wallet-account.interface';
-import { WalletGateway } from './wallet.gateway';
-import { extractUSDTEquity, fromBalancesToWalletContractAccount, fromWalletDataToWalletAccount } from './wallet.utils';
+import { WalletUtils } from './wallet.utils';
 
 @Injectable()
 export class WalletService implements IAccountTracker {
@@ -20,7 +20,8 @@ export class WalletService implements IAccountTracker {
   constructor(
     private eventEmitter: EventEmitter2,
     private exchangeService: ExchangeService,
-    private walletGateway: WalletGateway
+    private walletMapper: WalletMapperService
+    // private walletGateway: WalletGateway,
   ) {}
 
   async startTrackingAccount(accountId: string) {
@@ -56,7 +57,8 @@ export class WalletService implements IAccountTracker {
 
   getUSDTBalance(accountId: string): number {
     this.logger.debug(`Fetching USDT balance - AccountID: ${accountId}`);
-    const balance = extractUSDTEquity(this.getWallets(accountId), this.logger);
+    const walletAccount = this.getWallets(accountId);
+    const balance = WalletUtils.extractUSDTEquity(walletAccount);
     this.logger.debug(`Fetched USDT balance - AccountID: ${accountId} - Balance: ${balance}`);
     return balance;
   }
@@ -71,9 +73,9 @@ export class WalletService implements IAccountTracker {
       throw new AccountNotFoundException(accountId);
     }
 
-    const updatedBalances = fromWalletDataToWalletAccount(walletData);
+    const updatedBalances = this.walletMapper.fromWalletDataToWalletAccount(walletData);
     this.wallets.set(accountId, updatedBalances);
-    const usdtEquity = extractUSDTEquity(updatedBalances, this.logger);
+    const usdtEquity = WalletUtils.extractUSDTEquity(updatedBalances);
     this.logger.log(
       `Processed wallet data - AccountID: ${accountId} - USDT Balance: ${usdtEquity.toFixed(2) ?? 'N/A'} $`
     );
@@ -85,9 +87,9 @@ export class WalletService implements IAccountTracker {
 
     try {
       const balances = await this.exchangeService.getBalances(accountId);
-      const walletAccounts = fromBalancesToWalletContractAccount(balances);
+      const walletAccounts = this.walletMapper.fromBalancesToWalletContractAccount(balances);
       this.wallets.set(accountId, walletAccounts);
-      const usdtEquity = extractUSDTEquity(walletAccounts, this.logger);
+      const usdtEquity = WalletUtils.extractUSDTEquity(walletAccounts);
       this.eventEmitter.emit(Events.Wallet.BULK_UPDATED, new WalletsUpdatedEvent(accountId, usdtEquity));
       this.logger.log(`Fetched wallet - AccountID: ${accountId} - USDT Balance: ${usdtEquity.toFixed(2) ?? 'N/A'} $`);
       return walletAccounts;

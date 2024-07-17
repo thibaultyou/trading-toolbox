@@ -1,6 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Market } from 'ccxt';
 
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
 import { IAccountTracker } from '@common/types/account-tracker.interface';
@@ -10,15 +9,18 @@ import { ExchangeService } from '@exchange/exchange.service';
 
 import { MarketsUpdatedEvent } from './events/markets-updated.event';
 import { MarketNotFoundException, MarketsUpdateAggregatedException } from './exceptions/market.exceptions';
+import { MarketMapperService } from './services/market-mapper.service';
+import { IMarket } from './types/market.interface';
 
 @Injectable()
-export class MarketService implements OnModuleInit, IAccountTracker, IDataRefresher<Market[]> {
+export class MarketService implements OnModuleInit, IAccountTracker, IDataRefresher<IMarket[]> {
   private logger = new Logger(MarketService.name);
-  private markets: Map<string, Market[]> = new Map();
+  private markets: Map<string, IMarket[]> = new Map();
 
   constructor(
     private eventEmitter: EventEmitter2,
-    private exchangeService: ExchangeService
+    private exchangeService: ExchangeService,
+    private marketMapper: MarketMapperService
   ) {}
 
   async onModuleInit() {
@@ -50,7 +52,7 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
     }
   }
 
-  private getAccountMarkets(accountId: string): Market[] {
+  private getAccountMarkets(accountId: string): IMarket[] {
     this.logger.debug(`Fetching account markets - AccountID: ${accountId}`);
 
     if (!this.markets.has(accountId)) {
@@ -82,7 +84,7 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
     return contractMarketIds;
   }
 
-  findAccountContractMarketById(accountId: string, marketId: string): Market {
+  findAccountContractMarketById(accountId: string, marketId: string): IMarket {
     this.logger.debug(`Fetching account contract market - AccountID: ${accountId} - MarketID: ${marketId}`);
     const markets = this.getAccountMarkets(accountId);
     const specificMarket = markets.find((market) => market.id === marketId && market.active && market.contract);
@@ -96,15 +98,15 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
     return specificMarket;
   }
 
-  async refreshOne(accountId: string): Promise<Market[]> {
+  async refreshOne(accountId: string): Promise<IMarket[]> {
     this.logger.debug(`Refreshing markets - AccountID: ${accountId}`);
 
     try {
-      const markets = await this.exchangeService.getMarkets(accountId);
-      this.markets.set(
-        accountId,
-        markets.sort((a, b) => a.id.localeCompare(b.id))
-      );
+      const externalMarkets = await this.exchangeService.getMarkets(accountId);
+      const markets = externalMarkets
+        .map((market) => this.marketMapper.fromExternalMarket(market))
+        .sort((a, b) => a.id.localeCompare(b.id));
+      this.markets.set(accountId, markets);
       this.eventEmitter.emit(Events.Market.BULK_UPDATED, new MarketsUpdatedEvent(accountId, markets));
       this.logger.log(`Refreshed markets - AccountID: ${accountId} - Count: ${markets.length}`);
       return markets;

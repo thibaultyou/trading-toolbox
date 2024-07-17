@@ -12,9 +12,9 @@ export class ExchangeModuleAccountDeletedEventHandler {
 
   constructor(private exchangeService: ExchangeService) {}
 
-  @OnEvent(Events.Account.CREATED)
+  @OnEvent(Events.Account.DELETED)
   async handle(event: AccountDeletedEvent) {
-    const actionContext = `${Events.Account.CREATED} | AccountID: ${event.account.id}`;
+    const actionContext = `${Events.Account.DELETED} | AccountID: ${event.account.id}`;
 
     try {
       await this.exchangeService.cleanResources(event.account.id);

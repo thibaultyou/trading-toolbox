@@ -1,29 +1,31 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Order } from 'ccxt';
+import { IsEnum, IsNumber, IsString } from 'class-validator';
 
-import { fromOrdertoInternalOrder } from '../order.utils';
 import { OrderSide } from '../types/order-side.enum';
 import { OrderType } from '../types/order-type.enum';
 import { IOrder } from '../types/order.interface';
 import { TPSLMode } from '../types/tpsl-mode.enum';
 
-export class OrderReadResponseDto {
+export class OrderDto implements IOrder {
   @ApiProperty({
     description: 'Unique identifier for the order',
     example: '3f309063-cfd1-4ce8-ad74-77c94b01563f'
   })
+  @IsString()
   id: string;
 
   @ApiProperty({
     description: 'External order link ID, used for tracking the order on external systems or client side',
     example: '3cms_req_t_697716177_3'
   })
+  @IsString()
   linkId: string;
 
   @ApiProperty({
     description: 'Trading symbol for the order',
     example: 'DOGEUSDT'
   })
+  @IsString()
   marketId: string;
 
   @ApiProperty({
@@ -31,6 +33,7 @@ export class OrderReadResponseDto {
     example: 0.22184,
     type: Number
   })
+  @IsNumber()
   price: number;
 
   @ApiProperty({
@@ -38,6 +41,7 @@ export class OrderReadResponseDto {
     example: 33,
     type: Number
   })
+  @IsNumber()
   amount: number;
 
   @ApiProperty({
@@ -45,19 +49,22 @@ export class OrderReadResponseDto {
     example: OrderSide.SELL,
     enum: OrderSide
   })
+  @IsEnum(OrderSide)
   side: OrderSide;
 
   @ApiProperty({
     description: 'Current status of the order',
     example: 'canceled'
   })
-  status: Order['status'];
+  @IsString()
+  status: string;
 
   @ApiProperty({
     description: 'Type of the order, e.g., limit or market',
     example: OrderType.LIMIT,
     enum: OrderType
   })
+  @IsEnum(OrderType)
   type: OrderType;
 
   @ApiProperty({
@@ -65,6 +72,7 @@ export class OrderReadResponseDto {
     example: 0,
     type: Number
   })
+  @IsNumber()
   leavesQty: number;
 
   @ApiProperty({
@@ -72,6 +80,7 @@ export class OrderReadResponseDto {
     example: TPSLMode.PARTIAL,
     enum: TPSLMode
   })
+  @IsEnum(TPSLMode)
   tpslMode: TPSLMode;
 
   @ApiProperty({
@@ -79,6 +88,7 @@ export class OrderReadResponseDto {
     example: 0.5,
     type: Number
   })
+  @IsNumber()
   triggerPrice: number;
 
   @ApiProperty({
@@ -86,6 +96,7 @@ export class OrderReadResponseDto {
     example: 1711934440046,
     type: Number
   })
+  @IsNumber()
   createdTime: number;
 
   @ApiProperty({
@@ -93,22 +104,10 @@ export class OrderReadResponseDto {
     example: 1711950591199,
     type: Number
   })
+  @IsNumber()
   updatedTime: number;
 
-  constructor(order: Order) {
-    const internalOrder: IOrder = fromOrdertoInternalOrder(order);
-    this.id = internalOrder.id;
-    this.linkId = internalOrder.linkId;
-    this.marketId = internalOrder.marketId;
-    this.price = internalOrder.price;
-    this.amount = internalOrder.amount;
-    this.side = internalOrder.side;
-    this.status = internalOrder.status;
-    this.type = internalOrder.type;
-    this.leavesQty = internalOrder.leavesQty;
-    this.tpslMode = internalOrder.tpslMode;
-    this.triggerPrice = internalOrder.triggerPrice;
-    this.createdTime = internalOrder.createdTime;
-    this.updatedTime = internalOrder.updatedTime;
+  constructor(order: IOrder) {
+    Object.assign(this, order);
   }
 }
