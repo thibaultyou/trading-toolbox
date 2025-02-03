@@ -19,7 +19,7 @@ import { UserService } from './user.service';
     JwtModule.registerAsync({
       useFactory: (config: IEnvConfiguration) => ({
         global: true,
-        secret: config.JWT_SECRET,
+        secret: config.JWT_SIGNING_SECRET,
         signOptions: { expiresIn: '4h' }
       }),
       inject: [CONFIG_TOKEN]

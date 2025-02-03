@@ -7,7 +7,7 @@ const EnvSchema = z.object({
   DATABASE_USER: z.string(),
   DATABASE_PASSWORD: z.string(),
   DATABASE_NAME: z.string(),
-  JWT_SECRET: z.string(),
+  JWT_SIGNING_SECRET: z.string(),
   WS_CORS_ORIGIN: z.string().default('*'),
   WS_NAMESPACE: z.string().default('/ws')
 });
@@ -21,7 +21,7 @@ export const envConfig: IEnvConfiguration = EnvSchema.parse({
   DATABASE_USER: process.env.DATABASE_USER,
   DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
   DATABASE_NAME: process.env.DATABASE_NAME,
-  JWT_SECRET: process.env.JWT_SECRET,
+  JWT_SIGNING_SECRET: process.env.JWT_SIGNING_SECRET,
   WS_CORS_ORIGIN: process.env.WS_CORS_ORIGIN,
   WS_NAMESPACE: process.env.WS_NAMESPACE
 });
