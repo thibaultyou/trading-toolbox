@@ -131,7 +131,6 @@ export class WalletService implements IAccountTracker, IAccountSynchronizer<IWal
     // TODO not implemented
     throw new Error('Method not implemented.');
   }
-  
 }
 // this.walletGateway.sendWalletsUpdate(accountId, updatedBalances);
 

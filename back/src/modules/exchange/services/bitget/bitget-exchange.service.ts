@@ -2,7 +2,11 @@
 import * as ccxt from 'ccxt';
 import { Account } from '@account/entities/account.entity';
 import { BaseExchangeService } from '../base-exchange.service';
-import { ExchangeInitializationException, ExchangeOperationFailedException, InvalidCredentialsException } from '../../exchange.exceptions';
+import {
+  ExchangeInitializationException,
+  ExchangeOperationFailedException,
+  InvalidCredentialsException
+} from '../../exchange.exceptions';
 import { Balances, Order, Position } from 'ccxt';
 import { RestClientV2 } from 'bitget-api';
 import { BitgetMapperService } from './bitget-mapper.service';
@@ -24,12 +28,12 @@ export class BitgetExchangeService extends BaseExchangeService {
       this.exchange = new ccxt.bitget({
         apiKey: this.account.key,
         secret: this.account.secret,
-        password: this.account.passphrase,
+        password: this.account.passphrase
       });
       this.client = new RestClientV2({
         apiKey: this.account.key,
         apiSecret: this.account.secret,
-        apiPass: this.account.passphrase,
+        apiPass: this.account.passphrase
       });
       await this.getBalances();
       return true;
@@ -64,7 +68,7 @@ export class BitgetExchangeService extends BaseExchangeService {
         balances[currency] = {
           free,
           used,
-          total,
+          total
         };
       }
 
@@ -73,7 +77,7 @@ export class BitgetExchangeService extends BaseExchangeService {
     } catch (error) {
       this.logger.error(
         `Error fetching balances - AccountID: ${this.account.id} - Error: ${error.message}`,
-        error.stack,
+        error.stack
       );
       throw new ExchangeOperationFailedException('getBalances', error.message);
     }
@@ -85,14 +89,12 @@ export class BitgetExchangeService extends BaseExchangeService {
       const response = await this.client.getFuturesOpenOrders({ productType: 'USDT-FUTURES' });
       const openOrdersRaw = response?.data?.entrustedList || [];
       const mappedOrders = this.mapper.fromBitgetOpenOrdersToCCXTOrders(openOrdersRaw);
-      this.logger.log(
-        `Open orders fetched - AccountID: ${this.account.id} - Count: ${mappedOrders.length}`,
-      );
+      this.logger.log(`Open orders fetched - AccountID: ${this.account.id} - Count: ${mappedOrders.length}`);
       return mappedOrders;
     } catch (error) {
       this.logger.error(
         `Error fetching open orders - AccountID: ${this.account.id} - Error: ${error.message}`,
-        error.stack,
+        error.stack
       );
       throw new ExchangeOperationFailedException('getOpenOrders', error.message);
     }
@@ -103,14 +105,12 @@ export class BitgetExchangeService extends BaseExchangeService {
     try {
       const positions = await this.exchange.fetchPositions();
       const mappedPositions = positions.map((position: Position) => this.mapper.mapPosition(position));
-      this.logger.log(
-        `Open positions fetched - AccountID: ${this.account.id} - Count: ${mappedPositions.length}`,
-      );
+      this.logger.log(`Open positions fetched - AccountID: ${this.account.id} - Count: ${mappedPositions.length}`);
       return mappedPositions;
     } catch (error) {
       this.logger.error(
         `Error fetching open positions - AccountID: ${this.account.id} - Error: ${error.message}`,
-        error.stack,
+        error.stack
       );
       throw new ExchangeOperationFailedException('getOpenPositions', error.message);
     }

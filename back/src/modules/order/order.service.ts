@@ -34,7 +34,7 @@ export class OrderService implements IAccountTracker, IAccountSynchronizer<IOrde
     private exchangeService: ExchangeService,
     private orderMapper: OrderMapperService
   ) {}
-  
+
   @Interval(Timers.ORDERS_CACHE_COOLDOWN)
   sync(): void {
     this.syncAllAccounts();

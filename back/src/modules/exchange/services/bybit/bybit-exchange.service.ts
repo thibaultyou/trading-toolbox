@@ -15,7 +15,7 @@ export class BybitExchangeService extends BaseExchangeService {
     try {
       this.exchange = new ccxt.bybit({
         apiKey: this.account.key,
-        secret: this.account.secret,
+        secret: this.account.secret
       });
       await this.getBalances();
       return true;

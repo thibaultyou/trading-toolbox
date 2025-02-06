@@ -8,7 +8,7 @@ import { BitgetExchangeService } from './bitget/bitget-exchange.service';
 
 const exchangeRegistry: Record<string, new (account: Account) => IExchangeService> = {
   [ExchangeType.Bybit]: BybitExchangeService,
-  [ExchangeType.Bitget]: BitgetExchangeService,
+  [ExchangeType.Bitget]: BitgetExchangeService
 };
 
 @Injectable()

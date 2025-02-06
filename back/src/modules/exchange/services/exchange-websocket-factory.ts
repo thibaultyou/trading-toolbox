@@ -10,7 +10,7 @@ import { IExchangeWebsocketService } from '../types/exchange-websocket-service.i
 export class ExchangeWebsocketFactory {
   constructor(
     private readonly bybitWsService: BybitWebsocketManagerService,
-    private readonly bitgetWsService: BitgetWebsocketManagerService,
+    private readonly bitgetWsService: BitgetWebsocketManagerService
   ) {}
 
   getWebsocketService(exchangeType: ExchangeType): IExchangeWebsocketService {
