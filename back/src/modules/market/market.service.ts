@@ -2,8 +2,8 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
-import { IAccountTracker } from '@common/types/account-tracker.interface';
-import { IDataRefresher } from '@common/types/data-refresher.interface';
+import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
+import { IDataRefresher } from '@common/interfaces/data-refresher.interface';
 import { Events, Timers } from '@config';
 import { ExchangeService } from '@exchange/exchange.service';
 
@@ -104,7 +104,7 @@ export class MarketService implements OnModuleInit, IAccountTracker, IDataRefres
     try {
       const externalMarkets = await this.exchangeService.getMarkets(accountId);
       const markets = externalMarkets
-        .map((market) => this.marketMapper.fromExternalMarket(market))
+        .map((market) => this.marketMapper.fromExternal(market))
         .sort((a, b) => a.id.localeCompare(b.id));
       this.markets.set(accountId, markets);
       this.eventEmitter.emit(Events.Market.BULK_UPDATED, new MarketsUpdatedEvent(accountId, markets));

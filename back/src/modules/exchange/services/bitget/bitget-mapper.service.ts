@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Order } from 'ccxt';
+import { Order, Position } from 'ccxt';
 
 /**
  * The structure from your reference:
@@ -174,5 +174,20 @@ export class BitgetMapperService {
     // e.g. "DOGEUSDT" => "DOGE/USDT"
     const base = symbol.slice(0, symbol.length - marginCoin.length);
     return `${base}/${marginCoin}:${marginCoin}`;
+  }
+
+  public mapPosition(position: Position): Position {
+    // Check if the raw info contains the extra fields
+    const raw = position.info || {};
+    // Bitget returns these as strings; parse if they exist.
+    const takeProfit = raw.takeProfit;
+    const stopLoss = raw.stopLoss;
+
+    return {
+      ...position,
+      // ccxt's Position interface has optional takeProfitPrice/stopLossPrice properties
+      takeProfitPrice: takeProfit ? parseFloat(takeProfit) : undefined,
+      stopLossPrice: stopLoss ? parseFloat(stopLoss) : undefined
+    };
   }
 }

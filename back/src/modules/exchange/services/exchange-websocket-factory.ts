@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ExchangeType } from '../types/exchange-type.enum';
 import { UnsupportedExchangeException } from '../exchange.exceptions';
 
-import { BitgetWebsocketManagerService } from './bitget-websocket-manager.service';
-import { BybitWebsocketManagerService } from './bybit-websocket-manager.service';
+import { BitgetWebsocketManagerService } from './bitget/bitget-websocket-manager.service';
+import { BybitWebsocketManagerService } from './bybit/bybit-websocket-manager.service';
 import { IExchangeWebsocketService } from '../types/exchange-websocket-service.interface';
 
 @Injectable()

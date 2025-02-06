@@ -10,8 +10,10 @@ export const fromTickerDataToPrice = (data: ITickerData): number | null => {
   return null;
 };
 
-export const haveTickerDataChanged = (existingData: ITickerData, newData: ITickerData): boolean =>
-  Object.entries(newData).some(([key, value]) => existingData[key] !== value);
+export const haveTickerDataChanged = (existingData: ITickerData, newData: ITickerData): boolean => {
+  const keys = Object.keys(newData) as (keyof ITickerData)[];
+  return keys.some((key) => existingData[key] !== newData[key]);
+};
 
 export const haveTickerSetsChanged = (setA: Set<string>, setB: Set<string>): boolean => {
   if (setA.size !== setB.size) return true;

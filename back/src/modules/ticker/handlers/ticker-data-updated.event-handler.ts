@@ -18,7 +18,7 @@ export class TickerModuleTickerUpdatedEventHandler {
 
     try {
       this.tickerService.updateTickerData(event.accountId, event.marketId, event.data);
-      this.logger.debug(actionContext);
+      // this.logger.debug(actionContext);
     } catch (error) {
       this.logger.error(`${actionContext} - Failed to update ticker data - Error: ${error.message}`, error.stack);
     }

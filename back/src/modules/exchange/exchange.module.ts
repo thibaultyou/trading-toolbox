@@ -11,13 +11,13 @@ import { ExchangeModuleExchangeInitializedEventHandler } from './handlers/exchan
 import { ExchangeModuleExchangeTerminatedEventHandler } from './handlers/exchange-terminated.event-handler';
 import { ExchangeModuleWebSocketSubscribeEventEventHandler } from './handlers/websocket-subscribe.event-handler';
 import { ExchangeModuleWebSocketUnsubscribeEventEventHandler } from './handlers/websocket-unsubscribe.event-handler';
-import { BybitExchangeService } from './services/bybit-exchange.service';
-import { BitgetExchangeService } from './services/bitget-exchange.service';
+import { BybitExchangeService } from './services/bybit/bybit-exchange.service';
+import { BitgetExchangeService } from './services/bitget/bitget-exchange.service';
 import { ExchangeFactory } from './services/exchange-service.factory';
-import { BybitWebsocketManagerService } from './services/bybit-websocket-manager.service';
-import { BitgetWebsocketManagerService } from './services/bitget-websocket-manager.service';
+import { BybitWebsocketManagerService } from './services/bybit/bybit-websocket-manager.service';
+import { BitgetWebsocketManagerService } from './services/bitget/bitget-websocket-manager.service';
 import { ExchangeWebsocketFactory } from './services/exchange-websocket-factory';
-import { BitgetMapperService } from './services/bitget-mapper.service';
+import { BitgetMapperService } from './services/bitget/bitget-mapper.service';
 
 @Global()
 @Module({

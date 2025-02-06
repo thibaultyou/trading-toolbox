@@ -12,21 +12,22 @@ export class OrderMapperService {
     return new OrderDto(order);
   }
 
-  fromExternalOrder(order: Order): IOrder {
+  fromExternal(external: any): IOrder {
+    const order: Order = external;
     return {
       id: order.info.orderId,
       linkId: order.info.orderLinkId,
       marketId: order.info.symbol,
       price: parseFloat(order.info.price),
       amount: order.amount,
-      side: order.side.toLowerCase() === 'buy' ? OrderSide.BUY : OrderSide.SELL,
+      side: order.info.side.toLowerCase() === 'buy' ? OrderSide.BUY : OrderSide.SELL,
       status: order.status,
       type: order.info.orderType.toLowerCase() === 'limit' ? OrderType.LIMIT : OrderType.MARKET,
       leavesQty: parseFloat(order.info.leavesQty),
       tpslMode: order.info.tpslMode,
       triggerPrice: parseFloat(order.info.triggerPrice),
-      createdTime: parseInt(order.info.createdTime),
-      updatedTime: parseInt(order.info.updatedTime)
+      createdTime: parseInt(order.info.createdTime, 10),
+      updatedTime: parseInt(order.info.updatedTime, 10)
     };
   }
 }

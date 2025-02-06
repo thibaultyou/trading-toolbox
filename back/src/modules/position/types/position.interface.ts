@@ -13,6 +13,4 @@ export interface IPosition {
   tpslMode: TPSLMode;
   takeProfitPrice: number;
   stopLossPrice: number;
-  // createdTime: number;
-  // updatedTime: number;
 }

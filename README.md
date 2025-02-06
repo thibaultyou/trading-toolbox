@@ -60,7 +60,7 @@ Follow these instructions to set up the project on your local machine for develo
 
 4. **Access the application:**
    - API Server: `http://localhost:1234/api`
-   - Adminer (Database Management): `http://localhost:5000/adminer`
+   - Adminer (Database Management): `http://localhost:6000/adminer`
    - Swagger Documentation: `http://localhost:1234/api/docs`
 
 5. **Stop the application:**

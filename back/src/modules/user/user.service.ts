@@ -44,7 +44,7 @@ export class UserService {
     try {
       await this.checkExistingUser(dto.username);
       const hashedPassword = await this.passwordService.hashPassword(dto.password);
-      const userData = this.userMapper.fromCreateDto(dto);
+      const userData = this.userMapper.createFromDto(dto);
       const user = await this.saveUser({ ...userData, password: hashedPassword });
       const userDto = this.userMapper.toDto(user);
       this.eventEmitter.emit(Events.User.CREATED, new UserCreatedEvent(userDto.id, userDto.username));

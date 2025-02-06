@@ -65,7 +65,7 @@ export class StrategyService implements OnModuleInit {
 
   async createStrategy(userId: string, dto: StrategyCreateRequestDto): Promise<Strategy> {
     this.logger.debug(`Creating new strategy - UserID: ${userId}`);
-    const strategy = this.strategyMapper.fromCreateDto(dto, userId);
+    const strategy = this.strategyMapper.createFromDto(dto, userId);
     const savedStrategy = await this.strategyRepository.save(strategy);
     this.logger.log(
       `Created new strategy - UserID: ${userId} - StrategyID: ${savedStrategy.id} - Type: ${savedStrategy.type}`

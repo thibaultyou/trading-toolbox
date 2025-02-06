@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
-import { IAccountTracker } from '@common/types/account-tracker.interface';
+import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
 import { Events } from '@config';
 import { ExchangeService } from '@exchange/exchange.service';
 import { IWalletData } from '@exchange/types/wallet-data.interface';
@@ -91,9 +91,7 @@ export class WalletService implements IAccountTracker {
 
     if (delta > threshold) {
       this.wallets.set(accountId, updatedWallet);
-      this.logger.log(
-        `Processed wallet data - AccountID: ${accountId} - USDT Balance: ${newUsdtEquity.toFixed(2)} $ (delta: ${delta.toFixed(4)})`
-      );
+      this.logger.log(`Processed wallet data - AccountID: ${accountId} - USDT Balance: ${newUsdtEquity.toFixed(2)} $`);
       this.eventEmitter.emit(Events.Wallet.BULK_UPDATED, new WalletsUpdatedEvent(accountId, newUsdtEquity));
     }
   }

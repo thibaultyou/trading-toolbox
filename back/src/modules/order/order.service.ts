@@ -2,8 +2,8 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
-import { IAccountTracker } from '@common/types/account-tracker.interface';
-import { IDataRefresher } from '@common/types/data-refresher.interface';
+import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
+import { IDataRefresher } from '@common/interfaces/data-refresher.interface';
 import { Events, Timers } from '@config';
 import { ExchangeService } from '@exchange/exchange.service';
 
@@ -73,7 +73,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
     try {
       const externalOrders = await this.exchangeService.getOrders(accountId, marketId);
-      const orders = externalOrders.map((order) => this.orderMapper.fromExternalOrder(order));
+      const orders = externalOrders.map((order) => this.orderMapper.fromExternal(order));
       this.logger.debug(`Fetched orders - AccountID: ${accountId} - Count: ${orders.length}`);
       return orders;
     } catch (error) {
@@ -113,7 +113,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
     try {
       const externalOrder = await this.exchangeService.getOrder(accountId, marketId, orderId);
-      const order = this.orderMapper.fromExternalOrder(externalOrder);
+      const order = this.orderMapper.fromExternal(externalOrder);
       this.logger.debug(`Fetched order - AccountID: ${accountId} - OrderID: ${orderId}`);
       return order;
     } catch (error) {
@@ -146,7 +146,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         dto.stopLossPrice,
         params
       );
-      const order = this.orderMapper.fromExternalOrder(externalOrder);
+      const order = this.orderMapper.fromExternal(externalOrder);
       this.logger.log(`Created order - AccountID: ${accountId} - OrderID: ${order.id}`);
       return order;
     } catch (error) {
@@ -174,7 +174,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
     try {
       const externalOrder = await this.exchangeService.cancelOrder(accountId, orderId, orderToUpdate.marketId);
-      const order = this.orderMapper.fromExternalOrder(externalOrder);
+      const order = this.orderMapper.fromExternal(externalOrder);
       this.logger.log(`Cancelled order - AccountID: ${accountId} - OrderID: ${orderId}`);
       return order;
     } catch (error) {
@@ -191,7 +191,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
     try {
       const externalOrders = await this.exchangeService.cancelOrders(accountId, marketId);
-      const orders = externalOrders.map((externalOrder) => this.orderMapper.fromExternalOrder(externalOrder));
+      const orders = externalOrders.map((externalOrder) => this.orderMapper.fromExternal(externalOrder));
 
       if (externalOrders.length === 0) {
         this.logger.debug(
@@ -244,7 +244,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         dto.price,
         params
       );
-      const updatedOrder = this.orderMapper.fromExternalOrder(updatedExternalOrder);
+      const updatedOrder = this.orderMapper.fromExternal(updatedExternalOrder);
       this.eventEmitter.emit(
         Events.Order.UPDATED,
         new OrderUpdatedEvent(accountId, updatedOrder.id, updatedOrder.linkId)
@@ -266,7 +266,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
     try {
       const newExternalOrders = await this.exchangeService.getOpenOrders(accountId);
-      const newOrders = newExternalOrders.map((order) => this.orderMapper.fromExternalOrder(order));
+      const newOrders = newExternalOrders.map((order) => this.orderMapper.fromExternal(order));
       const currentOrders = this.openOrders.get(accountId) || [];
       const haveChanged = haveOrdersChanged(currentOrders, newOrders);
 

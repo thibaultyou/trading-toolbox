@@ -1,4 +1,4 @@
-import { IAccountTracker } from '@common/types/account-tracker.interface';
+import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
 
 export interface IExchangeWebsocketService extends IAccountTracker {
   subscribe(accountId: string, wsTopics: string[] | string, isPrivateTopic?: boolean): Promise<void>;

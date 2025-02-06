@@ -15,7 +15,7 @@ import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } 
 
 import { BaseController } from '@common/base.controller';
 import { UuidValidationPipe } from '@common/pipes/uuid-validation.pipe';
-import { RequestWithUser } from '@common/types/request-with-user.interface';
+import { RequestWithUser } from '@common/interfaces/request-with-user.interface';
 import { ExtractUserId } from '@user/decorators/user-id-extractor.decorator';
 import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 

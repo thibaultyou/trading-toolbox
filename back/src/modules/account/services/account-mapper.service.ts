@@ -6,9 +6,10 @@ import { AccountUpdateRequestDto } from '@account/dtos/account-update.request.dt
 import { AccountDto } from '@account/dtos/account.dto';
 import { Account } from '@account/entities/account.entity';
 import { User } from '@user/entities/user.entity';
+import { IBaseMapper } from '@common/interfaces/base-mapper.interface';
 
 @Injectable()
-export class AccountMapperService {
+export class AccountMapperService implements IBaseMapper<Account, AccountDto, AccountCreateRequestDto, AccountUpdateRequestDto> {
   toDto(account: Account): AccountDto {
     const dto = new AccountDto();
     dto.id = account.id;
@@ -18,7 +19,8 @@ export class AccountMapperService {
     return dto;
   }
 
-  fromCreateDto(user: User, dto: AccountCreateRequestDto): Account {
+  createFromDto(...args: [AccountCreateRequestDto, User]): Account {
+    const [dto, user] = args;
     const account = new Account();
     account.name = dto.name;
     account.key = dto.key;

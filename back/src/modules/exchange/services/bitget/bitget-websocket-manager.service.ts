@@ -5,13 +5,13 @@ import { TrackingFailedException } from '@common/exceptions/tracking.exceptions'
 import { AccountService } from '@account/account.service';
 import { Events } from '@config';
 
-import { ExecutionDataReceivedEvent } from '../events/execution-data-received.event';
-import { OrderDataUpdatedEvent } from '../events/order-data-updated.event';
-import { PositionDataUpdatedEvent } from '../events/position-data-updated.event';
-import { TickerDataUpdatedEvent } from '../events/ticker-data-updated.event';
-import { WalletDataUpdatedEvent } from '../events/wallet-data-updated.event';
+import { ExecutionDataReceivedEvent } from '../../events/execution-data-received.event';
+import { OrderDataUpdatedEvent } from '../../events/order-data-updated.event';
+import { PositionDataUpdatedEvent } from '../../events/position-data-updated.event';
+import { TickerDataUpdatedEvent } from '../../events/ticker-data-updated.event';
+import { WalletDataUpdatedEvent } from '../../events/wallet-data-updated.event';
 
-import { IExchangeWebsocketService } from '../types/exchange-websocket-service.interface';
+import { IExchangeWebsocketService } from '../../types/exchange-websocket-service.interface';
 
 import { WebsocketClientV2, DefaultLogger, WsTopicV2 } from 'bitget-api';
 
@@ -65,18 +65,18 @@ export class BitgetWebsocketManagerService implements IExchangeWebsocketService 
       );
 
       ws.on('update', (message) => this.handleWsUpdate(accountId, message));
-      ws.on('open', (data) => this.logger.log(`WebSocket open - AccountID: ${accountId} - Key: ${data.wsKey}`));
-      ws.on('response', (resp) =>
-        this.logger.debug(`WS response - AccountID: ${accountId} - Response: ${JSON.stringify(resp)}`)
-      );
-      ws.on('reconnect', ({ wsKey }) => this.logger.warn(`WS reconnecting - AccountID: ${accountId} - Key: ${wsKey}`));
-      ws.on('reconnected', ({ wsKey }) => this.logger.log(`WS reconnected - AccountID: ${accountId} - Key: ${wsKey}`));
-      ws.on('exception', (err) =>
-        this.logger.error(`WS exception - AccountID: ${accountId} - Error: ${err}`, err.stack)
-      );
-      ws.on('authenticated', (evt) =>
-        this.logger.log(`WS authenticated - AccountID: ${accountId} - Key: ${evt.wsKey}`)
-      );
+      // ws.on('open', (data) => this.logger.log(`WebSocket open - AccountID: ${accountId} - Key: ${data.wsKey}`));
+      // ws.on('response', (resp) =>
+      //   this.logger.debug(`WS response - AccountID: ${accountId} - Response: ${JSON.stringify(resp)}`)
+      // );
+      // ws.on('reconnect', ({ wsKey }) => this.logger.warn(`WS reconnecting - AccountID: ${accountId} - Key: ${wsKey}`));
+      // ws.on('reconnected', ({ wsKey }) => this.logger.log(`WS reconnected - AccountID: ${accountId} - Key: ${wsKey}`));
+      // ws.on('exception', (err) =>
+      //   this.logger.error(`WS exception - AccountID: ${accountId} - Error: ${err}`, err.stack)
+      // );
+      // ws.on('authenticated', (evt) =>
+      //   this.logger.log(`WS authenticated - AccountID: ${accountId} - Key: ${evt.wsKey}`)
+      // );
 
       this.wsConnections.set(accountId, ws);
       this.subscriptions.set(accountId, new Set());
@@ -183,9 +183,6 @@ export class BitgetWebsocketManagerService implements IExchangeWebsocketService 
   }
 
   private handleWsUpdate(accountId: string, message: any) {
-    // TODO replace by topic / channel instead of the full message content
-    this.logger.debug(`handleWsUpdate - AccountID: ${accountId} - Message: ${JSON.stringify(message)}`);
-
     const channel = message?.arg?.channel;
     if (!channel) {
       this.logger.warn(`Unrecognized or missing channel in message: ${JSON.stringify(message)}`);
@@ -241,7 +238,7 @@ export class BitgetWebsocketManagerService implements IExchangeWebsocketService 
   private handleTickerUpdate(accountId: string, message: any) {
     const marketId = message.arg?.instId || 'unknown';
     const tickerData = message.data?.[0] || {};
-    this.logger.debug(`handleTickerUpdate - AccountID: ${accountId}, MarketID: ${marketId}`);
+    // this.logger.debug(`handleTickerUpdate - AccountID: ${accountId}, MarketID: ${marketId}`);
     this.eventEmitter.emit(Events.Data.TICKER_UPDATED, new TickerDataUpdatedEvent(accountId, marketId, tickerData));
   }
 

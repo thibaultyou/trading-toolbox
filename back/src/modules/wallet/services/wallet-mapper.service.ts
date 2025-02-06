@@ -1,25 +1,59 @@
 import { Injectable } from '@nestjs/common';
 import { Balances } from 'ccxt';
 
+import { IBaseMapper } from '@common/interfaces/base-mapper.interface';
 import { IWalletData } from '@exchange/types/wallet-data.interface';
-import { CoinDetailDto } from '@wallet/dtos/coin-detail.dto';
 import { WalletDto } from '@wallet/dtos/wallet.dto';
-import { ICoinData } from '@wallet/types/coin-data.interface';
 import { WalletAccountType } from '@wallet/types/wallet-account-type.enum';
 import { IWalletAccount } from '@wallet/types/wallet-account.interface';
 
 @Injectable()
-export class WalletMapperService {
+export class WalletMapperService implements IBaseMapper<IWalletAccount, WalletDto> {
   toDto(walletAccount: IWalletAccount, currency: string = 'USDT'): WalletDto {
     return new WalletDto(walletAccount, currency);
   }
 
-  fromBalancesToWalletAccount(balances: Balances): IWalletAccount[] {
-    // --- Bybit style (previous usage) ---
+  fromExternal(external: any): IWalletAccount {
+    if (external && external.info) {
+      // Assume external is a Balances object.
+      const walletAccounts = this.fromBalancesToWalletAccount(external as Balances);
+      return (
+        walletAccounts.find(
+          (wa: IWalletAccount) => wa.accountType === WalletAccountType.CONTRACT
+        ) || { accountType: '', coin: [] }
+      );
+    }
+    if (external && external.accountType && external.coin) {
+      return external as IWalletAccount;
+    }
+    if (external && 'marginCoin' in external) {
+      const marginCoin = external.marginCoin || 'USDT';
+      const frozen = parseFloat(external.locked ?? external.frozen ?? '0');
+      const available = parseFloat(external.available || '0');
+      const total = frozen + available;
+      const equity = external.usdtEquity ?? external.accountEquity ?? external.equity ?? total;
+      const unrealisedPnl = external.unrealizedPL ?? external.unrealisedPnl ?? '0';
+      return {
+        accountType: WalletAccountType.CONTRACT,
+        coin: [
+          {
+            coin: marginCoin,
+            equity: String(equity),
+            walletBalance: String(total),
+            availableToWithdraw: String(available),
+            unrealisedPnl: String(unrealisedPnl)
+          }
+        ]
+      };
+    }
+    return { accountType: '', coin: [] };
+  }
+
+  private fromBalancesToWalletAccount(balances: Balances): IWalletAccount[] {
+    // --- Bybit style ---
     if (balances.info?.result?.list) {
       return balances.info.result.list;
     }
-
     // --- Bitget style ---
     if (balances.info?.data && Array.isArray(balances.info.data)) {
       return balances.info.data.map((entry: any) => {
@@ -29,7 +63,6 @@ export class WalletMapperService {
         const total = frozen + available;
         const equity = entry.usdtEquity ?? entry.accountEquity ?? entry.equity ?? total;
         const unrealisedPnl = entry.unrealizedPL ?? entry.unrealisedPnl ?? '0';
-
         const walletAccount: IWalletAccount = {
           accountType: WalletAccountType.CONTRACT,
           coin: [
@@ -45,23 +78,19 @@ export class WalletMapperService {
         return walletAccount;
       });
     }
-
     return [];
   }
 
-  fromBalancesToWalletContractAccount(balances: Balances): IWalletAccount | undefined {
+  fromBalancesToWalletContractAccount(balances: any): IWalletAccount | undefined {
     const walletAccounts = this.fromBalancesToWalletAccount(balances);
-    return walletAccounts.find(
-      (walletAccount: IWalletAccount) => walletAccount.accountType === WalletAccountType.CONTRACT
-    );
+    return walletAccounts?.find((wa: IWalletAccount) => wa.accountType === WalletAccountType.CONTRACT);
   }
 
   fromWalletDataToWalletAccount(walletData: IWalletData): IWalletAccount {
     if (walletData.accountType && walletData.coin) {
-      return walletData; // i.e. Bybit style
+      return walletData as IWalletAccount;
     }
-
-    if ('marginCoin' in walletData) {
+    if (walletData && 'marginCoin' in walletData) {
       const entry = walletData as any;
       const marginCoin = entry.marginCoin || 'USDT';
       const frozen = parseFloat(entry.locked ?? entry.frozen ?? '0');
@@ -69,7 +98,6 @@ export class WalletMapperService {
       const total = frozen + available;
       const equity = entry.usdtEquity ?? entry.accountEquity ?? entry.equity ?? total;
       const unrealisedPnl = entry.unrealizedPL ?? entry.unrealisedPnl ?? '0';
-
       return {
         accountType: WalletAccountType.CONTRACT,
         coin: [
@@ -83,14 +111,6 @@ export class WalletMapperService {
         ]
       };
     }
-
-    return {
-      accountType: '',
-      coin: []
-    };
-  }
-
-  toCoinDetailDto(coinData: ICoinData): CoinDetailDto {
-    return new CoinDetailDto(coinData);
+    return { accountType: '', coin: [] };
   }
 }

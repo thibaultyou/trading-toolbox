@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
-import { IAccountTracker } from '@common/types/account-tracker.interface';
+import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
 import { Events, Timers } from '@config';
 import { WebSocketSubscribeEvent } from '@exchange/events/websocket-subscribe.event';
 import { WebSocketUnsubscribeEvent } from '@exchange/events/websocket-unsubscribe.event';
@@ -83,7 +83,7 @@ export class TickerService implements OnModuleInit, IAccountTracker {
   }
 
   updateTickerData(accountId: string, marketId: string, data: ITickerData): void {
-    this.logger.debug(`Updating ticker data - AccountID: ${accountId} - MarketID: ${marketId}`);
+    // this.logger.debug(`Updating ticker data - AccountID: ${accountId} - MarketID: ${marketId}`);
 
     const accountTickers = this.tickerValues.get(accountId) || new Map();
     this.tickerValues.set(accountId, accountTickers);
@@ -96,17 +96,13 @@ export class TickerService implements OnModuleInit, IAccountTracker {
 
       if (price !== null) {
         accountTickers.set(marketId, updatedData);
-        this.logger.debug(`Updated ticker data - AccountID: ${accountId} - MarketID: ${marketId} - Price: ${price}`);
+        // this.logger.debug(`Updated ticker data - AccountID: ${accountId} - MarketID: ${marketId} - Price: ${price} $`);
       } else {
         this.logger.warn(
           `Ticker data update skipped - AccountID: ${accountId} - MarketID: ${marketId} - Reason: Incomplete data`,
           { updatedData }
         );
       }
-    } else {
-      this.logger.debug(
-        `Ticker data update skipped - AccountID: ${accountId} - MarketID: ${marketId} - Reason: Unchanged`
-      );
     }
   }
 

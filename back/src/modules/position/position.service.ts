@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Order } from 'ccxt';
 
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
-import { IAccountTracker } from '@common/types/account-tracker.interface';
+import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
 import { Events, Timers } from '@config';
 import { ExchangeService } from '@exchange/exchange.service';
 import { OrderSide } from '@order/types/order-side.enum';
@@ -111,7 +111,7 @@ export class PositionService implements OnModuleInit, IAccountTracker {
 
     try {
       const externalPositions = await this.exchangeService.getOpenPositions(accountId);
-      const newPositions = externalPositions.map((position) => this.positionMapper.fromExternalPosition(position));
+      const newPositions = externalPositions.map((position) => this.positionMapper.fromExternal(position));
       this.positions.set(accountId, newPositions);
       this.eventEmitter.emit(Events.Data.POSITION_UPDATED, new PositionsUpdatedEvent(accountId, newPositions));
       this.logger.log(`Fetched positions - AccountID: ${accountId} - Count: ${newPositions.length}`);

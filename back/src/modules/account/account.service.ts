@@ -105,7 +105,7 @@ export class AccountService {
       throw new AccountAlreadyExistsException(dto.name, dto.key);
     }
 
-    const account = this.accountMapper.fromCreateDto(user, dto);
+    const account = this.accountMapper.createFromDto(dto, user);
 
     try {
       this.logger.debug(`Creating exchange for account - Name: ${account.name}`);

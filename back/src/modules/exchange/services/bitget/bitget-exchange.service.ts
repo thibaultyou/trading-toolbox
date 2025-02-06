@@ -2,13 +2,13 @@ import * as ccxt from 'ccxt';
 
 import { Account } from '@account/entities/account.entity';
 
-import { BaseExchangeService } from './base-exchange.service';
+import { BaseExchangeService } from '../base-exchange.service';
 import {
   ExchangeInitializationException,
   ExchangeOperationFailedException,
   InvalidCredentialsException
-} from '../exchange.exceptions';
-import { Balances, Order } from 'ccxt';
+} from '../../exchange.exceptions';
+import { Balances, Order, Position } from 'ccxt';
 import { RestClientV2 } from 'bitget-api';
 import { BitgetMapperService } from './bitget-mapper.service';
 
@@ -84,15 +84,8 @@ export class BitgetExchangeService extends BaseExchangeService {
 
   async getOpenOrders(): Promise<Order[]> {
     this.logger.debug(`Fetching open orders - AccountID: ${this.account.id}`);
-
     try {
       const response = await this.client.getFuturesOpenOrders({ productType: 'USDT-FUTURES' });
-
-
-      // FIXME remove testing area
-      this.logger.warn(JSON.stringify(response))
-      //
-
       const openOrdersRaw = response?.data?.entrustedList || [];
       const mappedOrders = this.mapper.fromBitgetOpenOrdersToCCXTOrders(openOrdersRaw);
       this.logger.log(`Fetched open orders - AccountID: ${this.account.id} - Count: ${mappedOrders.length}`);
@@ -106,22 +99,19 @@ export class BitgetExchangeService extends BaseExchangeService {
     }
   }
 
-  async getOrder(orderId: string, symbol: string): Promise<Order> {
-    this.logger.debug(`Fetching order - AccountID: ${this.account.id} - OrderID: ${orderId} - Symbol: ${symbol}`);
-
+  async getOpenPositions(): Promise<Position[]> {
+    this.logger.debug(`Fetching open positions - AccountID: ${this.account.id}`);
     try {
-      const order = await this.client.getFuturesOrder({ productType: 'USDT-FUTURES', symbol, orderId:'1271088564713127937'})
-
-      this.logger.warn(JSON.stringify(order))
-
-      this.logger.log(`Fetched order - AccountID: ${this.account.id} - OrderID: ${orderId} - Symbol: ${symbol}`);
-      return null;
+      const positions = await this.exchange.fetchPositions();
+      const mappedPositions = positions.map((position: Position) => this.mapper.mapPosition(position));
+      this.logger.log(`Fetched open positions - AccountID: ${this.account.id} - Count: ${mappedPositions.length}`);
+      return mappedPositions;
     } catch (error) {
       this.logger.error(
-        `Failed to fetch order - AccountID: ${this.account.id} - OrderID: ${orderId} - Symbol: ${symbol} - Error: ${error.message}`,
+        `Failed to fetch open positions - AccountID: ${this.account.id} - Error: ${error.message}`,
         error.stack
       );
-      throw new ExchangeOperationFailedException('fetching order', error.message);
+      throw new ExchangeOperationFailedException('fetching open positions', error.message);
     }
   }
 }

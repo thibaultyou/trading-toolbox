@@ -6,12 +6,12 @@ import { AccountService } from '@account/account.service';
 import { TrackingFailedException } from '@common/exceptions/tracking.exceptions';
 import { Events } from '@config';
 
-import { ExecutionDataReceivedEvent } from '../events/execution-data-received.event';
-import { OrderDataUpdatedEvent } from '../events/order-data-updated.event';
-import { PositionDataUpdatedEvent } from '../events/position-data-updated.event';
-import { TickerDataUpdatedEvent } from '../events/ticker-data-updated.event';
-import { WalletDataUpdatedEvent } from '../events/wallet-data-updated.event';
-import { IExchangeWebsocketService } from '../types/exchange-websocket-service.interface';
+import { ExecutionDataReceivedEvent } from '../../events/execution-data-received.event';
+import { OrderDataUpdatedEvent } from '../../events/order-data-updated.event';
+import { PositionDataUpdatedEvent } from '../../events/position-data-updated.event';
+import { TickerDataUpdatedEvent } from '../../events/ticker-data-updated.event';
+import { WalletDataUpdatedEvent } from '../../events/wallet-data-updated.event';
+import { IExchangeWebsocketService } from '../../types/exchange-websocket-service.interface';
 
 @Injectable()
 export class BybitWebsocketManagerService implements IExchangeWebsocketService {

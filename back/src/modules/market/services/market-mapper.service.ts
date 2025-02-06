@@ -1,16 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { Market } from 'ccxt';
-
 import { MarketDto } from '@market/dtos/market.dto';
 import { IMarket } from '@market/types/market.interface';
+import { IBaseMapper } from '@common/interfaces/base-mapper.interface';
 
 @Injectable()
-export class MarketMapperService {
+export class MarketMapperService implements IBaseMapper<IMarket, MarketDto> {
   toDto(market: IMarket): MarketDto {
     return new MarketDto(market);
   }
 
-  fromExternalMarket(market: Market): IMarket {
+  fromExternal(external: any): IMarket {
+    const market: Market = external;
     return {
       id: market.id,
       symbol: market.symbol,

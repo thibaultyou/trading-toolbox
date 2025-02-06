@@ -61,6 +61,6 @@ export class PositionController extends BaseController {
     @Param('side') side: OrderSide
   ): Promise<OrderDto> {
     const order = await this.positionService.closePosition(accountId, marketId, side);
-    return this.orderMapper.fromExternalOrder(order);
+    return this.orderMapper.fromExternal(order);
   }
 }

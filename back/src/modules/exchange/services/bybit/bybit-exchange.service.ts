@@ -2,8 +2,8 @@ import * as ccxt from 'ccxt';
 
 import { Account } from '@account/entities/account.entity';
 
-import { BaseExchangeService } from './base-exchange.service';
-import { ExchangeInitializationException, InvalidCredentialsException } from '../exchange.exceptions';
+import { BaseExchangeService } from '../base-exchange.service';
+import { ExchangeInitializationException, InvalidCredentialsException } from '../../exchange.exceptions';
 
 export class BybitExchangeService extends BaseExchangeService {
   constructor(account: Account) {
