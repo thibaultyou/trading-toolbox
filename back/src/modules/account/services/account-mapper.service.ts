@@ -9,7 +9,9 @@ import { User } from '@user/entities/user.entity';
 import { IBaseMapper } from '@common/interfaces/base-mapper.interface';
 
 @Injectable()
-export class AccountMapperService implements IBaseMapper<Account, AccountDto, AccountCreateRequestDto, AccountUpdateRequestDto> {
+export class AccountMapperService
+  implements IBaseMapper<Account, AccountDto, AccountCreateRequestDto, AccountUpdateRequestDto>
+{
   toDto(account: Account): AccountDto {
     const dto = new AccountDto();
     dto.id = account.id;

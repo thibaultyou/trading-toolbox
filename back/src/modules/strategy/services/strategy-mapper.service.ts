@@ -6,7 +6,9 @@ import { StrategyDto } from '@strategy/dtos/strategy.dto';
 import { Strategy } from '@strategy/entities/strategy.entity';
 
 @Injectable()
-export class StrategyMapperService implements IBaseMapper<Strategy, StrategyDto, StrategyCreateRequestDto, StrategyUpdateRequestDto> {
+export class StrategyMapperService
+  implements IBaseMapper<Strategy, StrategyDto, StrategyCreateRequestDto, StrategyUpdateRequestDto>
+{
   toDto(strategy: Strategy): StrategyDto {
     const dto = new StrategyDto();
     dto.id = strategy.id;

@@ -18,9 +18,10 @@ export class WalletMapperService implements IBaseMapper<IWalletAccount, WalletDt
       // Assume external is a Balances object.
       const walletAccounts = this.fromBalancesToWalletAccount(external as Balances);
       return (
-        walletAccounts.find(
-          (wa: IWalletAccount) => wa.accountType === WalletAccountType.CONTRACT
-        ) || { accountType: '', coin: [] }
+        walletAccounts.find((wa: IWalletAccount) => wa.accountType === WalletAccountType.CONTRACT) || {
+          accountType: '',
+          coin: []
+        }
       );
     }
     if (external && external.accountType && external.coin) {
