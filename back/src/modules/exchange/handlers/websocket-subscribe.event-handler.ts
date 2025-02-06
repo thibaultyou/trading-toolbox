@@ -1,23 +1,30 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { EventHandlersContext, Events } from '@config';
+import { Events, EventHandlersContext } from '@config';
+import { AccountService } from '@account/account.service';
 
 import { WebSocketSubscribeEvent } from '../events/websocket-subscribe.event';
-import { WebsocketManagerService } from '../services/websocket-manager.service';
+import { ExchangeWebsocketFactory } from '../services/exchange-websocket-factory';
 
 @Injectable()
 export class ExchangeModuleWebSocketSubscribeEventEventHandler {
   private logger = new Logger(EventHandlersContext.ExchangeModule);
 
-  constructor(private websocketManagerService: WebsocketManagerService) {}
+  constructor(
+    private readonly exchangeWebsocketFactory: ExchangeWebsocketFactory,
+    private readonly accountService: AccountService
+  ) {}
 
   @OnEvent(Events.Websocket.SUBSCRIBE)
   async handle(event: WebSocketSubscribeEvent) {
-    const actionContext = `${Events.Websocket.SUBSCRIBE} | AccountID: ${event.accountId}, Topics: ${event.topics}`;
+    const accountId = event.accountId;
+    const actionContext = `${Events.Websocket.SUBSCRIBE} | AccountID: ${accountId}, Topics: ${event.topics}`;
 
     try {
-      await this.websocketManagerService.subscribe(event.accountId, event.topics);
+      const account = await this.accountService.getAccountByIdForSystem(accountId);
+      const wsManager = this.exchangeWebsocketFactory.getWebsocketService(account.exchange);
+      await wsManager.subscribe(accountId, event.topics);
       this.logger.log(actionContext);
     } catch (error) {
       this.logger.error(

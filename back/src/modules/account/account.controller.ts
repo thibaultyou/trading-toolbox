@@ -67,6 +67,16 @@ export class AccountController extends BaseController {
     description: 'Account creation details',
     type: AccountCreateRequestDto,
     examples: {
+      aBitgetAccount: {
+        summary: 'Bitget Account',
+        value: {
+          name: 'TEST',
+          exchange: 'bitget',
+          key: 'API_KEY',
+          secret: 'API_SECRET',
+          passphrase: 'API_PASSPHRASE'
+        }
+      },
       aBybitAccount: {
         summary: 'Bybit Account',
         value: {

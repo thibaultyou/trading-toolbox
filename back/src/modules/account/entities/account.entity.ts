@@ -31,6 +31,11 @@ export class Account {
   @IsString()
   secret: string;
 
+  @ApiProperty({ required: false, description: 'Optional passphrase, e.g. for Bitget' })
+  @Column({ nullable: true })
+  @IsString()
+  passphrase?: string;
+
   @ApiProperty({ enum: ExchangeType, example: ExchangeType.Bybit })
   @Column({ type: 'enum', enum: ExchangeType })
   @IsEnum(ExchangeType)

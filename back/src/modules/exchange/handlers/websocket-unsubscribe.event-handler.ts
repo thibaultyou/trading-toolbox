@@ -1,29 +1,34 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { EventHandlersContext, Events } from '@config';
+import { Events, EventHandlersContext } from '@config';
+import { AccountService } from '@account/account.service';
 
 import { WebSocketUnsubscribeEvent } from '../events/websocket-unsubscribe.event';
-import { WebsocketManagerService } from '../services/websocket-manager.service';
+import { ExchangeWebsocketFactory } from '../services/exchange-websocket-factory';
 
 @Injectable()
 export class ExchangeModuleWebSocketUnsubscribeEventEventHandler {
   private logger = new Logger(EventHandlersContext.ExchangeModule);
 
-  constructor(private websocketManagerService: WebsocketManagerService) {}
+  constructor(
+    private readonly exchangeWebsocketFactory: ExchangeWebsocketFactory,
+    private readonly accountService: AccountService
+  ) {}
 
   @OnEvent(Events.Websocket.UNSUBSCRIBE)
-  handle(event: WebSocketUnsubscribeEvent) {
-    const actionContext = `${Events.Websocket.UNSUBSCRIBE} | AccountID: ${event.accountId}`;
+  async handle(event: WebSocketUnsubscribeEvent) {
+    const accountId = event.accountId;
+    const actionContext = `${Events.Websocket.UNSUBSCRIBE} | AccountID: ${accountId}, Topics: ${event.topics}`;
 
     try {
-      this.websocketManagerService.unsubscribe(event.accountId, event.topics);
+      const account = await this.accountService.getAccountByIdForSystem(accountId);
+      const wsManager = this.exchangeWebsocketFactory.getWebsocketService(account.exchange);
+      wsManager.unsubscribe(accountId, event.topics);
+
       this.logger.log(actionContext);
     } catch (error) {
-      this.logger.error(
-        `${actionContext} - Failed to remove topic from websocket manager - Error: ${error.message}`,
-        error.stack
-      );
+      this.logger.error(`${actionContext} - Failed to unsubscribe - Error: ${error.message}`, error.stack);
     }
   }
 }

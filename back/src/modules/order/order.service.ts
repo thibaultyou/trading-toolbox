@@ -47,6 +47,11 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
 
     if (!this.openOrders.has(accountId)) {
       await this.refreshOne(accountId);
+
+      if (!this.openOrders.has(accountId)) {
+        this.openOrders.set(accountId, []);
+        this.logger.warn(`No open orders found - AccountID: ${accountId}`);
+      }
       this.logger.log(`Started tracking account - AccountID: ${accountId}`);
     } else {
       this.logger.warn(`Account tracking skipped - AccountID: ${accountId} - Reason: Already tracked`);

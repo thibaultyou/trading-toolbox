@@ -23,19 +23,29 @@ export class AccountMapperService {
     account.name = dto.name;
     account.key = dto.key;
     account.secret = dto.secret;
+    account.passphrase = dto.passphrase || null;
     account.exchange = dto.exchange;
     account.user = user;
     return account;
   }
 
   updateFromDto(account: Account, dto: AccountUpdateRequestDto): Account {
-    if (dto.name !== undefined) account.name = dto.name;
+    if (dto.name !== undefined) {
+      account.name = dto.name;
+    }
+    if (dto.key !== undefined) {
+      account.key = dto.key;
+    }
+    if (dto.secret !== undefined) {
+      account.secret = dto.secret;
+    }
+    if (dto.passphrase !== undefined) {
+      account.passphrase = dto.passphrase;
+    }
+    if (dto.exchange !== undefined) {
+      account.exchange = dto.exchange;
+    }
 
-    if (dto.key !== undefined) account.key = dto.key;
-
-    if (dto.secret !== undefined) account.secret = dto.secret;
-
-    if (dto.exchange !== undefined) account.exchange = dto.exchange;
     return account;
   }
 }

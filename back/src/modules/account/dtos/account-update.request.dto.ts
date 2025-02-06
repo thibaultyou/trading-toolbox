@@ -22,6 +22,12 @@ export class AccountUpdateRequestDto {
   @MaxLength(255, { message: 'Secret must not exceed 255 characters.' })
   secret?: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString({ message: 'Passphrase must be a string if provided.' })
+  @MaxLength(255, { message: 'Passphrase must not exceed 255 characters.' })
+  passphrase?: string;
+
   @ApiProperty({ enum: ExchangeType, example: ExchangeType.Bybit, required: false })
   @IsOptional()
   @IsEnum(ExchangeType, { message: 'Invalid exchange type if provided.' })

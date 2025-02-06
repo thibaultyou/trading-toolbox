@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 import { ExchangeType } from '@exchange/types/exchange-type.enum';
 
@@ -21,6 +21,15 @@ export class AccountCreateRequestDto {
   @IsString({ message: 'Secret must be a string.' })
   @MaxLength(255, { message: 'Secret must not exceed 255 characters.' })
   secret: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Optional passphrase for some exchanges (e.g. Bitget).'
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  passphrase?: string;
 
   @ApiProperty({ enum: ExchangeType, example: ExchangeType.Bybit })
   @IsNotEmpty({ message: 'Exchange type is required.' })

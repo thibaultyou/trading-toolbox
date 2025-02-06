@@ -6,6 +6,7 @@ import { BybitExchangeService } from './bybit-exchange.service';
 import { UnsupportedExchangeException } from '../exchange.exceptions';
 import { IExchangeService } from '../types/exchange-service.interface';
 import { ExchangeType } from '../types/exchange-type.enum';
+import { BitgetExchangeService } from './bitget-exchange.service';
 
 @Injectable()
 export class ExchangeFactory {
@@ -14,6 +15,9 @@ export class ExchangeFactory {
     switch (account.exchange) {
       case ExchangeType.Bybit:
         exchange = new BybitExchangeService(account);
+        break;
+      case ExchangeType.Bitget:
+        exchange = new BitgetExchangeService(account);
         break;
       default:
         throw new UnsupportedExchangeException(account.exchange);

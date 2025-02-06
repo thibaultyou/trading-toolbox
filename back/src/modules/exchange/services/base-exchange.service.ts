@@ -122,6 +122,11 @@ export abstract class BaseExchangeService implements IExchangeService {
 
     try {
       const positions = await this.exchange.fetchPositions();
+
+      // FIXME remove testing area
+      this.logger.error(JSON.stringify(positions))
+
+
       this.logger.log(`Fetched open positions - AccountID: ${this.account.id} - Count: ${positions.length}`);
       return positions;
     } catch (error) {

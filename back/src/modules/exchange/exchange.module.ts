@@ -12,16 +12,25 @@ import { ExchangeModuleExchangeTerminatedEventHandler } from './handlers/exchang
 import { ExchangeModuleWebSocketSubscribeEventEventHandler } from './handlers/websocket-subscribe.event-handler';
 import { ExchangeModuleWebSocketUnsubscribeEventEventHandler } from './handlers/websocket-unsubscribe.event-handler';
 import { BybitExchangeService } from './services/bybit-exchange.service';
+import { BitgetExchangeService } from './services/bitget-exchange.service';
 import { ExchangeFactory } from './services/exchange-service.factory';
-import { WebsocketManagerService } from './services/websocket-manager.service';
+import { BybitWebsocketManagerService } from './services/bybit-websocket-manager.service';
+import { BitgetWebsocketManagerService } from './services/bitget-websocket-manager.service';
+import { ExchangeWebsocketFactory } from './services/exchange-websocket-factory';
+import { BitgetMapperService } from './services/bitget-mapper.service';
 
 @Global()
 @Module({
-  exports: [ExchangeFactory, ExchangeService],
+  exports: [ExchangeFactory, ExchangeService, ExchangeWebsocketFactory],
   imports: [AccountModule, WalletModule],
   providers: [
     BybitExchangeService,
+    BitgetExchangeService,
+    BitgetMapperService,
+    BitgetWebsocketManagerService,
     ExchangeFactory,
+    BybitWebsocketManagerService,
+    ExchangeWebsocketFactory,
     ExchangeService,
     ExchangeModuleAccountCreatedEventHandler,
     ExchangeModuleAccountDeletedEventHandler,
@@ -29,8 +38,7 @@ import { WebsocketManagerService } from './services/websocket-manager.service';
     ExchangeModuleExchangeInitializedEventHandler,
     ExchangeModuleExchangeTerminatedEventHandler,
     ExchangeModuleWebSocketSubscribeEventEventHandler,
-    ExchangeModuleWebSocketUnsubscribeEventEventHandler,
-    WebsocketManagerService
+    ExchangeModuleWebSocketUnsubscribeEventEventHandler
   ]
 })
 export class ExchangeModule {}

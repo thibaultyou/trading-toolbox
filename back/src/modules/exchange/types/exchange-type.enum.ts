@@ -1,4 +1,4 @@
 export enum ExchangeType {
-  // TODO Replace with CamelCase
-  Bybit = 'bybit'
+  Bybit = 'bybit',
+  Bitget = 'bitget'
 }

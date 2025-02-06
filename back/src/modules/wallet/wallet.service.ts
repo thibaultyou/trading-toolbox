@@ -27,11 +27,22 @@ export class WalletService implements IAccountTracker {
   async startTrackingAccount(accountId: string) {
     this.logger.debug(`Starting account tracking - AccountID: ${accountId}`);
 
-    if (!this.wallets.has(accountId)) {
-      await this.fetchWallet(accountId);
-      this.logger.log(`Started tracking account - AccountID: ${accountId}`);
-    } else {
+    if (this.wallets.has(accountId)) {
       this.logger.warn(`Account tracking skipped - AccountID: ${accountId} - Reason: Already tracked`);
+      return;
+    }
+
+    try {
+      const walletAccount = await this.fetchWallet(accountId);
+      if (!walletAccount) {
+        this.logger.warn(`Skipped tracking account - AccountID: ${accountId} - Reason: No wallet data or fetch failed`);
+        return;
+      }
+
+      this.wallets.set(accountId, walletAccount);
+      this.logger.log(`Started tracking account - AccountID: ${accountId}`);
+    } catch (error) {
+      this.logger.warn(`Account tracking failed - AccountID: ${accountId} - Error: ${error.message}`);
     }
   }
 
@@ -66,36 +77,54 @@ export class WalletService implements IAccountTracker {
   processWalletData(accountId: string, walletData: IWalletData) {
     this.logger.debug(`Processing wallet data - AccountID: ${accountId}`);
 
-    const existingWallets = this.wallets.get(accountId);
-
-    if (!existingWallets) {
+    const existingWallet = this.wallets.get(accountId);
+    if (!existingWallet) {
       this.logger.warn(`Wallet data processing failed - AccountID: ${accountId} - Reason: Account not found`);
       throw new AccountNotFoundException(accountId);
     }
 
-    const updatedBalances = this.walletMapper.fromWalletDataToWalletAccount(walletData);
-    this.wallets.set(accountId, updatedBalances);
-    const usdtEquity = WalletUtils.extractUSDTEquity(updatedBalances);
-    this.logger.log(
-      `Processed wallet data - AccountID: ${accountId} - USDT Balance: ${usdtEquity.toFixed(2) ?? 'N/A'} $`
-    );
-    this.eventEmitter.emit(Events.Wallet.BULK_UPDATED, new WalletsUpdatedEvent(accountId, usdtEquity));
+    const updatedWallet = this.walletMapper.fromWalletDataToWalletAccount(walletData);
+    const oldUsdtEquity = WalletUtils.extractUSDTEquity(existingWallet);
+    const newUsdtEquity = WalletUtils.extractUSDTEquity(updatedWallet);
+    const threshold = 0.01;
+    const delta = Math.abs(newUsdtEquity - oldUsdtEquity);
+
+    if (delta > threshold) {
+      this.wallets.set(accountId, updatedWallet);
+      this.logger.log(
+        `Processed wallet data - AccountID: ${accountId} - USDT Balance: ${newUsdtEquity.toFixed(2)} $ (delta: ${delta.toFixed(4)})`
+      );
+      this.eventEmitter.emit(Events.Wallet.BULK_UPDATED, new WalletsUpdatedEvent(accountId, newUsdtEquity));
+    }
   }
 
-  async fetchWallet(accountId: string): Promise<IWalletAccount> {
+  async fetchWallet(accountId: string): Promise<IWalletAccount | null> {
     this.logger.debug(`Fetching wallet - AccountID: ${accountId}`);
 
     try {
       const balances = await this.exchangeService.getBalances(accountId);
-      const walletAccounts = this.walletMapper.fromBalancesToWalletContractAccount(balances);
-      this.wallets.set(accountId, walletAccounts);
-      const usdtEquity = WalletUtils.extractUSDTEquity(walletAccounts);
+
+      if (!balances?.info) {
+        this.logger.warn(`No 'info' in balances - AccountID: ${accountId}`);
+        return null;
+      }
+
+      const walletAccount = this.walletMapper.fromBalancesToWalletContractAccount(balances);
+      if (!walletAccount) {
+        this.logger.warn(`No CONTRACT wallet found in balances - AccountID: ${accountId}`);
+        return null;
+      }
+
+      const usdtEquity = WalletUtils.extractUSDTEquity(walletAccount);
+
+      this.logger.log(`Fetched wallet - AccountID: ${accountId} - USDT Balance: ${usdtEquity.toFixed(2)} $`);
+
       this.eventEmitter.emit(Events.Wallet.BULK_UPDATED, new WalletsUpdatedEvent(accountId, usdtEquity));
-      this.logger.log(`Fetched wallet - AccountID: ${accountId} - USDT Balance: ${usdtEquity.toFixed(2) ?? 'N/A'} $`);
-      return walletAccounts;
+
+      return walletAccount;
     } catch (error) {
       this.logger.error(`Wallet fetch failed - AccountID: ${accountId} - Error: ${error.message}`, error.stack);
-      throw error;
+      return null;
     }
   }
 }

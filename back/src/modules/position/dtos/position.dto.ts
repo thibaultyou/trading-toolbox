@@ -78,19 +78,19 @@ export class PositionDto implements IPosition {
   @IsEnum(TPSLMode)
   tpslMode: TPSLMode;
 
-  // @ApiProperty({
-  //   description: 'Price at which the position will automatically close in profit',
-  //   example: 0,
-  //   type: Number
-  // })
-  // takeProfitPrice: number;
+  @ApiProperty({
+    description: 'Price at which the position will automatically close in profit',
+    example: 0,
+    type: Number
+  })
+  takeProfitPrice: number;
 
-  // @ApiProperty({
-  //   description: 'Price at which the position will automatically close at a loss to prevent further losses',
-  //   example: 0,
-  //   type: Number
-  // })
-  // stopLossPrice: number;
+  @ApiProperty({
+    description: 'Price at which the position will automatically close at a loss to prevent further losses',
+    example: 0,
+    type: Number
+  })
+  stopLossPrice: number;
 
   constructor(position: IPosition) {
     Object.assign(this, position);

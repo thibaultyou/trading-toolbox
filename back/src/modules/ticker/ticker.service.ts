@@ -16,7 +16,7 @@ import { fromTickerDataToPrice, haveTickerDataChanged } from './ticker.utils';
 
 @Injectable()
 export class TickerService implements OnModuleInit, IAccountTracker {
-  private readonly logger = new Logger(TickerService.name);
+  private logger = new Logger(TickerService.name);
   private readonly tickerValues: Map<string, Map<string, ITickerData>> = new Map();
 
   constructor(
