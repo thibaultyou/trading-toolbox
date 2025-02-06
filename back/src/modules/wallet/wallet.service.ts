@@ -11,9 +11,10 @@ import { WalletsUpdatedEvent } from './events/wallets-updated.event';
 import { WalletMapperService } from './services/wallet-mapper.service';
 import { IWalletAccount } from './types/wallet-account.interface';
 import { WalletUtils } from './wallet.utils';
+import { IAccountSynchronizer } from '@common/interfaces/account-synchronizer.interface';
 
 @Injectable()
-export class WalletService implements IAccountTracker {
+export class WalletService implements IAccountTracker, IAccountSynchronizer<IWalletAccount | null> {
   private logger = new Logger(WalletService.name);
   private wallets: Map<string, IWalletAccount> = new Map();
 
@@ -33,7 +34,7 @@ export class WalletService implements IAccountTracker {
     }
 
     try {
-      const walletAccount = await this.fetchWallet(accountId);
+      const walletAccount = await this.syncAccount(accountId);
       if (!walletAccount) {
         this.logger.warn(`Skipped tracking account - AccountID: ${accountId} - Reason: No wallet data or fetch failed`);
         return;
@@ -96,7 +97,7 @@ export class WalletService implements IAccountTracker {
     }
   }
 
-  async fetchWallet(accountId: string): Promise<IWalletAccount | null> {
+  async syncAccount(accountId: string): Promise<IWalletAccount | null> {
     this.logger.debug(`Fetching wallet - AccountID: ${accountId}`);
 
     try {
@@ -125,6 +126,12 @@ export class WalletService implements IAccountTracker {
       return null;
     }
   }
+
+  async syncAllAccounts(): Promise<void> {
+    // TODO not implemented
+    throw new Error('Method not implemented.');
+  }
+  
 }
 // this.walletGateway.sendWalletsUpdate(accountId, updatedBalances);
 

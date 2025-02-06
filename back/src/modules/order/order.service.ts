@@ -1,9 +1,10 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Interval } from '@nestjs/schedule';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
 import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
-import { IDataRefresher } from '@common/interfaces/data-refresher.interface';
+import { IAccountSynchronizer } from '@common/interfaces/account-synchronizer.interface';
 import { Events, Timers } from '@config';
 import { ExchangeService } from '@exchange/exchange.service';
 
@@ -24,7 +25,7 @@ import { OrderSide } from './types/order-side.enum';
 import { IOrder } from './types/order.interface';
 
 @Injectable()
-export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresher<IOrder[]> {
+export class OrderService implements IAccountTracker, IAccountSynchronizer<IOrder[]> {
   private logger = new Logger(OrderService.name);
   private openOrders: Map<string, IOrder[]> = new Map();
 
@@ -33,20 +34,17 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     private exchangeService: ExchangeService,
     private orderMapper: OrderMapperService
   ) {}
-
-  async onModuleInit() {
-    this.logger.debug('Initializing module');
-    setInterval(() => {
-      this.refreshAll();
-    }, Timers.ORDERS_CACHE_COOLDOWN);
-    this.logger.log('Module initialized successfully');
+  
+  @Interval(Timers.ORDERS_CACHE_COOLDOWN)
+  sync(): void {
+    this.syncAllAccounts();
   }
 
   async startTrackingAccount(accountId: string) {
     this.logger.debug(`Starting account tracking - AccountID: ${accountId}`);
 
     if (!this.openOrders.has(accountId)) {
-      await this.refreshOne(accountId);
+      await this.syncAccount(accountId);
 
       if (!this.openOrders.has(accountId)) {
         this.openOrders.set(accountId, []);
@@ -261,7 +259,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     }
   }
 
-  async refreshOne(accountId: string): Promise<IOrder[]> {
+  async syncAccount(accountId: string): Promise<IOrder[]> {
     this.logger.debug(`Refreshing open orders - AccountID: ${accountId}`);
 
     try {
@@ -284,12 +282,12 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
     }
   }
 
-  async refreshAll() {
+  async syncAllAccounts() {
     this.logger.debug('Starting refresh of all open orders');
     const accountIds = Array.from(this.openOrders.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
     const ordersPromises = accountIds.map((accountId) =>
-      this.refreshOne(accountId).catch((error) => {
+      this.syncAccount(accountId).catch((error) => {
         errors.push({ accountId, error });
       })
     );

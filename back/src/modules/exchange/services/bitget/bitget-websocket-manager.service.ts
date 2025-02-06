@@ -14,6 +14,7 @@ import { WalletDataUpdatedEvent } from '../../events/wallet-data-updated.event';
 import { IExchangeWebsocketService } from '../../types/exchange-websocket-service.interface';
 
 import { WebsocketClientV2, DefaultLogger, WsTopicV2 } from 'bitget-api';
+import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
 
 function mapUnifiedTopicToBitget(topic: string): WsTopicV2 {
   switch (topic) {

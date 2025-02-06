@@ -1,5 +1,6 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Interval } from '@nestjs/schedule';
 
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
 import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
@@ -13,9 +14,10 @@ import { PositionService } from '@position/position.service';
 
 import { TickerPriceNotFoundException } from './exceptions/ticker.exceptions';
 import { fromTickerDataToPrice, haveTickerDataChanged } from './ticker.utils';
+import { IAccountSynchronizer } from '@common/interfaces/account-synchronizer.interface';
 
 @Injectable()
-export class TickerService implements OnModuleInit, IAccountTracker {
+export class TickerService implements IAccountTracker, IAccountSynchronizer<Map<string, ITickerData>> {
   private logger = new Logger(TickerService.name);
   private readonly tickerValues: Map<string, Map<string, ITickerData>> = new Map();
 
@@ -26,16 +28,9 @@ export class TickerService implements OnModuleInit, IAccountTracker {
     private readonly positionService: PositionService
   ) {}
 
-  async onModuleInit(): Promise<void> {
-    this.logger.debug('Initializing module');
-    this.startPeriodicRefresh();
-    this.logger.log('Module initialized successfully');
-  }
-
-  private startPeriodicRefresh(): void {
-    setInterval(() => {
-      this.refreshAccountsTickersWatchList();
-    }, Timers.TICKERS_CACHE_COOLDOWN);
+  @Interval(Timers.TICKERS_CACHE_COOLDOWN)
+  sync(): void {
+    this.syncAllAccounts();
   }
 
   async startTrackingAccount(accountId: string): Promise<void> {
@@ -120,47 +115,10 @@ export class TickerService implements OnModuleInit, IAccountTracker {
     }
   }
 
-  private async refreshAccountsTickersWatchList(): Promise<void> {
-    this.logger.debug('Refreshing all accounts tickers watch list');
-    const accountIds = Array.from(this.tickerValues.keys());
-    await Promise.all(accountIds.map((accountId) => this.refreshAccountTickersWatchList(accountId)));
-    this.logger.debug(`Refreshed all accounts tickers watch list`);
-  }
-
-  private async refreshAccountTickersWatchList(accountId: string): Promise<void> {
-    this.logger.debug(`Refreshing tickers watch list - AccountID: ${accountId}`);
-
-    const newUniqueTickers = this.getUniqueTickersForAccount(accountId);
-    const currentlyTracked = Array.from(this.tickerValues.get(accountId)?.keys() || []);
-    const toSubscribe = newUniqueTickers.filter((ticker) => !currentlyTracked.includes(ticker));
-    const toUnsubscribe = currentlyTracked.filter((ticker) => !newUniqueTickers.includes(ticker));
-    await this.handleTickerSubscriptions(accountId, toSubscribe, toUnsubscribe);
-
-    if (toSubscribe.length + toUnsubscribe.length > 0) {
-      this.logger.log(`Updated tickers watch list - AccountID: ${accountId} - NewCount: ${newUniqueTickers.length}`);
-    } else {
-      this.logger.debug(`Tickers watch list unchanged - AccountID: ${accountId} - Count: ${currentlyTracked.length}`);
-    }
-  }
-
   private getUniqueTickersForAccount(accountId: string): string[] {
     const ordersTickers = this.orderService.getOpenOrders(accountId).map((order) => order.marketId);
     const positionsTickers = this.positionService.getPositions(accountId).map((position) => position.marketId);
     return Array.from(new Set([...ordersTickers, ...positionsTickers]));
-  }
-
-  private async handleTickerSubscriptions(
-    accountId: string,
-    toSubscribe: string[],
-    toUnsubscribe: string[]
-  ): Promise<void> {
-    if (toSubscribe.length > 0) {
-      await this.subscribeToTickers(accountId, toSubscribe);
-    }
-
-    if (toUnsubscribe.length > 0) {
-      await this.unsubscribeFromTickers(accountId, toUnsubscribe);
-    }
   }
 
   private async subscribeToTickers(accountId: string, tickers: string[]): Promise<void> {
@@ -188,5 +146,52 @@ export class TickerService implements OnModuleInit, IAccountTracker {
 
   private async subscribeToTicker(accountId: string, marketId: string): Promise<void> {
     await this.subscribeToTickers(accountId, [marketId]);
+  }
+
+  async syncAccount(accountId: string): Promise<Map<string, ITickerData>> {
+    this.logger.debug(`Refreshing tickers watch list - AccountID: ${accountId}`);
+
+    const accountTickers = this.tickerValues.get(accountId) || new Map<string, ITickerData>();
+    this.tickerValues.set(accountId, accountTickers);
+
+    const newUniqueTickers = this.getUniqueTickersForAccount(accountId);
+    const currentlyTracked = Array.from(accountTickers.keys());
+
+    const toSubscribe = newUniqueTickers.filter((ticker) => !currentlyTracked.includes(ticker));
+    if (toSubscribe.length > 0) {
+      await this.subscribeToTickers(accountId, toSubscribe);
+    }
+
+    const toUnsubscribe = currentlyTracked.filter((ticker) => !newUniqueTickers.includes(ticker));
+    if (toUnsubscribe.length > 0) {
+      await this.unsubscribeFromTickers(accountId, toUnsubscribe);
+    }
+
+    if (toSubscribe.length + toUnsubscribe.length > 0) {
+      this.logger.log(`Updated tickers watch list - AccountID: ${accountId} - NewCount: ${newUniqueTickers.length}`);
+    } else {
+      this.logger.debug(`Tickers watch list unchanged - AccountID: ${accountId} - Count: ${currentlyTracked.length}`);
+    }
+    return accountTickers;
+  }
+
+  async syncAllAccounts(): Promise<void> {
+    this.logger.debug('Refreshing all accounts tickers watch list');
+    const accountIds = Array.from(this.tickerValues.keys());
+    const errors: Array<{ accountId: string; error: Error }> = [];
+
+    const refreshPromises = accountIds.map((accountId) =>
+      this.syncAccount(accountId).catch((error) => {
+        errors.push({ accountId, error });
+      })
+    );
+    await Promise.all(refreshPromises);
+
+    if (errors.length > 0) {
+      const errorMsg = errors.map((e) => `${e.accountId}: ${e.error.message}`).join('; ');
+      this.logger.error(`Multiple tickers refresh failed - Errors: ${errorMsg}`);
+    }
+
+    this.logger.debug('Refreshed all accounts tickers watch list');
   }
 }

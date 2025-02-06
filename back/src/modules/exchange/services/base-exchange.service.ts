@@ -8,8 +8,6 @@ import { OrderType } from '@order/types/order-type.enum';
 import { ExchangeOperationFailedException, ExchangeTerminationFailedException } from '../exchange.exceptions';
 import { IExchangeService } from '../types/exchange-service.interface';
 
-// TODO improve logging, error handling, custom exceptions
-
 export abstract class BaseExchangeService implements IExchangeService {
   protected readonly logger = new Logger(BaseExchangeService.name);
   protected exchange: Exchange;

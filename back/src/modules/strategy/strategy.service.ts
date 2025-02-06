@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Interval } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -13,7 +14,7 @@ import { StrategyMapperService } from './services/strategy-mapper.service';
 import { StrategyFactory } from './strategies/strategy.factory';
 
 @Injectable()
-export class StrategyService implements OnModuleInit {
+export class StrategyService {
   private logger = new Logger(StrategyService.name);
 
   constructor(
@@ -23,12 +24,9 @@ export class StrategyService implements OnModuleInit {
     private strategyMapper: StrategyMapperService
   ) {}
 
-  async onModuleInit() {
-    this.logger.debug('Initializing module');
-    setInterval(() => {
-      this.processStrategies();
-    }, Timers.STRATEGIES_CHECK_COOLDOWN);
-    this.logger.log('Module initialized successfully');
+  @Interval(Timers.STRATEGIES_CHECK_COOLDOWN)
+  loop(): void {
+    this.processStrategies();
   }
 
   async getAllStrategies(userId: string): Promise<Strategy[]> {

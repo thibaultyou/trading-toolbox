@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Interval } from '@nestjs/schedule';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Order } from 'ccxt';
 
@@ -13,9 +14,10 @@ import { PositionsUpdatedEvent } from './events/positions-updated.event';
 import { PositionNotFoundException, PositionsUpdateAggregatedException } from './exceptions/position.exceptions';
 import { PositionMapperService } from './services/position-mapper.service';
 import { IPosition } from './types/position.interface';
+import { IAccountSynchronizer } from '@common/interfaces/account-synchronizer.interface';
 
 @Injectable()
-export class PositionService implements OnModuleInit, IAccountTracker {
+export class PositionService implements IAccountTracker, IAccountSynchronizer<IPosition[]> {
   private logger = new Logger(PositionService.name);
   private positions: Map<string, IPosition[]> = new Map();
 
@@ -25,19 +27,16 @@ export class PositionService implements OnModuleInit, IAccountTracker {
     private positionMapper: PositionMapperService
   ) {}
 
-  async onModuleInit() {
-    this.logger.debug('Initializing module');
-    setInterval(() => {
-      this.refreshAll();
-    }, Timers.POSITIONS_CACHE_COOLDOWN);
-    this.logger.log('Module initialized successfully');
+  @Interval(Timers.POSITIONS_CACHE_COOLDOWN)
+  sync(): void {
+    this.syncAllAccounts();
   }
 
   async startTrackingAccount(accountId: string) {
     this.logger.debug(`Starting account tracking - AccountID: ${accountId}`);
 
     if (!this.positions.has(accountId)) {
-      await this.fetchPositions(accountId);
+      await this.syncAccount(accountId);
       this.logger.log(`Started tracking account - AccountID: ${accountId}`);
     } else {
       this.logger.warn(`Account tracking skipped - AccountID: ${accountId} - Reason: Already tracked`);
@@ -106,7 +105,7 @@ export class PositionService implements OnModuleInit, IAccountTracker {
     }
   }
 
-  async fetchPositions(accountId: string): Promise<IPosition[]> {
+  async syncAccount(accountId: string): Promise<IPosition[]> {
     this.logger.debug(`Fetching positions - AccountID: ${accountId}`);
 
     try {
@@ -122,12 +121,12 @@ export class PositionService implements OnModuleInit, IAccountTracker {
     }
   }
 
-  async refreshAll() {
+  async syncAllAccounts() {
     this.logger.debug('Starting refresh of all positions');
     const accountIds = Array.from(this.positions.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
     const positionsPromises = accountIds.map((accountId) =>
-      this.fetchPositions(accountId).catch((error) => {
+      this.syncAccount(accountId).catch((error) => {
         errors.push({ accountId, error });
       })
     );

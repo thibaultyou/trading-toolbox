@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Timeout } from '@nestjs/schedule';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Balances, Market, Order, Position, Ticker } from 'ccxt';
 
@@ -14,11 +15,8 @@ import { ExchangeNotFoundException, ExchangeOperationFailedException } from './e
 import { ExchangeFactory } from './services/exchange-service.factory';
 import { IExchangeService } from './types/exchange-service.interface';
 
-// TODO move bybit related content out of here
-// TODO improve logging, error handling, custom exceptions
-
 @Injectable()
-export class ExchangeService implements OnModuleInit {
+export class ExchangeService {
   private logger = new Logger(ExchangeService.name);
   private exchanges: Map<string, IExchangeService> = new Map();
 
@@ -28,15 +26,11 @@ export class ExchangeService implements OnModuleInit {
     private accountService: AccountService
   ) {}
 
-  async onModuleInit() {
-    this.logger.debug('Initializing module');
+  @Timeout(500)
+  private async initExchangesAfterDelay(): Promise<void> {
     const accounts = await this.accountService.getAllAccountsForSystem();
     this.logger.debug(`Fetched accounts for initialization - Count: ${accounts.length}`);
-    // NOTE 1s delay to allow other modules to init and listen to exchange events
-    setTimeout(async () => {
-      await Promise.all(accounts.map((account) => this.initializeExchange(account)));
-    }, 1000);
-    this.logger.log('Module initialized successfully');
+    await Promise.all(accounts.map((account) => this.initializeExchange(account)));
   }
 
   async initializeExchange(account: Account) {

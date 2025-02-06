@@ -32,7 +32,7 @@ export interface IExchangeService {
     price?: number,
     params?: Record<string, any>
   ): Promise<Order>;
-  closePosition(symbol: string, side: OrderSide, quantity: number): Promise<Order>;
+  closePosition(symbol: string, side: OrderSide): Promise<Order>;
   cancelOrders(symbol: string, params?: Record<string, any>): Promise<Order[]>;
   cancelOrder(orderId: string, symbol: string): Promise<Order>;
   clean(): Promise<void>;
