@@ -1,9 +1,10 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
-import { ValidateAccount } from '@account/decorators/account-validation.decorator';
 import { AccountValidationGuard } from '@account/guards/account-validation.guard';
 import { BaseController } from '@common/base.controller';
+import { ValidateAccount } from '@common/decorators/account-validation.decorator';
+import { Urls } from '@config';
 import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
 import { TickerService } from './ticker.service';
@@ -11,7 +12,7 @@ import { TickerService } from './ticker.service';
 @ApiTags('Tickers')
 @UseGuards(JwtAuthGuard, AccountValidationGuard)
 @ApiBearerAuth()
-@Controller('tickers')
+@Controller(Urls.TICKERS)
 export class TickerController extends BaseController {
   constructor(private readonly tickerService: TickerService) {
     super('TickerController');

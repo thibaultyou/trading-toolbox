@@ -10,6 +10,7 @@ export interface IExchangeService {
   getTicker(symbol: string): Promise<Ticker>;
   getMarkets(): Promise<Market[]>;
   getOpenOrders(): Promise<Order[]>;
+  getClosedOrders(symbol?: string, params?: Record<string, any>): Promise<Order[]>;
   getOrder(orderId: string, symbol: string): Promise<Order>;
   getOrders(symbol?: string, params?: Record<string, any>): Promise<Order[]>;
   getOpenPositions(): Promise<Position[]>;
@@ -32,7 +33,7 @@ export interface IExchangeService {
     price?: number,
     params?: Record<string, any>
   ): Promise<Order>;
-  closePosition(symbol: string, side: OrderSide, quantity: number): Promise<Order>;
+  closePosition(symbol: string, side: OrderSide): Promise<Order>;
   cancelOrders(symbol: string, params?: Record<string, any>): Promise<Order[]>;
   cancelOrder(orderId: string, symbol: string): Promise<Order>;
   clean(): Promise<void>;

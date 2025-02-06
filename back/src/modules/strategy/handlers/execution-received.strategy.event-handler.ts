@@ -8,24 +8,23 @@ import { StrategyService } from '../strategy.service';
 
 @Injectable()
 export class StrategyModuleExecutionReceivedEventHandler {
-  private logger = new Logger(EventHandlersContext.StrategyModule);
+  private readonly logger = new Logger(EventHandlersContext.StrategyModule);
 
-  constructor(private strategyService: StrategyService) {}
+  constructor(private readonly strategyService: StrategyService) {}
 
   @OnEvent(Events.Data.EXECUTION_RECEIVED)
   async handle(event: ExecutionDataReceivedEvent) {
-    const actionContext = `${Events.Data.EXECUTION_RECEIVED} | AccountID: ${event.accountId}`;
+    const accountId = event.accountId;
+    const actionContext = `${Events.Data.EXECUTION_RECEIVED} | accountId=${accountId}`;
+    this.logger.debug(`handle() - start | ${actionContext}`);
 
     try {
       for (const executionData of event.data) {
         await this.strategyService.processOrderExecutionData(executionData);
       }
-      this.logger.log(actionContext);
+      this.logger.log(`handle() - success | ${actionContext}, count=${event.data.length}`);
     } catch (error) {
-      this.logger.error(
-        `${actionContext} - Failed to process order execution data - Error: ${error.message}`,
-        error.stack
-      );
+      this.logger.error(`handle() - error | ${actionContext}, msg=${error.message}`, error.stack);
     }
   }
 }

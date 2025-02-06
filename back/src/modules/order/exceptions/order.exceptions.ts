@@ -1,44 +1,56 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 
-export class OrderNotFoundException extends HttpException {
+import { BaseCustomException } from '@common/exceptions/base-custom.exception';
+
+export class OrderNotFoundException extends BaseCustomException {
   constructor(accountId: string, orderId?: string) {
-    const orderInfo = orderId ? ` - OrderID: ${orderId}` : '';
-    super(`Order not found - AccountID: ${accountId}${orderInfo}`, HttpStatus.NOT_FOUND);
+    const orderInfo = orderId ? `, orderId=${orderId}` : '';
+    super('ORDER_NOT_FOUND', `Order not found | accountId=${accountId}${orderInfo}`, HttpStatus.NOT_FOUND);
   }
 }
 
-export class OrderCreationFailedException extends HttpException {
+export class OrderCreationFailedException extends BaseCustomException {
   constructor(accountId: string, reason: string) {
-    super(`Order creation failed - AccountID: ${accountId} - Reason: ${reason}`, HttpStatus.INTERNAL_SERVER_ERROR);
-  }
-}
-
-export class OrderUpdateFailedException extends HttpException {
-  constructor(accountId: string, orderId: string, reason: string) {
     super(
-      `Order update failed - AccountID: ${accountId} - OrderID: ${orderId} - Reason: ${reason}`,
+      'ORDER_CREATION_FAILED',
+      `Order creation failed | accountId=${accountId}, msg=${reason}`,
       HttpStatus.INTERNAL_SERVER_ERROR
     );
   }
 }
 
-export class OrderCancellationFailedException extends HttpException {
+export class OrderUpdateFailedException extends BaseCustomException {
   constructor(accountId: string, orderId: string, reason: string) {
     super(
-      `Order cancellation failed - AccountID: ${accountId} - OrderID: ${orderId} - Reason: ${reason}`,
+      'ORDER_UPDATE_FAILED',
+      `Order update failed | accountId=${accountId}, orderId=${orderId}, msg=${reason}`,
       HttpStatus.INTERNAL_SERVER_ERROR
     );
   }
 }
 
-export class OrdersUpdateAggregatedException extends HttpException {
+export class OrderCancellationFailedException extends BaseCustomException {
+  constructor(accountId: string, orderId: string, reason: string) {
+    super(
+      'ORDER_CANCELLATION_FAILED',
+      `Order cancellation failed | accountId=${accountId}, orderId=${orderId}, msg=${reason}`,
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+  }
+}
+
+export class OrdersUpdateAggregatedException extends BaseCustomException {
   constructor(errors: Array<{ accountId: string; orderId?: string; error: Error }>) {
     const message = errors
       .map(
         ({ accountId, orderId, error }) =>
-          `AccountID: ${accountId}${orderId ? ` - OrderID: ${orderId}` : ''} - Error: ${error.message}`
+          `accountId=${accountId}${orderId ? `, orderId=${orderId}` : ''}, msg=${error.message}`
       )
       .join('; ');
-    super(`Multiple order updates failed - Errors: ${message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    super(
+      'ORDERS_UPDATE_FAILED',
+      `Multiple order updates failed | errors=[${message}]`,
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
   }
 }

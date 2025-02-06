@@ -1,6 +1,7 @@
 import { LoggerService } from '@nestjs/common';
 import { createLogger, format, transports } from 'winston';
 
+import { asyncLocalStorage } from '@common/async-context';
 import { InjectConfig } from '@common/decorators/inject-env.decorator';
 import { IEnvConfiguration } from '@config';
 
@@ -21,14 +22,19 @@ export class AppLogger implements LoggerService {
   private createAppLogger(): ILogger & { setContext: (context: string) => void } {
     const logger = createLogger({
       level: this.config.NODE_ENV === 'development' ? 'debug' : 'info',
-      format: format.combine(
-        format.colorize(),
-        format.timestamp({ format: 'YYYY/MM/DD,HH:mm:ss' }),
-        format.printf((info) => {
-          const ctx = this.context ? `[${this.context}]` : '';
-          return `${info.timestamp} [${info.level}]${ctx} | ${info.message}`;
-        })
-      ),
+      format:
+        this.config.NODE_ENV === 'development'
+          ? format.combine(
+              format.colorize(),
+              format.timestamp({ format: 'YYYY/MM/DD,HH:mm:ss' }),
+              format.printf((info) => {
+                const store = asyncLocalStorage.getStore();
+                const ctx = this.context ? `[${this.context}]` : '';
+                const cid = store?.correlationId ? `[CID:${store.correlationId}]` : '';
+                return `${info.timestamp} [${info.level}]${ctx}${cid} | ${info.message}`;
+              })
+            )
+          : format.combine(format.timestamp(), format.json()),
       transports: [new transports.Console()]
     });
     return {

@@ -1,11 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-  UnauthorizedException,
-  ConflictException,
-  InternalServerErrorException
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -22,6 +15,12 @@ import { User } from './entities/user.entity';
 import { UserCreatedEvent } from './events/user-created.event';
 import { UserDeletedEvent } from './events/user-deleted.event';
 import { UserUpdatedEvent } from './events/user-updated.event';
+import {
+  UserAlreadyExistsException,
+  UserOperationFailedException,
+  InvalidUserCredentialsException,
+  UserNotFoundException
+} from './exceptions/user.exceptions';
 import { PasswordService } from './services/password.service';
 import { UserMapperService } from './services/user-mapper.service';
 
@@ -39,50 +38,73 @@ export class UserService {
   ) {}
 
   async createUser(dto: UserCreateRequestDto): Promise<UserDto> {
-    this.logger.debug(`Creating new user - Username: ${dto.username}`);
+    this.logger.debug(`createUser() - start | username=${dto.username}`);
 
     try {
       await this.checkExistingUser(dto.username);
+
       const hashedPassword = await this.passwordService.hashPassword(dto.password);
-      const userData = this.userMapper.fromCreateDto(dto);
-      const user = await this.saveUser({ ...userData, password: hashedPassword });
-      const userDto = this.userMapper.toDto(user);
+      const userData = this.userMapper.createFromDto(dto);
+      userData.password = hashedPassword;
+
+      const savedUser = await this.saveUser(userData);
+      const userDto = this.userMapper.toDto(savedUser);
       this.eventEmitter.emit(Events.User.CREATED, new UserCreatedEvent(userDto.id, userDto.username));
+      this.logger.log(`createUser() - success | userId=${userDto.id}, username=${userDto.username}`);
       return userDto;
     } catch (error) {
-      this.handleError(error, `Error creating user - Username: ${dto.username}`);
+      this.logger.error(`createUser() - error | username=${dto.username}, msg=${error.message}`, error.stack);
+
+      if (error instanceof UserAlreadyExistsException) throw error;
+
+      throw new UserOperationFailedException('createUser', error.message);
     }
   }
 
   async authenticateUser(dto: UserLoginRequestDto): Promise<UserLoginResponseDto> {
-    this.logger.debug(`Authenticating user - Username: ${dto.username}`);
+    this.logger.debug(`authenticateUser() - start | username=${dto.username}`);
 
     try {
       const user = await this.findUserWithAccounts(dto.username);
-      await this.verifyPassword(dto.password, user.password);
+      const isValid = await this.passwordService.verifyPassword(dto.password, user.password);
+
+      if (!isValid) {
+        this.logger.warn(`authenticateUser() - invalid password | username=${dto.username}`);
+        throw new InvalidUserCredentialsException(dto.username);
+      }
 
       const token = this.generateToken(user);
       const response = this.createLoginResponse(user, token);
-      this.logger.log(`User authenticated successfully - UserID: ${user.id}, Username: ${user.username}`);
+      this.logger.log(`authenticateUser() - success | userId=${user.id}, username=${user.username}`);
       return response;
     } catch (error) {
-      this.handleError(error, `Error authenticating user - Username: ${dto.username}`);
+      this.logger.error(`authenticateUser() - error | username=${dto.username}, msg=${error.message}`, error.stack);
+
+      if (error instanceof InvalidUserCredentialsException) throw error;
+
+      throw new UserOperationFailedException('authenticateUser', error.message);
     }
   }
 
   async getUserById(userId: string): Promise<UserDto> {
-    this.logger.debug(`Fetching user - UserID: ${userId}`);
+    this.logger.debug(`getUserById() - start | userId=${userId}`);
 
     try {
       const user = await this.findUserById(userId);
-      return this.userMapper.toDto(user);
+      const userDto = this.userMapper.toDto(user);
+      this.logger.log(`getUserById() - success | userId=${userId}`);
+      return userDto;
     } catch (error) {
-      this.handleError(error, `Error fetching user - UserID: ${userId}`);
+      this.logger.error(`getUserById() - error | userId=${userId}, msg=${error.message}`, error.stack);
+
+      if (error instanceof UserNotFoundException) throw error;
+
+      throw new UserOperationFailedException('getUserById', error.message);
     }
   }
 
   async updateUser(userId: string, dto: UserUpdateRequestDto): Promise<UserDto> {
-    this.logger.debug(`Updating user - UserID: ${userId}`);
+    this.logger.debug(`updateUser() - start | userId=${userId}`);
 
     try {
       const user = await this.findUserById(userId);
@@ -95,22 +117,32 @@ export class UserService {
       const savedUser = await this.usersRepository.save(updatedUser);
       const userDto = this.userMapper.toDto(savedUser);
       this.eventEmitter.emit(Events.User.UPDATED, new UserUpdatedEvent(userDto.id, userDto.username));
+      this.logger.log(`updateUser() - success | userId=${userDto.id}, username=${userDto.username}`);
       return userDto;
     } catch (error) {
-      this.handleError(error, `Error updating user - UserID: ${userId}`);
+      this.logger.error(`updateUser() - error | userId=${userId}, msg=${error.message}`, error.stack);
+
+      if (error instanceof UserNotFoundException) throw error;
+
+      throw new UserOperationFailedException('updateUser', error.message);
     }
   }
 
   async deleteUser(userId: string): Promise<void> {
-    this.logger.debug(`Deleting user - UserID: ${userId}`);
+    this.logger.debug(`deleteUser() - start | userId=${userId}`);
 
     try {
       const user = await this.findUserById(userId);
       await this.usersRepository.remove(user);
+
       this.eventEmitter.emit(Events.User.DELETED, new UserDeletedEvent(userId));
-      this.logger.log(`Deleted user - UserID: ${userId}, Username: ${user.username}`);
+      this.logger.log(`deleteUser() - success | userId=${userId}, username=${user.username}`);
     } catch (error) {
-      this.handleError(error, `Error deleting user - UserID: ${userId}`);
+      this.logger.error(`deleteUser() - error | userId=${userId}, msg=${error.message}`, error.stack);
+
+      if (error instanceof UserNotFoundException) throw error;
+
+      throw new UserOperationFailedException('deleteUser', error.message);
     }
   }
 
@@ -118,41 +150,65 @@ export class UserService {
     const existingUser = await this.usersRepository.findOne({ where: { username } });
 
     if (existingUser) {
-      this.logger.warn(`Attempt to create user with existing username - Username: ${username}`);
-      throw new ConflictException('Username already exists');
+      this.logger.warn(`checkExistingUser() - conflict | username=${username}`);
+      throw new UserAlreadyExistsException(username);
     }
   }
 
   private async saveUser(userData: Partial<User>): Promise<User> {
+    this.logger.debug(`saveUser() - start | username=${userData.username}`);
     const user = this.usersRepository.create(userData);
     const savedUser = await this.usersRepository.save(user);
-    this.logger.log(`Created new user - UserID: ${savedUser.id}, Username: ${savedUser.username}`);
+    this.logger.log(`saveUser() - success | userId=${savedUser.id}, username=${savedUser.username}`);
     return savedUser;
   }
 
   private async findUserWithAccounts(username: string): Promise<User> {
+    this.logger.debug(`findUserWithAccounts() - start | username=${username}`);
     const user = await this.usersRepository.findOne({
       where: { username },
       relations: ['accounts']
     });
 
     if (!user) {
-      this.logger.warn(`Authentication failed - User not found: ${username}`);
-      throw new UnauthorizedException('Invalid credentials');
+      this.logger.warn(`findUserWithAccounts() - not found | username=${username}`);
+      throw new InvalidUserCredentialsException(username);
     }
+
+    this.logger.log(`findUserWithAccounts() - success | userId=${user.id}, username=${user.username}`);
     return user;
   }
 
-  private async verifyPassword(plainTextPassword: string, hashedPassword: string): Promise<void> {
-    const isPasswordValid = await this.passwordService.verifyPassword(plainTextPassword, hashedPassword);
+  private async findUserById(userId: string): Promise<User> {
+    this.logger.debug(`findUserById() - start | userId=${userId}`);
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
 
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+    if (!user) {
+      this.logger.warn(`findUserById() - not found | userId=${userId}`);
+      throw new UserNotFoundException(userId);
+    }
+
+    this.logger.log(`findUserById() - success | userId=${user.id}, username=${user.username}`);
+    return user;
+  }
+
+  private generateToken(user: User): string {
+    this.logger.debug(`generateToken() - start | userId=${user.id}`);
+
+    try {
+      const payload = { username: user.username, sub: user.id };
+      const token = this.jwtService.sign(payload);
+      this.logger.log(`generateToken() - success | userId=${user.id}`);
+      return token;
+    } catch (error) {
+      this.logger.error(`generateToken() - error | userId=${user.id}, msg=${error.message}`, error.stack);
+      throw new UserOperationFailedException('generateToken', error.message);
     }
   }
 
   private createLoginResponse(user: User, token: string): UserLoginResponseDto {
-    return {
+    this.logger.debug(`createLoginResponse() - start | userId=${user.id}`);
+    const response: UserLoginResponseDto = {
       access_token: token,
       accounts:
         user.accounts?.map((account) => ({
@@ -161,39 +217,7 @@ export class UserService {
           exchange: account.exchange
         })) ?? []
     };
-  }
-
-  private async findUserById(userId: string): Promise<User> {
-    const user = await this.usersRepository.findOne({ where: { id: userId } });
-
-    if (!user) {
-      this.logger.warn(`User not found - UserID: ${userId}`);
-      throw new NotFoundException('User not found');
-    }
-    return user;
-  }
-
-  private generateToken(user: User): string {
-    try {
-      const payload = { username: user.username, sub: user.id };
-      return this.jwtService.sign(payload);
-    } catch (error) {
-      this.logger.error(`Error generating token - UserID: ${user.id} - Error: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('An error occurred while generating the token');
-    }
-  }
-
-  private handleError(error: Error, logMessage: string): never {
-    this.logger.error(`${logMessage} - Error: ${error.message}`, error.stack);
-
-    if (
-      error instanceof NotFoundException ||
-      error instanceof UnauthorizedException ||
-      error instanceof ConflictException
-    ) {
-      throw error;
-    }
-
-    throw new InternalServerErrorException('An unexpected error occurred');
+    this.logger.log(`createLoginResponse() - success | userId=${user.id}, totalAccounts=${response.accounts.length}`);
+    return response;
   }
 }

@@ -1,9 +1,10 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
-import { ValidateAccount } from '@account/decorators/account-validation.decorator';
 import { AccountValidationGuard } from '@account/guards/account-validation.guard';
 import { BaseController } from '@common/base.controller';
+import { ValidateAccount } from '@common/decorators/account-validation.decorator';
+import { Urls } from '@config';
 import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
 import { WalletDto } from './dtos/wallet.dto';
@@ -13,7 +14,7 @@ import { WalletService } from './wallet.service';
 @ApiTags('Wallets')
 @UseGuards(JwtAuthGuard, AccountValidationGuard)
 @ApiBearerAuth()
-@Controller('wallets')
+@Controller(Urls.WALLETS)
 export class WalletController extends BaseController {
   constructor(
     private readonly walletService: WalletService,

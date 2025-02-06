@@ -2,7 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
-import { IAccountTracker } from '@common/types/account-tracker.interface';
+import { IAccountSynchronizer } from '@common/interfaces/account-synchronizer.interface';
+import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
 import { Events } from '@config';
 import { ExchangeService } from '@exchange/exchange.service';
 import { IWalletData } from '@exchange/types/wallet-data.interface';
@@ -10,117 +11,140 @@ import { IWalletData } from '@exchange/types/wallet-data.interface';
 import { WalletsUpdatedEvent } from './events/wallets-updated.event';
 import { WalletMapperService } from './services/wallet-mapper.service';
 import { IWalletAccount } from './types/wallet-account.interface';
-import { WalletUtils } from './wallet.utils';
+import { extractUSDTEquity } from './wallet.utils';
 
 @Injectable()
-export class WalletService implements IAccountTracker {
-  private logger = new Logger(WalletService.name);
-  private wallets: Map<string, IWalletAccount> = new Map();
+export class WalletService implements IAccountTracker, IAccountSynchronizer<IWalletAccount | null> {
+  private readonly logger = new Logger(WalletService.name);
+  private readonly wallets: Map<string, IWalletAccount> = new Map();
 
   constructor(
-    private eventEmitter: EventEmitter2,
-    private exchangeService: ExchangeService,
-    private walletMapper: WalletMapperService
-    // private walletGateway: WalletGateway,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly exchangeService: ExchangeService,
+    private readonly walletMapper: WalletMapperService
+    // private readonly walletGateway: WalletGateway, // NOTE Needed for serveer-side updates
   ) {}
 
-  async startTrackingAccount(accountId: string) {
-    this.logger.debug(`Starting account tracking - AccountID: ${accountId}`);
+  async startTrackingAccount(accountId: string): Promise<void> {
+    this.logger.debug(`startTrackingAccount() - start | accountId=${accountId}`);
 
-    if (!this.wallets.has(accountId)) {
-      await this.fetchWallet(accountId);
-      this.logger.log(`Started tracking account - AccountID: ${accountId}`);
-    } else {
-      this.logger.warn(`Account tracking skipped - AccountID: ${accountId} - Reason: Already tracked`);
+    if (this.wallets.has(accountId)) {
+      this.logger.warn(`startTrackingAccount() - skip | accountId=${accountId}, reason=Already tracked`);
+      return;
+    }
+
+    try {
+      const walletAccount = await this.syncAccount(accountId);
+
+      if (!walletAccount) {
+        this.logger.warn(
+          `startTrackingAccount() - skip | accountId=${accountId}, reason=No wallet data or fetch failed`
+        );
+        return;
+      }
+
+      this.wallets.set(accountId, walletAccount);
+      this.logger.log(`startTrackingAccount() - success | accountId=${accountId}, tracking=started`);
+    } catch (error) {
+      this.logger.error(`startTrackingAccount() - error | accountId=${accountId}, msg=${error.message}`, error.stack);
     }
   }
 
-  stopTrackingAccount(accountId: string) {
-    this.logger.debug(`Stopping account tracking - AccountID: ${accountId}`);
+  stopTrackingAccount(accountId: string): void {
+    this.logger.debug(`stopTrackingAccount() - start | accountId=${accountId}`);
 
     if (this.wallets.delete(accountId)) {
-      this.logger.log(`Stopped tracking account - AccountID: ${accountId}`);
+      this.logger.log(`stopTrackingAccount() - success | accountId=${accountId}, tracking=stopped`);
     } else {
-      this.logger.warn(`Account tracking removal failed - AccountID: ${accountId} - Reason: Not tracked`);
+      this.logger.warn(`stopTrackingAccount() - skip | accountId=${accountId}, reason=Not tracked`);
     }
   }
 
   getWallets(accountId: string): IWalletAccount {
-    this.logger.debug(`Fetching wallets - AccountID: ${accountId}`);
+    this.logger.debug(`getWallets() - start | accountId=${accountId}`);
 
     if (!this.wallets.has(accountId)) {
-      this.logger.warn(`Wallets not found - AccountID: ${accountId}`);
+      this.logger.warn(`getWallets() - not found | accountId=${accountId}, reason=No wallet`);
       throw new AccountNotFoundException(accountId);
     }
-    return this.wallets.get(accountId);
+
+    this.logger.log(`getWallets() - success | accountId=${accountId}`);
+    return this.wallets.get(accountId) as IWalletAccount;
   }
 
   getUSDTBalance(accountId: string): number {
-    this.logger.debug(`Fetching USDT balance - AccountID: ${accountId}`);
+    this.logger.debug(`getUSDTBalance() - start | accountId=${accountId}`);
+
     const walletAccount = this.getWallets(accountId);
-    const balance = WalletUtils.extractUSDTEquity(walletAccount);
-    this.logger.debug(`Fetched USDT balance - AccountID: ${accountId} - Balance: ${balance}`);
+    const balance = extractUSDTEquity(walletAccount);
+    this.logger.log(`getUSDTBalance() - success | accountId=${accountId}, usdtBalance=${balance}`);
     return balance;
   }
 
-  processWalletData(accountId: string, walletData: IWalletData) {
-    this.logger.debug(`Processing wallet data - AccountID: ${accountId}`);
+  processWalletData(accountId: string, walletData: IWalletData): void {
+    this.logger.debug(`processWalletData() - start | accountId=${accountId}`);
 
-    const existingWallets = this.wallets.get(accountId);
+    const existingWallet = this.wallets.get(accountId);
 
-    if (!existingWallets) {
-      this.logger.warn(`Wallet data processing failed - AccountID: ${accountId} - Reason: Account not found`);
+    if (!existingWallet) {
+      this.logger.warn(`processWalletData() - skip | accountId=${accountId}, reason=Wallet not tracked`);
       throw new AccountNotFoundException(accountId);
     }
 
-    const updatedBalances = this.walletMapper.fromWalletDataToWalletAccount(walletData);
-    this.wallets.set(accountId, updatedBalances);
-    const usdtEquity = WalletUtils.extractUSDTEquity(updatedBalances);
-    this.logger.log(
-      `Processed wallet data - AccountID: ${accountId} - USDT Balance: ${usdtEquity.toFixed(2) ?? 'N/A'} $`
-    );
-    this.eventEmitter.emit(Events.Wallet.BULK_UPDATED, new WalletsUpdatedEvent(accountId, usdtEquity));
+    const updatedWallet = this.walletMapper.fromWalletDataToWalletAccount(walletData);
+    const oldUsdtEquity = extractUSDTEquity(existingWallet);
+    const newUsdtEquity = extractUSDTEquity(updatedWallet);
+    // NOTE Update only if there's a noticeable difference
+    const threshold = 0.01;
+    const delta = Math.abs(newUsdtEquity - oldUsdtEquity);
+
+    if (delta > threshold) {
+      this.wallets.set(accountId, updatedWallet);
+
+      this.logger.log(
+        `processWalletData() - success | accountId=${accountId}, usdtBalance=${newUsdtEquity.toFixed(2)}`
+      );
+      this.eventEmitter.emit(Events.Wallet.BULK_UPDATED, new WalletsUpdatedEvent(accountId, newUsdtEquity));
+
+      // NOTE Broadcast changes via websockets:
+      // this.walletGateway.sendWalletsUpdate(accountId, updatedWallet);
+    } else {
+      this.logger.debug(`processWalletData() - skip | accountId=${accountId}, reason=No significant change`);
+    }
   }
 
-  async fetchWallet(accountId: string): Promise<IWalletAccount> {
-    this.logger.debug(`Fetching wallet - AccountID: ${accountId}`);
+  async syncAccount(accountId: string): Promise<IWalletAccount | null> {
+    this.logger.debug(`syncAccount() - start | accountId=${accountId}`);
 
     try {
       const balances = await this.exchangeService.getBalances(accountId);
-      const walletAccounts = this.walletMapper.fromBalancesToWalletContractAccount(balances);
-      this.wallets.set(accountId, walletAccounts);
-      const usdtEquity = WalletUtils.extractUSDTEquity(walletAccounts);
+
+      if (!balances?.info) {
+        this.logger.warn(`syncAccount() - skip | accountId=${accountId}, reason=No 'info' in balances`);
+        return null;
+      }
+
+      const walletAccount = this.walletMapper.fromBalancesToWalletContractAccount(balances);
+
+      if (!walletAccount) {
+        this.logger.warn(`syncAccount() - skip | accountId=${accountId}, reason=No CONTRACT wallet found`);
+        return null;
+      }
+
+      const usdtEquity = extractUSDTEquity(walletAccount);
+      this.logger.log(`syncAccount() - success | accountId=${accountId}, usdtBalance=${usdtEquity.toFixed(2)}`);
+
       this.eventEmitter.emit(Events.Wallet.BULK_UPDATED, new WalletsUpdatedEvent(accountId, usdtEquity));
-      this.logger.log(`Fetched wallet - AccountID: ${accountId} - USDT Balance: ${usdtEquity.toFixed(2) ?? 'N/A'} $`);
-      return walletAccounts;
+      return walletAccount;
     } catch (error) {
-      this.logger.error(`Wallet fetch failed - AccountID: ${accountId} - Error: ${error.message}`, error.stack);
-      throw error;
+      this.logger.error(`syncAccount() - error | accountId=${accountId}, msg=${error.message}`, error.stack);
+      return null;
     }
   }
-}
-// this.walletGateway.sendWalletsUpdate(accountId, updatedBalances);
 
-//   fetchWallet = (accountId: string): TE.TaskEither<Error, IWalletAccount> =>
-//     pipe(
-//       TE.right(accountId),
-//       TE.tapIO(() => logEffect(this.logger, `Wallets - Refresh Initiated - AccountID: ${accountId}`)(accountId)),
-//       TE.chain(() => this.exchangeService.getBalances(accountId)),
-//       TE.map((balances) => BalanceConverter.fromBalancesToWalletContractAccount(balances)),
-//       TE.tapIO((newBalances) => {
-//         this.wallets.set(accountId, newBalances);
-//         this.walletGateway.sendBalancesUpdate(accountId, newBalances);
-//         const usdtEquity = extractUSDTEquity(newBalances, this.logger);
-//         return () => {
-//           logEffect(
-//             this.logger,
-//             `Wallets - Updated - AccountID: ${accountId}, Balance (USDT): ${usdtEquity.toFixed(2) ?? 'N/A'} $`
-//           )(newBalances);
-//           this.eventEmitter.emit(Events.WALLETS_UPDATED, new BalancesUpdatedEvent(accountId, usdtEquity));
-//         };
-//       }),
-//       TE.mapError((error) => new ExchangeOperationFailedException('refreshOne', error.message)),
-//       TE.tapError((error) =>
-//         logError(this.logger, `Wallets - Update Failed - AccountID: ${accountId}, Error: ${error.message}`)(error)
-//       )
-//     );
+  async syncAllAccounts(): Promise<void> {
+    this.logger.debug('syncAllAccounts() - start | reason=Not implemented');
+    // FIXME Implementation pending...
+    throw new Error('Method not implemented.');
+  }
+}

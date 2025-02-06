@@ -1,9 +1,10 @@
 import { Controller, Delete, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { ValidateAccount } from '@account/decorators/account-validation.decorator';
 import { AccountValidationGuard } from '@account/guards/account-validation.guard';
 import { BaseController } from '@common/base.controller';
+import { ValidateAccount } from '@common/decorators/account-validation.decorator';
+import { Urls } from '@config';
 import { OrderDto } from '@order/dtos/order.dto';
 import { OrderMapperService } from '@order/services/order-mapper.service';
 import { OrderSide } from '@order/types/order-side.enum';
@@ -16,7 +17,7 @@ import { PositionMapperService } from './services/position-mapper.service';
 @ApiTags('Positions')
 @UseGuards(JwtAuthGuard, AccountValidationGuard)
 @ApiBearerAuth()
-@Controller('positions')
+@Controller(Urls.POSITIONS)
 export class PositionController extends BaseController {
   constructor(
     private readonly positionService: PositionService,
@@ -61,6 +62,6 @@ export class PositionController extends BaseController {
     @Param('side') side: OrderSide
   ): Promise<OrderDto> {
     const order = await this.positionService.closePosition(accountId, marketId, side);
-    return this.orderMapper.fromExternalOrder(order);
+    return this.orderMapper.fromExternal(order);
   }
 }

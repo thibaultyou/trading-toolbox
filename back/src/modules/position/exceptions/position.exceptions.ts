@@ -1,16 +1,24 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 
-export class PositionNotFoundException extends HttpException {
+import { BaseCustomException } from '@common/exceptions/base-custom.exception';
+
+export class PositionNotFoundException extends BaseCustomException {
   constructor(accountId: string, marketId: string) {
-    super(`Position not found - AccountID: ${accountId} - PositionID: ${marketId}`, HttpStatus.NOT_FOUND);
+    super(
+      'POSITION_NOT_FOUND',
+      `Position not found | accountId=${accountId}, marketId=${marketId}`,
+      HttpStatus.NOT_FOUND
+    );
   }
 }
 
-export class PositionsUpdateAggregatedException extends HttpException {
+export class PositionsUpdateAggregatedException extends BaseCustomException {
   constructor(errors: Array<{ accountId: string; error: Error }>) {
-    const message = errors
-      .map(({ accountId, error }) => `AccountID: ${accountId} - Error: ${error.message}`)
-      .join('; ');
-    super(`Multiple position updates failed - Errors: ${message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    const message = errors.map(({ accountId, error }) => `accountId=${accountId}, msg=${error.message}`).join('; ');
+    super(
+      'POSITIONS_UPDATE_FAILED',
+      `Multiple position updates failed | errors=[${message}]`,
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
   }
 }

@@ -1,13 +1,8 @@
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpException,
-  UnauthorizedException,
-  NotFoundException
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
 import { Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
+
+import { CORRELATION_ID_HEADER } from '@config';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -15,32 +10,43 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
   catch(exception: any, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    let status = 500;
-    let errorMessage = 'Internal server error';
+    const response = ctx.getResponse<Response>();
+    let status: number;
+    let errorCode: string;
+    let message: string;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      errorMessage = exception.message;
-    } else if (exception instanceof UnauthorizedException) {
-      status = 401;
-      errorMessage = `Unauthorized: ${exception.message}`;
-    } else if (exception.message.includes('API key is invalid')) {
-      status = 403;
-      errorMessage = `Forbidden: Invalid API key`;
-    } else if (exception instanceof NotFoundException) {
-      status = 404;
-      errorMessage = `Not Found: ${exception.message}`;
+      const res = exception.getResponse();
+
+      if (typeof res === 'string') {
+        message = res;
+        errorCode = exception.name;
+      } else if (typeof res === 'object') {
+        message = (res as any).message || exception.message;
+        errorCode = (res as any).errorCode || exception.name || 'ERR_HTTP_EXCEPTION';
+      }
+    } else {
+      status = 500;
+      message = exception.message || 'Internal server error';
+      errorCode = exception.name || 'ERR_INTERNAL_SERVER';
     }
 
-    this.logger.warn(`Error: ${errorMessage}`, exception.stack);
-
-    response.status(status).json({
+    const correlationId = request.headers[CORRELATION_ID_HEADER] || (request as any).correlationId || 'N/A';
+    const path = request.url;
+    const errorResponse = {
+      errorCode,
+      message,
       statusCode: status,
-      message: errorMessage,
       timestamp: new Date().toISOString(),
-      path: request.url
-    });
+      path,
+      correlationId
+    };
+    this.logger.error(
+      `catch() - error | correlationId=${correlationId}, path=${path}, errorCode=${errorCode}, msg=${message}`,
+      exception.stack
+    );
+    response.status(status).json(errorResponse);
   }
 }

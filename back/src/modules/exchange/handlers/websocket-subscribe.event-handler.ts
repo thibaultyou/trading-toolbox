@@ -1,29 +1,35 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { EventHandlersContext, Events } from '@config';
+import { AccountService } from '@account/account.service';
+import { Events, EventHandlersContext } from '@config';
 
 import { WebSocketSubscribeEvent } from '../events/websocket-subscribe.event';
-import { WebsocketManagerService } from '../services/websocket-manager.service';
+import { ExchangeWebsocketFactory } from '../services/exchange-websocket-factory';
 
 @Injectable()
 export class ExchangeModuleWebSocketSubscribeEventEventHandler {
-  private logger = new Logger(EventHandlersContext.ExchangeModule);
+  private readonly logger = new Logger(EventHandlersContext.ExchangeModule);
 
-  constructor(private websocketManagerService: WebsocketManagerService) {}
+  constructor(
+    private readonly exchangeWebsocketFactory: ExchangeWebsocketFactory,
+    private readonly accountService: AccountService
+  ) {}
 
   @OnEvent(Events.Websocket.SUBSCRIBE)
   async handle(event: WebSocketSubscribeEvent) {
-    const actionContext = `${Events.Websocket.SUBSCRIBE} | AccountID: ${event.accountId}, Topics: ${event.topics}`;
+    const accountId = event.accountId;
+    const topics = Array.isArray(event.topics) ? `[${event.topics.join(',')}]` : event.topics;
+    const actionContext = `${Events.Websocket.SUBSCRIBE} | accountId=${accountId}, topics=${topics}`;
+    this.logger.debug(`handle() - start | ${actionContext}`);
 
     try {
-      await this.websocketManagerService.subscribe(event.accountId, event.topics);
-      this.logger.log(actionContext);
+      const account = await this.accountService.getAccountByIdForSystem(accountId);
+      const wsManager = this.exchangeWebsocketFactory.getWebsocketService(account.exchange);
+      await wsManager.subscribe(accountId, event.topics);
+      this.logger.log(`handle() - success | ${actionContext}`);
     } catch (error) {
-      this.logger.error(
-        `${actionContext} - Failed to add topic to websocket manager - Error: ${error.message}`,
-        error.stack
-      );
+      this.logger.error(`handle() - error | ${actionContext}, msg=${error.message}`, error.stack);
     }
   }
 }

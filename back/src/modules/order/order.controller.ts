@@ -13,9 +13,10 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { ValidateAccount } from '@account/decorators/account-validation.decorator';
 import { AccountValidationGuard } from '@account/guards/account-validation.guard';
 import { BaseController } from '@common/base.controller';
+import { ValidateAccount } from '@common/decorators/account-validation.decorator';
+import { Urls } from '@config';
 import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
 import { OrderCreateRequestDto } from './dtos/order-create.request.dto';
@@ -29,7 +30,7 @@ import { OrderType } from './types/order-type.enum';
 @ApiTags('Orders')
 @UseGuards(JwtAuthGuard, AccountValidationGuard)
 @ApiBearerAuth()
-@Controller('orders')
+@Controller(Urls.ORDERS)
 export class OrderController extends BaseController {
   constructor(
     private readonly orderService: OrderService,
@@ -67,6 +68,23 @@ export class OrderController extends BaseController {
   getAccountOpenOrders(@Param('accountId') accountId: string, @Query('marketId') marketId?: string): OrderDto[] {
     const openOrders = this.orderService.getOpenOrders(accountId, marketId);
     return openOrders.map((order) => this.orderMapper.toDto(order));
+  }
+
+  @Get('/accounts/:accountId/orders/closed')
+  @ValidateAccount()
+  @ApiOperation({ summary: 'Fetch all closed orders' })
+  @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
+  @ApiQuery({
+    name: 'marketId',
+    required: false,
+    description: 'Optional ID of the market symbol to filter orders (e.g., BTCUSDT)'
+  })
+  async getAccountClosedOrders(
+    @Param('accountId') accountId: string,
+    @Query('marketId') marketId?: string
+  ): Promise<OrderDto[]> {
+    const closedOrders = await this.orderService.getClosedOrders(accountId, marketId);
+    return closedOrders.map((order) => this.orderMapper.toDto(order));
   }
 
   @Post('/accounts/:accountId/orders')

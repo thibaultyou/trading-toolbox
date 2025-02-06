@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 
-import { StrategyCreateRequestDto } from '../dtos/strategy-create.request.dto';
-import { StrategyUpdateRequestDto } from '../dtos/strategy-update.request.dto';
-import { StrategyDto } from '../dtos/strategy.dto';
-import { Strategy } from '../entities/strategy.entity';
+import { IBaseMapper } from '@common/interfaces/base-mapper.interface';
+import { StrategyCreateRequestDto } from '@strategy/dtos/strategy-create.request.dto';
+import { StrategyUpdateRequestDto } from '@strategy/dtos/strategy-update.request.dto';
+import { StrategyDto } from '@strategy/dtos/strategy.dto';
+import { Strategy } from '@strategy/entities/strategy.entity';
 
 @Injectable()
-export class StrategyMapperService {
+export class StrategyMapperService
+  implements IBaseMapper<Strategy, StrategyDto, StrategyCreateRequestDto, StrategyUpdateRequestDto>
+{
   toDto(strategy: Strategy): StrategyDto {
     const dto = new StrategyDto();
     dto.id = strategy.id;
@@ -20,7 +23,8 @@ export class StrategyMapperService {
     return dto;
   }
 
-  fromCreateDto(dto: StrategyCreateRequestDto, userId: string): Strategy {
+  createFromDto(...args: [StrategyCreateRequestDto, string]): Strategy {
+    const [dto, userId] = args;
     const strategy = new Strategy();
     strategy.userId = userId;
     strategy.type = dto.type;

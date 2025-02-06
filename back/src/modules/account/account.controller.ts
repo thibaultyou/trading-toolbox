@@ -14,9 +14,10 @@ import {
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { BaseController } from '@common/base.controller';
+import { ExtractUserId } from '@common/decorators/user-id-extractor.decorator';
+import { RequestWithUser } from '@common/interfaces/request-with-user.interface';
 import { UuidValidationPipe } from '@common/pipes/uuid-validation.pipe';
-import { RequestWithUser } from '@common/types/request-with-user.interface';
-import { ExtractUserId } from '@user/decorators/user-id-extractor.decorator';
+import { Urls } from '@config';
 import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
 import { AccountService } from './account.service';
@@ -29,7 +30,7 @@ import { AccountMapperService } from './services/account-mapper.service';
 @ApiTags('Accounts')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
-@Controller('accounts')
+@Controller(Urls.ACCOUNTS)
 @UsePipes(new ValidationPipe({ transform: true }))
 export class AccountController extends BaseController {
   constructor(
@@ -67,6 +68,16 @@ export class AccountController extends BaseController {
     description: 'Account creation details',
     type: AccountCreateRequestDto,
     examples: {
+      aBitgetAccount: {
+        summary: 'Bitget Account',
+        value: {
+          name: 'TEST',
+          exchange: 'bitget',
+          key: 'API_KEY',
+          secret: 'API_SECRET',
+          passphrase: 'API_PASSPHRASE'
+        }
+      },
       aBybitAccount: {
         summary: 'Bybit Account',
         value: {

@@ -8,22 +8,21 @@ import { WalletService } from '../wallet.service';
 
 @Injectable()
 export class WalletModuleExchangeInitializedEventHandler {
-  private logger = new Logger(EventHandlersContext.WalletModule);
+  private readonly logger = new Logger(EventHandlersContext.WalletModule);
 
-  constructor(private walletService: WalletService) {}
+  constructor(private readonly walletService: WalletService) {}
 
   @OnEvent(Events.Exchange.INITIALIZED)
-  async handle(event: ExchangeInitializedEvent) {
-    const actionContext = `${Events.Exchange.INITIALIZED} | AccountID: ${event.accountId}`;
+  async handle(event: ExchangeInitializedEvent): Promise<void> {
+    const accountId = event.accountId;
+    const actionContext = `${Events.Exchange.INITIALIZED} | accountId=${accountId}`;
+    this.logger.debug(`handle() - start | ${actionContext}`);
 
     try {
-      await this.walletService.startTrackingAccount(event.accountId);
-      this.logger.log(actionContext);
+      await this.walletService.startTrackingAccount(accountId);
+      this.logger.log(`handle() - success | ${actionContext}, tracking=started`);
     } catch (error) {
-      this.logger.error(
-        `${actionContext} - Failed to add account to wallet watch list - Error: ${error.message}`,
-        error.stack
-      );
+      this.logger.error(`handle() - error | ${actionContext}, msg=${error.message}`, error.stack);
     }
   }
 }

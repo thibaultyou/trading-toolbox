@@ -3,8 +3,9 @@ import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiTags, ApiResponse } 
 
 import { AccountValidationGuard } from '@account/guards/account-validation.guard';
 import { BaseController } from '@common/base.controller';
+import { ExtractUserId } from '@common/decorators/user-id-extractor.decorator';
 import { UuidValidationPipe } from '@common/pipes/uuid-validation.pipe';
-import { ExtractUserId } from '@user/decorators/user-id-extractor.decorator';
+import { Urls } from '@config';
 import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
 import { StrategyCreateRequestDto } from './dtos/strategy-create.request.dto';
@@ -16,7 +17,7 @@ import { StrategyService } from './strategy.service';
 @ApiTags('Strategies')
 @UseGuards(JwtAuthGuard, AccountValidationGuard)
 @ApiBearerAuth()
-@Controller('strategies')
+@Controller(Urls.STRATEGIES)
 export class StrategyController extends BaseController {
   constructor(
     private readonly strategyService: StrategyService,

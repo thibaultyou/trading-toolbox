@@ -2,20 +2,16 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-import { AccountExceptionsFilter } from '@account/exceptions/account.exceptions.filter';
+import { GlobalExceptionFilter } from '@common/filters/global-exception.filter';
+import { CorrelationIdMiddleware } from '@common/middlewares/correlation-id.middleware';
 import { Urls, envConfig } from '@config';
 import { AppLogger } from '@logger/logger.service';
-import { MarketExceptionsFilter } from '@market/exceptions/market.exceptions.filter';
-import { OrderExceptionsFilter } from '@order/exceptions/order.exceptions.filter';
-import { PositionExceptionsFilter } from '@position/exceptions/position.exceptions.filter';
-import { StrategyExceptionsFilter } from '@strategy/exceptions/strategy.exceptions.filter';
-import { TickerExceptionsFilter } from '@ticker/exceptions/ticker.exceptions.filter';
-import { WalletExceptionsFilter } from '@wallet/exceptions/wallet.exceptions.filter';
 
 import { AppModule } from './app.module';
 
 const bootstrap = async () => {
   const app = await NestFactory.create(AppModule);
+  app.use(new CorrelationIdMiddleware().use);
   app.useLogger(new AppLogger(envConfig));
 
   const options = new DocumentBuilder()
@@ -27,18 +23,10 @@ const bootstrap = async () => {
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup(Urls.SWAGGER_DOCS, app, document);
 
-  app.useGlobalFilters(
-    new AccountExceptionsFilter(),
-    new MarketExceptionsFilter(),
-    new OrderExceptionsFilter(),
-    new PositionExceptionsFilter(),
-    new StrategyExceptionsFilter(),
-    new TickerExceptionsFilter(),
-    new WalletExceptionsFilter()
-  );
-
+  app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors();
+
   await app.listen(4000);
 };
 bootstrap();

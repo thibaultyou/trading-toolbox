@@ -11,17 +11,28 @@ import { ExchangeModuleExchangeInitializedEventHandler } from './handlers/exchan
 import { ExchangeModuleExchangeTerminatedEventHandler } from './handlers/exchange-terminated.event-handler';
 import { ExchangeModuleWebSocketSubscribeEventEventHandler } from './handlers/websocket-subscribe.event-handler';
 import { ExchangeModuleWebSocketUnsubscribeEventEventHandler } from './handlers/websocket-unsubscribe.event-handler';
-import { BybitExchangeService } from './services/bybit-exchange.service';
+import { BitgetExchangeService } from './services/bitget/bitget-exchange.service';
+import { BitgetMapperService } from './services/bitget/bitget-mapper.service';
+import { BitgetWebsocketManagerService } from './services/bitget/bitget-websocket-manager.service';
+import { BybitExchangeService } from './services/bybit/bybit-exchange.service';
+import { BybitWebsocketManagerService } from './services/bybit/bybit-websocket-manager.service';
+import { ExchangeEventThrottleService } from './services/event-throttle.service';
 import { ExchangeFactory } from './services/exchange-service.factory';
-import { WebsocketManagerService } from './services/websocket-manager.service';
+import { ExchangeWebsocketFactory } from './services/exchange-websocket-factory';
 
 @Global()
 @Module({
-  exports: [ExchangeFactory, ExchangeService],
+  exports: [ExchangeEventThrottleService, ExchangeFactory, ExchangeService, ExchangeWebsocketFactory],
   imports: [AccountModule, WalletModule],
   providers: [
+    ExchangeEventThrottleService,
     BybitExchangeService,
+    BitgetExchangeService,
+    BitgetMapperService,
+    BitgetWebsocketManagerService,
     ExchangeFactory,
+    BybitWebsocketManagerService,
+    ExchangeWebsocketFactory,
     ExchangeService,
     ExchangeModuleAccountCreatedEventHandler,
     ExchangeModuleAccountDeletedEventHandler,
@@ -29,8 +40,7 @@ import { WebsocketManagerService } from './services/websocket-manager.service';
     ExchangeModuleExchangeInitializedEventHandler,
     ExchangeModuleExchangeTerminatedEventHandler,
     ExchangeModuleWebSocketSubscribeEventEventHandler,
-    ExchangeModuleWebSocketUnsubscribeEventEventHandler,
-    WebsocketManagerService
+    ExchangeModuleWebSocketUnsubscribeEventEventHandler
   ]
 })
 export class ExchangeModule {}

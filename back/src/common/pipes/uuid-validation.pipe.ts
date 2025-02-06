@@ -5,7 +5,7 @@ import { validate as uuidValidate } from 'uuid';
 export class UuidValidationPipe implements PipeTransform<string> {
   transform(value: string, metadata: ArgumentMetadata): string {
     if (!uuidValidate(value)) {
-      throw new BadRequestException(`Bad Request: Invalid UUID format for ${metadata.data}`);
+      throw new BadRequestException(`Invalid UUID format | field=${metadata.data}, value=${value}`);
     }
     return value;
   }

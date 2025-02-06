@@ -8,22 +8,21 @@ import { PositionService } from '../position.service';
 
 @Injectable()
 export class PositionModuleExchangeTerminatedEventHandler {
-  private logger = new Logger(EventHandlersContext.PositionModule);
+  private readonly logger = new Logger(EventHandlersContext.PositionModule);
 
-  constructor(private positionService: PositionService) {}
+  constructor(private readonly positionService: PositionService) {}
 
   @OnEvent(Events.Exchange.TERMINATED)
   handle(event: ExchangeTerminatedEvent) {
-    const actionContext = `${Events.Exchange.TERMINATED} | AccountID: ${event.accountId}`;
+    const accountId = event.accountId;
+    const actionContext = `${Events.Exchange.TERMINATED} | accountId=${accountId}`;
+    this.logger.debug(`handle() - start | ${actionContext}`);
 
     try {
-      this.positionService.stopTrackingAccount(event.accountId);
-      this.logger.log(actionContext);
+      this.positionService.stopTrackingAccount(accountId);
+      this.logger.log(`handle() - success | ${actionContext}, tracking=stopped`);
     } catch (error) {
-      this.logger.error(
-        `${actionContext} - Failed to remove account from position watch list - Error: ${error.message}`,
-        error.stack
-      );
+      this.logger.error(`handle() - error | ${actionContext}, msg=${error.message}`, error.stack);
     }
   }
 }
