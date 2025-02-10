@@ -1,10 +1,3 @@
-Here’s an updated **README.md** that includes instructions for handling API keys in the test environment. The main changes:
-
-1. **Added** a section about using `.env.test.example` vs. a private `.env.test`.  
-2. **Clarified** how to set the credentials for Bybit and Bitget test/sandbox usage.  
-3. **Noted** the need to avoid committing real keys.
-
-```md
 # Trading Toolbox
 
 A personal project that facilitates trading operations on supported exchanges. Its core capabilities include monitoring trades, executing actions based on predefined conditions, and experimenting with advanced trading strategies.
@@ -196,4 +189,3 @@ This project is licensed under the **CC BY-NC-ND 4.0 License**. See [LICENSE.md]
 ---
 
 **Disclaimer**: This software is for personal, educational, and research purposes only. **Do not** use it for real trading or financial decisions without extensive testing and professional advice.
-```

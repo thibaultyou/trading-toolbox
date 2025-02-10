@@ -163,7 +163,9 @@ export class AccountService {
   async deleteAccount(userId: string, accountId: string): Promise<Account> {
     this.logger.debug(`deleteAccount() - start | userId=${userId}, accountId=${accountId}`);
     const account = await this.getAccountById(userId, accountId);
+    const savedId = account.id;
     await this.accountRepository.remove(account);
+    account.id = savedId;
     this.eventEmitter.emit(Events.Account.DELETED, new AccountDeletedEvent(account));
     this.logger.log(`deleteAccount() - success | accountId=${accountId}`);
     return account;

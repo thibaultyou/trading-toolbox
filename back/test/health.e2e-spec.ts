@@ -6,7 +6,7 @@ import { HealthController } from '@health/health.controller';
 import { BybitHealthIndicator } from '@health/indicators/bybit.health.indicator';
 import { BitgetHealthIndicator } from '@health/indicators/bitget.health.indicator';
 
-describe('HealthController (e2e)', () => {
+describe('Health Module (e2e)', () => {
   let app: INestApplication;
 
   const mockHealthCheckService = { check: jest.fn() };
@@ -34,7 +34,7 @@ describe('HealthController (e2e)', () => {
     jest.resetAllMocks();
   });
 
-  it('/health (GET) should return health status', async () => {
+  it('GET /health - should return health status when all dependencies are healthy', async () => {
     mockHealthCheckService.check.mockImplementation(() =>
       Promise.resolve({
         status: 'ok',
@@ -60,7 +60,7 @@ describe('HealthController (e2e)', () => {
       });
   });
 
-  it('/health (GET) when Bybit is not responding', async () => {
+  it('GET /health - should return SERVICE_UNAVAILABLE when Bybit is not responding', async () => {
     mockHealthCheckService.check.mockImplementation(() =>
       Promise.resolve({
         status: 'error',
@@ -87,7 +87,7 @@ describe('HealthController (e2e)', () => {
       });
   });
 
-  it('/health (GET) when the database is not responding', async () => {
+  it('GET /health - should return SERVICE_UNAVAILABLE when the database is not responding', async () => {
     mockHealthCheckService.check.mockImplementation(() =>
       Promise.resolve({
         status: 'error',
@@ -114,7 +114,7 @@ describe('HealthController (e2e)', () => {
       });
   });
 
-  it('/health (GET) when Bitget is not responding', async () => {
+  it('GET /health - should return SERVICE_UNAVAILABLE when Bitget is not responding', async () => {
     mockHealthCheckService.check.mockImplementation(() =>
       Promise.resolve({
         status: 'error',

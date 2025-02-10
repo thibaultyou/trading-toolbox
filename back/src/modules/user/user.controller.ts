@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Urls } from '@config';
@@ -26,6 +26,7 @@ export class UserController {
   }
 
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Authenticate a user', description: 'Authenticate a user and receive a JWT token' })
   @ApiBody({ type: UserLoginRequestDto, description: 'User login credentials' })
   @ApiResponse({ status: 200, description: 'Successful authentication', type: UserLoginResponseDto })
@@ -51,9 +52,10 @@ export class UserController {
 
   @Delete()
   @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a user', description: "Delete the authenticated user's account" })
-  @ApiResponse({ status: 200, description: 'User successfully deleted' })
+  @ApiResponse({ status: 204, description: 'User successfully deleted' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async deleteUser(@ExtractUserId() userId: string) {
