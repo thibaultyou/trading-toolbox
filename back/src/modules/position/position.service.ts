@@ -1,9 +1,11 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Interval } from '@nestjs/schedule';
 import { Order } from 'ccxt';
 
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
-import { IAccountTracker } from '@common/types/account-tracker.interface';
+import { IAccountSynchronizer } from '@common/interfaces/account-synchronizer.interface';
+import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
 import { Events, Timers } from '@config';
 import { ExchangeService } from '@exchange/exchange.service';
 import { OrderSide } from '@order/types/order-side.enum';
@@ -15,56 +17,57 @@ import { PositionMapperService } from './services/position-mapper.service';
 import { IPosition } from './types/position.interface';
 
 @Injectable()
-export class PositionService implements OnModuleInit, IAccountTracker {
-  private logger = new Logger(PositionService.name);
-  private positions: Map<string, IPosition[]> = new Map();
+export class PositionService implements IAccountTracker, IAccountSynchronizer<IPosition[]> {
+  private readonly logger = new Logger(PositionService.name);
+  private readonly positions: Map<string, IPosition[]> = new Map();
 
   constructor(
-    private eventEmitter: EventEmitter2,
-    private exchangeService: ExchangeService,
-    private positionMapper: PositionMapperService
+    private readonly eventEmitter: EventEmitter2,
+    private readonly exchangeService: ExchangeService,
+    private readonly positionMapper: PositionMapperService
   ) {}
 
-  async onModuleInit() {
-    this.logger.debug('Initializing module');
-    setInterval(() => {
-      this.refreshAll();
-    }, Timers.POSITIONS_CACHE_COOLDOWN);
-    this.logger.log('Module initialized successfully');
+  @Interval(Timers.POSITIONS_CACHE_COOLDOWN)
+  sync(): void {
+    this.syncAllAccounts();
   }
 
-  async startTrackingAccount(accountId: string) {
-    this.logger.debug(`Starting account tracking - AccountID: ${accountId}`);
+  async startTrackingAccount(accountId: string): Promise<void> {
+    this.logger.debug(`startTrackingAccount() - start | accountId=${accountId}`);
 
-    if (!this.positions.has(accountId)) {
-      await this.fetchPositions(accountId);
-      this.logger.log(`Started tracking account - AccountID: ${accountId}`);
-    } else {
-      this.logger.warn(`Account tracking skipped - AccountID: ${accountId} - Reason: Already tracked`);
+    if (this.positions.has(accountId)) {
+      this.logger.warn(`startTrackingAccount() - skip | accountId=${accountId}, reason=Already tracked`);
+      return;
     }
+
+    await this.syncAccount(accountId);
+    this.logger.log(`startTrackingAccount() - success | accountId=${accountId}, tracking=started`);
   }
 
-  stopTrackingAccount(accountId: string) {
-    this.logger.debug(`Stopping account tracking - AccountID: ${accountId}`);
+  stopTrackingAccount(accountId: string): void {
+    this.logger.debug(`stopTrackingAccount() - start | accountId=${accountId}`);
+    const deleted = this.positions.delete(accountId);
 
-    if (this.positions.delete(accountId)) {
-      this.logger.log(`Stopped tracking account - AccountID: ${accountId}`);
+    if (deleted) {
+      this.logger.log(`stopTrackingAccount() - success | accountId=${accountId}, tracking=stopped`);
     } else {
-      this.logger.warn(`Account tracking removal failed - AccountID: ${accountId} - Reason: Not tracked`);
+      this.logger.warn(`stopTrackingAccount() - skip | accountId=${accountId}, reason=Not tracked`);
     }
   }
 
   getPositions(accountId: string, marketId?: string, side?: OrderSide): IPosition[] {
     this.logger.debug(
-      `Fetching positions - AccountID: ${accountId}${marketId ? ` - MarketID: ${marketId}` : ''}${side ? ` - Side: ${side}` : ''}`
+      `getPositions() - start | accountId=${accountId}${marketId ? `, marketId=${marketId}` : ''}${
+        side ? `, side=${side}` : ''
+      }`
     );
 
     if (!this.positions.has(accountId)) {
-      this.logger.warn(`Positions not found - AccountID: ${accountId}`);
+      this.logger.warn(`getPositions() - not found | accountId=${accountId}, reason=Positions not tracked`);
       throw new AccountNotFoundException(accountId);
     }
 
-    let positions = this.positions.get(accountId);
+    let positions = this.positions.get(accountId) ?? [];
 
     if (marketId) {
       positions = positions.filter((position) => position.marketId === marketId.toUpperCase());
@@ -74,71 +77,71 @@ export class PositionService implements OnModuleInit, IAccountTracker {
       positions = positions.filter((position) => position.side.toLowerCase() === side.toLowerCase());
     }
 
-    this.logger.debug(`Fetched positions - AccountID: ${accountId} - Count: ${positions.length}`);
+    this.logger.log(`getPositions() - success | accountId=${accountId}, count=${positions.length}`);
     return positions;
   }
 
   async closePosition(accountId: string, marketId: string, side: OrderSide): Promise<Order> {
-    this.logger.debug(`Closing position - AccountID: ${accountId} - MarketID: ${marketId} - Side: ${side}`);
-
+    this.logger.debug(`closePosition() - start | accountId=${accountId}, marketId=${marketId}, side=${side}`);
     const position = this.getPositions(accountId).find(
       (p) => p.marketId === marketId.toUpperCase() && p.side.toLowerCase() === side.toLowerCase()
     );
 
     if (!position) {
-      this.logger.warn(`Position not found - AccountID: ${accountId} - MarketID: ${marketId} - Side: ${side}`);
+      this.logger.warn(`closePosition() - not found | accountId=${accountId}, marketId=${marketId}, side=${side}`);
       throw new PositionNotFoundException(accountId, marketId);
     }
 
     try {
       const order = await this.exchangeService.closePosition(accountId, marketId, side, position.amount);
-      this.eventEmitter.emit(Events.Position.CLOSED, new PositionClosedEvent(accountId, order));
       this.logger.log(
-        `Closed position - AccountID: ${accountId} - MarketID: ${marketId} - Side: ${side} - OrderID: ${order.id}`
+        `closePosition() - success | accountId=${accountId}, marketId=${marketId}, side=${side}, orderId=${order.id}`
       );
+
+      this.eventEmitter.emit(Events.Position.CLOSED, new PositionClosedEvent(accountId, order));
       return order;
     } catch (error) {
       this.logger.error(
-        `Position closing failed - AccountID: ${accountId} - MarketID: ${marketId} - Side: ${side} - Error: ${error.message}`,
+        `closePosition() - error | accountId=${accountId}, marketId=${marketId}, side=${side}, msg=${error.message}`,
         error.stack
       );
       throw error;
     }
   }
 
-  async fetchPositions(accountId: string): Promise<IPosition[]> {
-    this.logger.debug(`Fetching positions - AccountID: ${accountId}`);
+  async syncAccount(accountId: string): Promise<IPosition[]> {
+    this.logger.debug(`syncAccount() - start | accountId=${accountId}`);
 
     try {
       const externalPositions = await this.exchangeService.getOpenPositions(accountId);
-      const newPositions = externalPositions.map((position) => this.positionMapper.fromExternalPosition(position));
+      const newPositions = externalPositions.map((pos) => this.positionMapper.fromExternal(pos));
       this.positions.set(accountId, newPositions);
+      this.logger.log(`syncAccount() - success | accountId=${accountId}, count=${newPositions.length}`);
       this.eventEmitter.emit(Events.Data.POSITION_UPDATED, new PositionsUpdatedEvent(accountId, newPositions));
-      this.logger.log(`Fetched positions - AccountID: ${accountId} - Count: ${newPositions.length}`);
       return newPositions;
     } catch (error) {
-      this.logger.error(`Positions fetch failed - AccountID: ${accountId} - Error: ${error.message}`, error.stack);
+      this.logger.error(`syncAccount() - error | accountId=${accountId}, msg=${error.message}`, error.stack);
       throw error;
     }
   }
 
-  async refreshAll() {
-    this.logger.debug('Starting refresh of all positions');
+  async syncAllAccounts(): Promise<void> {
+    this.logger.debug('syncAllAccounts() - start');
     const accountIds = Array.from(this.positions.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
-    const positionsPromises = accountIds.map((accountId) =>
-      this.fetchPositions(accountId).catch((error) => {
-        errors.push({ accountId, error });
+    const tasks = accountIds.map((accountId) =>
+      this.syncAccount(accountId).catch((err) => {
+        errors.push({ accountId, error: err });
       })
     );
-    await Promise.all(positionsPromises);
+    await Promise.all(tasks);
 
     if (errors.length > 0) {
       const aggregatedError = new PositionsUpdateAggregatedException(errors);
-      this.logger.error(`Multiple position updates failed - Errors: ${aggregatedError.message}`, aggregatedError.stack);
+      this.logger.error(`syncAllAccounts() - error | msg=${aggregatedError.message}`, aggregatedError.stack);
     }
 
-    this.logger.debug(`Completed refresh of all positions`);
+    this.logger.debug('syncAllAccounts() - complete');
   }
 }
 

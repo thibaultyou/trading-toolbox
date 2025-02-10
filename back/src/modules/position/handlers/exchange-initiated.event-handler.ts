@@ -8,22 +8,21 @@ import { PositionService } from '../position.service';
 
 @Injectable()
 export class PositionModuleExchangeInitializedEventHandler {
-  private logger = new Logger(EventHandlersContext.PositionModule);
+  private readonly logger = new Logger(EventHandlersContext.PositionModule);
 
-  constructor(private positionService: PositionService) {}
+  constructor(private readonly positionService: PositionService) {}
 
   @OnEvent(Events.Exchange.INITIALIZED)
   async handle(event: ExchangeInitializedEvent) {
-    const actionContext = `${Events.Exchange.INITIALIZED} | AccountID: ${event.accountId}`;
+    const accountId = event.accountId;
+    const actionContext = `${Events.Exchange.INITIALIZED} | accountId=${accountId}`;
+    this.logger.debug(`handle() - start | ${actionContext}`);
 
     try {
-      await this.positionService.startTrackingAccount(event.accountId);
-      this.logger.log(actionContext);
+      await this.positionService.startTrackingAccount(accountId);
+      this.logger.log(`handle() - success | ${actionContext}, tracking=started`);
     } catch (error) {
-      this.logger.error(
-        `${actionContext} - Failed to add account to position watch list - Error: ${error.message}`,
-        error.stack
-      );
+      this.logger.error(`handle() - error | ${actionContext}, msg=${error.message}`, error.stack);
     }
   }
 }

@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   proxy:
     image: nginx:1.25.4-alpine3.18-slim
@@ -44,7 +43,7 @@ services:
     image: adminer:4.8.1-standalone
     restart: unless-stopped
     ports:
-      - "0.0.0.0:5000:8080"
+      - "0.0.0.0:6000:8080"
 
 volumes:
   db-data:

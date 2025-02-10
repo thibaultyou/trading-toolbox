@@ -8,19 +8,21 @@ import { ExchangeService } from '../exchange.service';
 
 @Injectable()
 export class ExchangeModuleAccountCreatedEventHandler {
-  private logger = new Logger(EventHandlersContext.ExchangeModule);
+  private readonly logger = new Logger(EventHandlersContext.ExchangeModule);
 
-  constructor(private exchangeService: ExchangeService) {}
+  constructor(private readonly exchangeService: ExchangeService) {}
 
   @OnEvent(Events.Account.CREATED)
   async handle(event: AccountCreatedEvent) {
-    const actionContext = `${Events.Account.CREATED} | AccountID: ${event.account.id}`;
+    const accountId = event.account.id;
+    const actionContext = `${Events.Account.CREATED} | accountId=${accountId}`;
+    this.logger.debug(`handle() - start | ${actionContext}`);
 
     try {
       await this.exchangeService.initializeExchange(event.account);
-      this.logger.log(actionContext);
+      this.logger.log(`handle() - success | ${actionContext}`);
     } catch (error) {
-      this.logger.error(`${actionContext} - Failed to initialize exchange - Error: ${error.message}`, error.stack);
+      this.logger.error(`handle() - error | ${actionContext}, msg=${error.message}`, error.stack);
     }
   }
 }

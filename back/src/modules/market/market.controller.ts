@@ -1,9 +1,10 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { ValidateAccount } from '@account/decorators/account-validation.decorator';
 import { AccountValidationGuard } from '@account/guards/account-validation.guard';
 import { BaseController } from '@common/base.controller';
+import { ValidateAccount } from '@common/decorators/account-validation.decorator';
+import { Urls } from '@config';
 import { JwtAuthGuard } from '@user/guards/jwt-auth.guard';
 
 import { MarketDto } from './dtos/market.dto';
@@ -12,7 +13,7 @@ import { MarketService } from './market.service';
 @ApiTags('Markets')
 @UseGuards(JwtAuthGuard, AccountValidationGuard)
 @ApiBearerAuth()
-@Controller('markets')
+@Controller(Urls.MARKETS)
 export class MarketController extends BaseController {
   constructor(private readonly marketService: MarketService) {
     super('Markets');

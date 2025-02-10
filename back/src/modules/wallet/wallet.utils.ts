@@ -1,25 +1,21 @@
-import { Logger } from '@nestjs/common';
-
 import { ICoinData } from './types/coin-data.interface';
 import { IWalletAccount } from './types/wallet-account.interface';
 
-export class WalletUtils {
-  private static readonly logger = new Logger(WalletUtils.name);
-
-  static extractUSDTEquity(walletAccount: IWalletAccount): number {
-    const usdtCoinObject = walletAccount?.coin.find((coin: ICoinData) => coin.coin === 'USDT');
-
-    if (usdtCoinObject?.equity !== undefined) {
-      const parsedEquity = parseFloat(usdtCoinObject.equity);
-
-      if (!isNaN(parsedEquity)) {
-        return parsedEquity;
-      } else {
-        this.logger.warn(`USDT equity found but could not be parsed to a number`);
-      }
-    } else {
-      this.logger.warn(`USDT equity not found or is undefined`);
-    }
+export const extractUSDTEquity = (walletAccount: IWalletAccount): number => {
+  if (!walletAccount) {
     return 0;
   }
-}
+
+  const usdtCoin: ICoinData | undefined = walletAccount.coin.find((c) => c.coin === 'USDT');
+
+  if (!usdtCoin || usdtCoin.equity === undefined) {
+    return 0;
+  }
+
+  const parsedEquity = parseFloat(usdtCoin.equity);
+
+  if (isNaN(parsedEquity)) {
+    return 0;
+  }
+  return parsedEquity;
+};

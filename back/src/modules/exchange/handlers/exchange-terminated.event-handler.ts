@@ -1,29 +1,34 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { EventHandlersContext, Events } from '@config';
+import { AccountService } from '@account/account.service';
+import { Events, EventHandlersContext } from '@config';
 
 import { ExchangeTerminatedEvent } from '../events/exchange-terminated.event';
-import { WebsocketManagerService } from '../services/websocket-manager.service';
+import { ExchangeWebsocketFactory } from '../services/exchange-websocket-factory';
 
 @Injectable()
 export class ExchangeModuleExchangeTerminatedEventHandler {
-  private logger = new Logger(EventHandlersContext.ExchangeModule);
+  private readonly logger = new Logger(EventHandlersContext.ExchangeModule);
 
-  constructor(private websocketManagerService: WebsocketManagerService) {}
+  constructor(
+    private readonly exchangeWebsocketFactory: ExchangeWebsocketFactory,
+    private readonly accountService: AccountService
+  ) {}
 
   @OnEvent(Events.Exchange.TERMINATED)
-  handle(event: ExchangeTerminatedEvent) {
-    const actionContext = `${Events.Exchange.TERMINATED} | AccountID: ${event.accountId}`;
+  async handle(event: ExchangeTerminatedEvent) {
+    const accountId = event.accountId;
+    const actionContext = `${Events.Exchange.TERMINATED} | accountId=${accountId}`;
+    this.logger.debug(`handle() - start | ${actionContext}`);
 
     try {
-      this.websocketManagerService.stopTrackingAccount(event.accountId);
-      this.logger.log(actionContext);
+      const account = await this.accountService.getAccountByIdForSystem(accountId);
+      const wsService = this.exchangeWebsocketFactory.getWebsocketService(account.exchange);
+      wsService.stopTrackingAccount(accountId);
+      this.logger.log(`handle() - success | ${actionContext}, tracking=stopped`);
     } catch (error) {
-      this.logger.error(
-        `${actionContext} - Failed to remove account from websocket manager - Error: ${error.message}`,
-        error.stack
-      );
+      this.logger.error(`handle() - error | ${actionContext}, msg=${error.message}`, error.stack);
     }
   }
 }

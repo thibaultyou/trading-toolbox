@@ -14,10 +14,10 @@ export abstract class BaseStrategy {
   protected readonly logger = new Logger(BaseStrategy.name);
 
   constructor(
-    protected orderService: OrderService,
-    protected tickerService: TickerService,
-    protected walletService: WalletService,
-    protected optionsValidator: StrategyOptionsValidator
+    protected readonly orderService: OrderService,
+    protected readonly tickerService: TickerService,
+    protected readonly walletService: WalletService,
+    protected readonly optionsValidator: StrategyOptionsValidator
   ) {}
 
   abstract process(accountId: string, strategy: IStrategy, executionData?: IExecutionData): Promise<void>;
@@ -28,7 +28,7 @@ export abstract class BaseStrategy {
 
   async handleOrderExecution(accountId: string, strategy: IStrategy, executionData: IExecutionData) {
     this.logger.debug(
-      `Handling order execution - AccountID: ${accountId} - StrategyID: ${strategy.id} - OrderID: ${executionData.orderId}`
+      `handleOrderExecution() - start | accountId=${accountId}, strategyId=${strategy.id}, orderId=${executionData.orderId}`
     );
 
     const executedOrderIndex = strategy.orders.findIndex((id) => id === executionData.orderId);
@@ -38,24 +38,24 @@ export abstract class BaseStrategy {
 
       if (strategy.takeProfitOrderId === executionData.orderId) {
         this.logger.log(
-          `Take profit order executed - AccountID: ${accountId} - StrategyID: ${strategy.id} - OrderID: ${executionData.orderId}`
+          `handleOrderExecution() - success (takeProfitExecuted) | accountId=${accountId}, strategyId=${strategy.id}, orderId=${executionData.orderId}`
         );
         strategy.takeProfitOrderId = undefined;
       } else if (strategy.stopLossOrderId === executionData.orderId) {
         this.logger.log(
-          `Stop loss order executed - AccountID: ${accountId} - StrategyID: ${strategy.id} - OrderID: ${executionData.orderId}`
+          `handleOrderExecution() - success (stopLossExecuted) | accountId=${accountId}, strategyId=${strategy.id}, orderId=${executionData.orderId}`
         );
         strategy.stopLossOrderId = undefined;
       } else {
         this.logger.log(
-          `Order executed - AccountID: ${accountId} - StrategyID: ${strategy.id} - OrderID: ${executionData.orderId}`
+          `handleOrderExecution() - success (otherOrderExecuted) | accountId=${accountId}, strategyId=${strategy.id}, orderId=${executionData.orderId}`
         );
       }
 
       await this.process(accountId, strategy, executionData);
     } else {
       this.logger.warn(
-        `Order not found in strategy - AccountID: ${accountId} - StrategyID: ${strategy.id} - OrderID: ${executionData.orderId}`
+        `handleOrderExecution() - skip | reason=OrderNotFoundInStrategy, accountId=${accountId}, strategyId=${strategy.id}, orderId=${executionData.orderId}`
       );
     }
   }
@@ -68,17 +68,17 @@ export abstract class BaseStrategy {
     size: number,
     deviation?: number
   ) {
-    let logMessage = `Calculated ${orderType} - MarketID: ${marketId} - Price: ${price.toFixed(5)} - Size: ${size.toFixed(8)}`;
+    let msg = `Calculated ${orderType} | marketId=${marketId}, price=${price.toFixed(5)}, size=${size.toFixed(8)}`;
 
     if (currencyMode === CurrencyMode.QUOTE) {
       const sizeInQuote = size * price;
-      logMessage += ` ($${sizeInQuote.toFixed(2)})`;
+      msg += ` (quoteVolume=$${sizeInQuote.toFixed(2)})`;
     }
 
     if (deviation) {
-      logMessage += ` - Deviation: ${deviation.toFixed(2)}%`;
+      msg += `, deviation=${deviation.toFixed(2)}%`;
     }
 
-    this.logger.debug(logMessage);
+    this.logger.debug(`logOrder() - ${msg}`);
   }
 }

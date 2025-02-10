@@ -1,16 +1,20 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 
-export class USDTBalanceNotFoundException extends HttpException {
+import { BaseCustomException } from '@common/exceptions/base-custom.exception';
+
+export class USDTBalanceNotFoundException extends BaseCustomException {
   constructor(accountId: string) {
-    super(`USDT balance not found - AccountID: ${accountId}`, HttpStatus.NOT_FOUND);
+    super('USDT_BALANCE_NOT_FOUND', `USDT balance not found | accountId=${accountId}`, HttpStatus.NOT_FOUND);
   }
 }
 
-export class WalletsUpdateAggregatedException extends HttpException {
+export class WalletsUpdateAggregatedException extends BaseCustomException {
   constructor(errors: Array<{ accountId: string; error: Error }>) {
-    const message = errors
-      .map(({ accountId, error }) => `AccountID: ${accountId} - Error: ${error.message}`)
-      .join('; ');
-    super(`Multiple wallet updates failed - Errors: ${message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    const message = errors.map(({ accountId, error }) => `accountId=${accountId}, msg=${error.message}`).join('; ');
+    super(
+      'WALLETS_UPDATE_FAILED',
+      `Multiple wallet updates failed | errors=[${message}]`,
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
   }
 }

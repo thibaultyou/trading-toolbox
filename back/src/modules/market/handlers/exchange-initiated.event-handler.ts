@@ -14,14 +14,14 @@ export class MarketModuleExchangeInitializedEventHandler {
 
   @OnEvent(Events.Exchange.INITIALIZED)
   async handle(event: ExchangeInitializedEvent) {
-    const actionContext = `${Events.Exchange.INITIALIZED} | AccountID: ${event.accountId}`;
+    this.logger.debug(`handle() - start | event=${Events.Exchange.INITIALIZED}, accountId=${event.accountId}`);
 
     try {
       await this.marketService.startTrackingAccount(event.accountId);
-      this.logger.log(actionContext);
+      this.logger.log(`handle() - success | event=${Events.Exchange.INITIALIZED}, accountId=${event.accountId}`);
     } catch (error) {
       this.logger.error(
-        `${actionContext} - Failed to add account to market watch list - Error: ${error.message}`,
+        `handle() - error | event=${Events.Exchange.INITIALIZED}, accountId=${event.accountId}, msg=${error.message}`,
         error.stack
       );
     }

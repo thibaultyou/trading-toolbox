@@ -14,14 +14,14 @@ export class MarketModuleExchangeTerminatedEventHandler {
 
   @OnEvent(Events.Exchange.TERMINATED)
   handle(event: ExchangeTerminatedEvent) {
-    const actionContext = `${Events.Exchange.TERMINATED} | AccountID: ${event.accountId}`;
+    this.logger.debug(`handle() - start | event=${Events.Exchange.TERMINATED}, accountId=${event.accountId}`);
 
     try {
       this.marketService.stopTrackingAccount(event.accountId);
-      this.logger.log(actionContext);
+      this.logger.log(`handle() - success | event=${Events.Exchange.TERMINATED}, accountId=${event.accountId}`);
     } catch (error) {
       this.logger.error(
-        `${actionContext} - Failed to remove account from market watch list - Error: ${error.message}`,
+        `handle() - error | event=${Events.Exchange.TERMINATED}, accountId=${event.accountId}, msg=${error.message}`,
         error.stack
       );
     }

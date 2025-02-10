@@ -1,9 +1,10 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Interval } from '@nestjs/schedule';
 
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
-import { IAccountTracker } from '@common/types/account-tracker.interface';
-import { IDataRefresher } from '@common/types/data-refresher.interface';
+import { IAccountSynchronizer } from '@common/interfaces/account-synchronizer.interface';
+import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
 import { Events, Timers } from '@config';
 import { ExchangeService } from '@exchange/exchange.service';
 
@@ -24,67 +25,72 @@ import { OrderSide } from './types/order-side.enum';
 import { IOrder } from './types/order.interface';
 
 @Injectable()
-export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresher<IOrder[]> {
-  private logger = new Logger(OrderService.name);
-  private openOrders: Map<string, IOrder[]> = new Map();
+export class OrderService implements IAccountTracker, IAccountSynchronizer<IOrder[]> {
+  private readonly logger = new Logger(OrderService.name);
+  private readonly openOrders: Map<string, IOrder[]> = new Map();
 
   constructor(
-    private eventEmitter: EventEmitter2,
-    private exchangeService: ExchangeService,
-    private orderMapper: OrderMapperService
+    private readonly eventEmitter: EventEmitter2,
+    private readonly exchangeService: ExchangeService,
+    private readonly orderMapper: OrderMapperService
   ) {}
 
-  async onModuleInit() {
-    this.logger.debug('Initializing module');
-    setInterval(() => {
-      this.refreshAll();
-    }, Timers.ORDERS_CACHE_COOLDOWN);
-    this.logger.log('Module initialized successfully');
+  @Interval(Timers.ORDERS_CACHE_COOLDOWN)
+  sync(): void {
+    this.syncAllAccounts();
   }
 
-  async startTrackingAccount(accountId: string) {
-    this.logger.debug(`Starting account tracking - AccountID: ${accountId}`);
+  async startTrackingAccount(accountId: string): Promise<void> {
+    this.logger.debug(`startTrackingAccount() - start | accountId=${accountId}`);
 
     if (!this.openOrders.has(accountId)) {
-      await this.refreshOne(accountId);
-      this.logger.log(`Started tracking account - AccountID: ${accountId}`);
+      await this.syncAccount(accountId);
+
+      if (!this.openOrders.has(accountId)) {
+        this.openOrders.set(accountId, []);
+        this.logger.warn(`startTrackingAccount() - no open orders | accountId=${accountId}`);
+      }
+
+      this.logger.log(`startTrackingAccount() - success | accountId=${accountId}`);
     } else {
-      this.logger.warn(`Account tracking skipped - AccountID: ${accountId} - Reason: Already tracked`);
+      this.logger.warn(`startTrackingAccount() - skip | accountId=${accountId}, reason=Already tracked`);
     }
   }
 
-  stopTrackingAccount(accountId: string) {
-    this.logger.debug(`Stopping account tracking - AccountID: ${accountId}`);
+  stopTrackingAccount(accountId: string): void {
+    this.logger.debug(`stopTrackingAccount() - start | accountId=${accountId}`);
 
-    if (this.openOrders.delete(accountId)) {
-      this.logger.log(`Stopped tracking account - AccountID: ${accountId}`);
+    const removed = this.openOrders.delete(accountId);
+
+    if (removed) {
+      this.logger.log(`stopTrackingAccount() - success | accountId=${accountId}`);
     } else {
-      this.logger.warn(`Account tracking removal failed - AccountID: ${accountId} - Reason: Not tracked`);
+      this.logger.warn(`stopTrackingAccount() - skip | accountId=${accountId}, reason=Not tracked`);
     }
   }
 
   async getOrders(accountId: string, marketId?: string): Promise<IOrder[]> {
-    this.logger.debug(`Fetching orders - AccountID: ${accountId}${marketId ? ` - MarketID: ${marketId}` : ''}`);
+    this.logger.debug(`getOrders() - start | accountId=${accountId}${marketId ? `, marketId=${marketId}` : ''}`);
 
     try {
       const externalOrders = await this.exchangeService.getOrders(accountId, marketId);
-      const orders = externalOrders.map((order) => this.orderMapper.fromExternalOrder(order));
-      this.logger.debug(`Fetched orders - AccountID: ${accountId} - Count: ${orders.length}`);
+      const orders = externalOrders.map((order) => this.orderMapper.fromExternal(order));
+      this.logger.log(`getOrders() - success | accountId=${accountId}, count=${orders.length}`);
       return orders;
     } catch (error) {
       this.logger.error(
-        `Order fetch failed - AccountID: ${accountId}${marketId ? ` - MarketID: ${marketId}` : ''} - Error: ${error.message}`,
+        `getOrders() - error | accountId=${accountId}${marketId ? `, marketId=${marketId}` : ''}, msg=${error.message}`,
         error.stack
       );
-      throw new OrderNotFoundException(accountId, '');
+      throw new OrderNotFoundException(accountId);
     }
   }
 
   getOpenOrders(accountId: string, marketId?: string): IOrder[] {
-    this.logger.debug(`Fetching open orders - AccountID: ${accountId}${marketId ? ` - MarketID: ${marketId}` : ''}`);
+    this.logger.debug(`getOpenOrders() - start | accountId=${accountId}${marketId ? `, marketId=${marketId}` : ''}`);
 
     if (!this.openOrders.has(accountId)) {
-      this.logger.warn(`Open orders fetch failed - AccountID: ${accountId} - Reason: Account not found`);
+      this.logger.warn(`getOpenOrders() - error | accountId=${accountId}, reason=Account not found`);
       throw new AccountNotFoundException(accountId);
     }
 
@@ -94,26 +100,43 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
       orders = orders.filter((order) => order.marketId === marketId);
     }
 
-    this.logger.debug(`Fetched open orders - AccountID: ${accountId} - Count: ${orders.length}`);
+    this.logger.log(`getOpenOrders() - success | accountId=${accountId}, count=${orders.length}`);
     return orders;
   }
 
+  async getClosedOrders(accountId: string, marketId?: string): Promise<IOrder[]> {
+    this.logger.debug(`getClosedOrders() - start | accountId=${accountId}${marketId ? `, marketId=${marketId}` : ''}`);
+
+    try {
+      const externalOrders = await this.exchangeService.getClosedOrders(accountId, marketId);
+      const orders = externalOrders.map((order) => this.orderMapper.fromExternal(order));
+      this.logger.log(`getClosedOrders() - success | accountId=${accountId}, count=${orders.length}`);
+      return orders;
+    } catch (error) {
+      this.logger.error(
+        `getClosedOrders() - error | accountId=${accountId}${marketId ? `, marketId=${marketId}` : ''}, msg=${error.message}`,
+        error.stack
+      );
+      throw new OrderNotFoundException(accountId);
+    }
+  }
+
   async getOrderById(accountId: string, marketId: string, orderId: string): Promise<IOrder> {
-    this.logger.debug(`Fetching order - AccountID: ${accountId} - MarketID: ${marketId} - OrderID: ${orderId}`);
+    this.logger.debug(`getOrderById() - start | accountId=${accountId}, marketId=${marketId}, orderId=${orderId}`);
 
     if (!this.openOrders.has(accountId)) {
-      this.logger.warn(`Order fetch failed - AccountID: ${accountId} - Reason: Account not found`);
+      this.logger.warn(`getOrderById() - skip | accountId=${accountId}, reason=Account not found`);
       throw new AccountNotFoundException(accountId);
     }
 
     try {
       const externalOrder = await this.exchangeService.getOrder(accountId, marketId, orderId);
-      const order = this.orderMapper.fromExternalOrder(externalOrder);
-      this.logger.debug(`Fetched order - AccountID: ${accountId} - OrderID: ${orderId}`);
+      const order = this.orderMapper.fromExternal(externalOrder);
+      this.logger.log(`getOrderById() - success | accountId=${accountId}, orderId=${orderId}`);
       return order;
     } catch (error) {
       this.logger.error(
-        `Order fetch failed - AccountID: ${accountId} - OrderID: ${orderId} - Error: ${error.message}`,
+        `getOrderById() - error | accountId=${accountId}, orderId=${orderId}, msg=${error.message}`,
         error.stack
       );
       throw new OrderNotFoundException(accountId, orderId);
@@ -121,7 +144,7 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
   }
 
   async createOrder(accountId: string, dto: OrderCreateRequestDto): Promise<IOrder> {
-    this.logger.debug(`Creating order - AccountID: ${accountId} - MarketID: ${dto.marketId}`);
+    this.logger.debug(`createOrder() - start | accountId=${accountId}, marketId=${dto.marketId}`);
 
     try {
       const params = {
@@ -141,40 +164,38 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         dto.stopLossPrice,
         params
       );
-      const order = this.orderMapper.fromExternalOrder(externalOrder);
-      this.logger.log(`Created order - AccountID: ${accountId} - OrderID: ${order.id}`);
+      const order = this.orderMapper.fromExternal(externalOrder);
+      this.logger.log(`createOrder() - success | accountId=${accountId}, orderId=${order.id}`);
       return order;
     } catch (error) {
-      this.logger.error(`Order creation failed - AccountID: ${accountId} - Error: ${error.message}`, error.stack);
+      this.logger.error(`createOrder() - error | accountId=${accountId}, msg=${error.message}`, error.stack);
       throw new OrderCreationFailedException(accountId, error.message);
     }
   }
 
   async cancelOrder(accountId: string, orderId: string): Promise<IOrder> {
-    this.logger.debug(`Cancelling order - AccountID: ${accountId} - OrderID: ${orderId}`);
+    this.logger.debug(`cancelOrder() - start | accountId=${accountId}, orderId=${orderId}`);
 
     if (!this.openOrders.has(accountId)) {
-      this.logger.warn(`Order cancellation failed - AccountID: ${accountId} - Reason: Account not found`);
+      this.logger.warn(`cancelOrder() - skip | accountId=${accountId}, reason=Account not found`);
       throw new AccountNotFoundException(accountId);
     }
 
-    const orderToUpdate = this.openOrders.get(accountId).find((order) => order.id === orderId);
+    const orderToUpdate = this.openOrders.get(accountId).find((o) => o.id === orderId);
 
     if (!orderToUpdate) {
-      this.logger.warn(
-        `Order cancellation failed - AccountID: ${accountId} - OrderID: ${orderId} - Reason: Order not found`
-      );
+      this.logger.warn(`cancelOrder() - skip | accountId=${accountId}, orderId=${orderId}, reason=Order not found`);
       throw new OrderNotFoundException(accountId, orderId);
     }
 
     try {
       const externalOrder = await this.exchangeService.cancelOrder(accountId, orderId, orderToUpdate.marketId);
-      const order = this.orderMapper.fromExternalOrder(externalOrder);
-      this.logger.log(`Cancelled order - AccountID: ${accountId} - OrderID: ${orderId}`);
+      const order = this.orderMapper.fromExternal(externalOrder);
+      this.logger.log(`cancelOrder() - success | accountId=${accountId}, orderId=${orderId}`);
       return order;
     } catch (error) {
       this.logger.error(
-        `Order cancellation failed - AccountID: ${accountId} - OrderID: ${orderId} - Error: ${error.message}`,
+        `cancelOrder() - error | accountId=${accountId}, orderId=${orderId}, msg=${error.message}`,
         error.stack
       );
       throw new OrderCancellationFailedException(accountId, orderId, error.message);
@@ -182,25 +203,25 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
   }
 
   async cancelOrdersByMarket(accountId: string, marketId: string): Promise<IOrder[]> {
-    this.logger.debug(`Cancelling orders by market - AccountID: ${accountId} - MarketID: ${marketId}`);
+    this.logger.debug(`cancelOrdersByMarket() - start | accountId=${accountId}, marketId=${marketId}`);
 
     try {
       const externalOrders = await this.exchangeService.cancelOrders(accountId, marketId);
-      const orders = externalOrders.map((externalOrder) => this.orderMapper.fromExternalOrder(externalOrder));
+      const orders = externalOrders.map((order) => this.orderMapper.fromExternal(order));
 
       if (externalOrders.length === 0) {
         this.logger.debug(
-          `Order cancellation skipped - AccountID: ${accountId} - MarketID: ${marketId} - Reason: No orders found`
+          `cancelOrdersByMarket() - skip | accountId=${accountId}, marketId=${marketId}, reason=No orders`
         );
       } else {
         this.logger.log(
-          `Cancelled orders - AccountID: ${accountId} - MarketID: ${marketId} - Count: ${externalOrders.length}`
+          `cancelOrdersByMarket() - success | accountId=${accountId}, marketId=${marketId}, count=${externalOrders.length}`
         );
       }
       return orders;
     } catch (error) {
       this.logger.error(
-        `Order cancellation failed - AccountID: ${accountId} - MarketID: ${marketId} - Error: ${error.message}`,
+        `cancelOrdersByMarket() - error | accountId=${accountId}, marketId=${marketId}, msg=${error.message}`,
         error.stack
       );
       throw new OrderCancellationFailedException(accountId, '', error.message);
@@ -208,17 +229,17 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
   }
 
   async updateOrder(accountId: string, orderId: string, dto: OrderUpdateRequestDto): Promise<IOrder> {
-    this.logger.debug(`Updating order - AccountID: ${accountId} - OrderID: ${orderId}`);
+    this.logger.debug(`updateOrder() - start | accountId=${accountId}, orderId=${orderId}`);
 
     if (!this.openOrders.has(accountId)) {
-      this.logger.warn(`Order update failed - AccountID: ${accountId} - Reason: Account not found`);
+      this.logger.warn(`updateOrder() - skip | accountId=${accountId}, reason=Account not found`);
       throw new AccountNotFoundException(accountId);
     }
 
-    const orderToUpdate = this.openOrders.get(accountId).find((order) => order.id === orderId);
+    const orderToUpdate = this.openOrders.get(accountId).find((o) => o.id === orderId);
 
     if (!orderToUpdate) {
-      this.logger.warn(`Order update failed - AccountID: ${accountId} - OrderID: ${orderId} - Reason: Order not found`);
+      this.logger.warn(`updateOrder() - skip | accountId=${accountId}, orderId=${orderId}, reason=Order not found`);
       throw new OrderNotFoundException(accountId, orderId);
     }
 
@@ -239,65 +260,61 @@ export class OrderService implements OnModuleInit, IAccountTracker, IDataRefresh
         dto.price,
         params
       );
-      const updatedOrder = this.orderMapper.fromExternalOrder(updatedExternalOrder);
+      const updatedOrder = this.orderMapper.fromExternal(updatedExternalOrder);
       this.eventEmitter.emit(
         Events.Order.UPDATED,
         new OrderUpdatedEvent(accountId, updatedOrder.id, updatedOrder.linkId)
       );
-
-      this.logger.log(`Updated order - AccountID: ${accountId} - OrderID: ${orderId}`);
+      this.logger.log(`updateOrder() - success | accountId=${accountId}, orderId=${orderId}`);
       return updatedOrder;
     } catch (error) {
       this.logger.error(
-        `Order update failed - AccountID: ${accountId} - OrderID: ${orderId} - Error: ${error.message}`,
+        `updateOrder() - error | accountId=${accountId}, orderId=${orderId}, msg=${error.message}`,
         error.stack
       );
       throw new OrderUpdateFailedException(accountId, orderId, error.message);
     }
   }
 
-  async refreshOne(accountId: string): Promise<IOrder[]> {
-    this.logger.debug(`Refreshing open orders - AccountID: ${accountId}`);
+  async syncAccount(accountId: string): Promise<IOrder[]> {
+    this.logger.debug(`syncAccount() - start | accountId=${accountId}`);
 
     try {
       const newExternalOrders = await this.exchangeService.getOpenOrders(accountId);
-      const newOrders = newExternalOrders.map((order) => this.orderMapper.fromExternalOrder(order));
+      const newOrders = newExternalOrders.map((order) => this.orderMapper.fromExternal(order));
       const currentOrders = this.openOrders.get(accountId) || [];
-      const haveChanged = haveOrdersChanged(currentOrders, newOrders);
+      const changed = haveOrdersChanged(currentOrders, newOrders);
 
-      if (haveChanged) {
+      if (changed) {
         this.openOrders.set(accountId, newOrders);
         this.eventEmitter.emit(Events.Order.BULK_UPDATED, new OrdersUpdatedEvent(accountId, newOrders));
-        this.logger.log(`Updated open orders - AccountID: ${accountId} - Count: ${newOrders.length}`);
+        this.logger.log(`syncAccount() - updated | accountId=${accountId}, count=${newOrders.length}`);
       } else {
-        this.logger.debug(`Open orders update skipped - AccountID: ${accountId} - Reason: Unchanged`);
+        this.logger.debug(`syncAccount() - skip | accountId=${accountId}, reason=Unchanged`);
       }
       return newOrders;
     } catch (error) {
-      this.logger.error(`Open orders refresh failed - AccountID: ${accountId} - Error: ${error.message}`, error.stack);
+      this.logger.error(`syncAccount() - error | accountId=${accountId}, msg=${error.message}`, error.stack);
       throw new OrdersUpdateAggregatedException([{ accountId, error }]);
     }
   }
 
-  async refreshAll() {
-    this.logger.debug('Starting refresh of all open orders');
+  async syncAllAccounts(): Promise<void> {
+    this.logger.debug('syncAllAccounts() - start');
     const accountIds = Array.from(this.openOrders.keys());
     const errors: Array<{ accountId: string; error: Error }> = [];
-    const ordersPromises = accountIds.map((accountId) =>
-      this.refreshOne(accountId).catch((error) => {
-        errors.push({ accountId, error });
+    const promises = accountIds.map((id) =>
+      this.syncAccount(id).catch((error) => {
+        errors.push({ accountId: id, error });
       })
     );
-    await Promise.all(ordersPromises);
+    await Promise.all(promises);
 
     if (errors.length > 0) {
-      const aggregatedError = new OrdersUpdateAggregatedException(errors);
-      this.logger.error(
-        `Multiple open orders updates failed - Errors: ${aggregatedError.message}`,
-        aggregatedError.stack
-      );
+      const aggError = new OrdersUpdateAggregatedException(errors);
+      this.logger.error(`syncAllAccounts() - error | msg=${aggError.message}`, aggError.stack);
     }
 
-    this.logger.debug(`Completed refresh of all open orders`);
+    this.logger.debug('syncAllAccounts() - complete');
   }
 }

@@ -8,26 +8,30 @@ import { ExchangeService } from '../exchange.service';
 
 @Injectable()
 export class ExchangeModuleAccountUpdatedEventHandler {
-  private logger = new Logger(EventHandlersContext.ExchangeModule);
+  private readonly logger = new Logger(EventHandlersContext.ExchangeModule);
 
-  constructor(private exchangeService: ExchangeService) {}
+  constructor(private readonly exchangeService: ExchangeService) {}
 
   @OnEvent(Events.Account.UPDATED)
   async handle(event: AccountUpdatedEvent) {
-    const actionContext = `${Events.Account.UPDATED} | AccountID: ${event.account.id}`;
+    const accountId = event.account.id;
+    const actionContext = `${Events.Account.UPDATED} | accountId=${accountId}`;
+    this.logger.debug(`handle() - start (cleanup) | ${actionContext}`);
 
     try {
-      await this.exchangeService.cleanResources(event.account.id);
-      this.logger.log(`${actionContext} - Successfully cleaned resources`);
+      await this.exchangeService.cleanResources(accountId);
+      this.logger.log(`handle() - success (cleanup) | ${actionContext}`);
     } catch (error) {
-      this.logger.error(`${actionContext} - Failed to clean resources - Error: ${error.message}`, error.stack);
+      this.logger.error(`handle() - error (cleanup) | ${actionContext}, msg=${error.message}`, error.stack);
     }
+
+    this.logger.debug(`handle() - start (re-init) | ${actionContext}`);
 
     try {
       await this.exchangeService.initializeExchange(event.account);
-      this.logger.log(`${actionContext} - Successfully initialized exchange`);
+      this.logger.log(`handle() - success (re-init) | ${actionContext}`);
     } catch (error) {
-      this.logger.error(`${actionContext} - Failed to initialize exchange - Error: ${error.message}`, error.stack);
+      this.logger.error(`handle() - error (re-init) | ${actionContext}, msg=${error.message}`, error.stack);
     }
   }
 }

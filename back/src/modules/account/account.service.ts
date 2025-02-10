@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository } from 'typeorm';
@@ -30,60 +30,58 @@ export class AccountService {
   ) {}
 
   async getUserAccounts(userId: string): Promise<Account[]> {
-    this.logger.debug(`Fetching all accounts - UserID: ${userId}`);
-    const accounts = await this.accountRepository.find({ where: { user: { id: userId } } });
-    this.logger.log(`Fetched accounts - Count: ${accounts.length}`);
+    this.logger.debug(`getUserAccounts() - start | userId=${userId}`);
+    const accounts = await this.accountRepository.find({
+      where: { user: { id: userId } }
+    });
+    this.logger.log(`getUserAccounts() - success | userId=${userId}, count=${accounts.length}`);
     return accounts;
   }
 
   async getAllAccountsForSystem(): Promise<Account[]> {
-    this.logger.debug('Fetching all accounts across all users');
+    this.logger.debug('getAllAccountsForSystem() - start');
     const accounts = await this.accountRepository.find();
-    this.logger.log(`Fetched all accounts - Count: ${accounts.length}`);
+    this.logger.log(`getAllAccountsForSystem() - success | count=${accounts.length}`);
     return accounts;
   }
 
-  async getAccountById(userId: string, id: string): Promise<Account> {
-    this.logger.debug(`Fetching account - AccountID: ${id}`);
-    const account = await this.accountRepository.findOne({ where: { id, user: { id: userId } } });
+  async getAccountById(userId: string, accountId: string): Promise<Account> {
+    this.logger.debug(`getAccountById() - start | userId=${userId}, accountId=${accountId}`);
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId, user: { id: userId } }
+    });
 
     if (!account) {
-      this.logger.warn(`Account not found - AccountID: ${id}`);
-      throw new AccountNotFoundException(id);
+      this.logger.warn(`getAccountById() - not found | userId=${userId}, accountId=${accountId}`);
+      throw new AccountNotFoundException(accountId);
     }
 
-    this.logger.debug(`Fetched account - AccountID: ${id}`);
+    this.logger.log(`getAccountById() - success | userId=${userId}, accountId=${accountId}`);
     return account;
   }
 
   async validateUserAccount(userId: string, accountId: string): Promise<Account> {
-    this.logger.debug(`Validating user account - UserID: ${userId} - AccountID: ${accountId}`);
+    this.logger.debug(`validateUserAccount() - start | userId=${userId}, accountId=${accountId}`);
     const account = await this.getAccountById(userId, accountId);
-
-    if (!account) {
-      this.logger.warn(`User does not have access to this account - UserID: ${userId} - AccountID: ${accountId}`);
-      throw new UnauthorizedException('You do not have access to this account');
-    }
-
-    this.logger.debug(`User account validated - UserID: ${userId} - AccountID: ${accountId}`);
+    this.logger.log(`validateUserAccount() - success | userId=${userId}, accountId=${accountId}`);
     return account;
   }
 
-  async getAccountByIdForSystem(id: string): Promise<Account> {
-    this.logger.debug(`Fetching account for system - AccountID: ${id}`);
-    const account = await this.accountRepository.findOne({ where: { id } });
+  async getAccountByIdForSystem(accountId: string): Promise<Account> {
+    this.logger.debug(`getAccountByIdForSystem() - start | accountId=${accountId}`);
+    const account = await this.accountRepository.findOne({ where: { id: accountId } });
 
     if (!account) {
-      this.logger.warn(`Account not found - AccountID: ${id}`);
-      throw new AccountNotFoundException(id);
+      this.logger.warn(`getAccountByIdForSystem() - not found | accountId=${accountId}`);
+      throw new AccountNotFoundException(accountId);
     }
 
-    this.logger.debug(`Fetched account - AccountID: ${id}`);
+    this.logger.log(`getAccountByIdForSystem() - success | accountId=${accountId}`);
     return account;
   }
 
   async createAccount(user: User, dto: AccountCreateRequestDto): Promise<Account> {
-    this.logger.debug(`Creating new account - Name: ${dto.name}`);
+    this.logger.debug(`createAccount() - start | userId=${user.id}, name=${dto.name}`);
     const existingAccount = await this.accountRepository.findOne({
       where: [
         { name: dto.name, user: { id: user.id } },
@@ -93,49 +91,42 @@ export class AccountService {
 
     if (existingAccount) {
       if (existingAccount.name === dto.name) {
-        this.logger.warn(`Account creation failed - Name: ${dto.name} - Reason: Account with this name already exists`);
+        this.logger.warn(`createAccount() - conflict | reason=Name already exists, name=${dto.name}`);
       }
 
       if (existingAccount.key === dto.key) {
-        this.logger.warn(
-          `Account creation failed - Key: ${maskString(dto.key)} - Reason: Account with this key already exists`
-        );
+        this.logger.warn(`createAccount() - conflict | reason=Key already exists, key=${maskString(dto.key)}`);
       }
 
       throw new AccountAlreadyExistsException(dto.name, dto.key);
     }
 
-    const account = this.accountMapper.fromCreateDto(user, dto);
+    const account = this.accountMapper.createFromDto(dto, user);
 
     try {
-      this.logger.debug(`Creating exchange for account - Name: ${account.name}`);
+      this.logger.debug(`createAccount() - exchange factory init | accountName=${account.name}`);
       await this.exchangeFactory.createExchange(account);
-      this.logger.debug(`Created exchange for account - Name: ${account.name}`);
+      this.logger.log(`createAccount() - exchange factory success | accountName=${account.name}`);
     } catch (error) {
-      this.logger.error(`Exchange creation failed - Account: ${account.name} - Error: ${error.message}`, error.stack);
+      this.logger.error(`createAccount() - exchange factory error | msg=${error.message}`, error.stack);
       throw error;
     }
 
     const savedAccount = await this.accountRepository.save(account);
     this.eventEmitter.emit(Events.Account.CREATED, new AccountCreatedEvent(savedAccount));
-    this.logger.log(`Created new account - AccountID: ${savedAccount.id} - Name: ${savedAccount.name}`);
+    this.logger.log(`createAccount() - success | accountId=${savedAccount.id}, name=${savedAccount.name}`);
     return savedAccount;
   }
 
-  async updateAccount(userId: string, id: string, dto: AccountUpdateRequestDto): Promise<Account> {
-    this.logger.debug(`Updating account - AccountID: ${id}`);
-    const account = await this.getAccountById(userId, id);
-
-    if (!account) {
-      this.logger.warn(`Account update failed - AccountID: ${id} - Reason: Account not found`);
-      throw new AccountNotFoundException(id);
-    }
+  async updateAccount(userId: string, accountId: string, dto: AccountUpdateRequestDto): Promise<Account> {
+    this.logger.debug(`updateAccount() - start | userId=${userId}, accountId=${accountId}`);
+    const account = await this.getAccountById(userId, accountId);
 
     if (dto.name || dto.key) {
       const existingAccount = await this.accountRepository
         .createQueryBuilder('account')
         .where('account.userId = :userId', { userId: userId })
-        .andWhere('account.id != :id', { id })
+        .andWhere('account.id != :id', { id: accountId })
         .andWhere(
           new Brackets((qb) => {
             if (dto.name) {
@@ -151,13 +142,11 @@ export class AccountService {
 
       if (existingAccount) {
         if (existingAccount.name === dto.name) {
-          this.logger.warn(`Account update failed - Name: ${dto.name} - Reason: Account with this name already exists`);
+          this.logger.warn(`updateAccount() - conflict | reason=Name already exists, name=${dto.name}`);
         }
 
         if (existingAccount.key === dto.key) {
-          this.logger.warn(
-            `Account update failed - Key: ${maskString(dto.key)} - Reason: Account with this key already exists`
-          );
+          this.logger.warn(`updateAccount() - conflict | reason=Key already exists, key=${maskString(dto.key)}`);
         }
 
         throw new AccountAlreadyExistsException(dto.name, dto.key);
@@ -167,22 +156,16 @@ export class AccountService {
     const updatedAccount = this.accountMapper.updateFromDto(account, dto);
     const savedAccount = await this.accountRepository.save(updatedAccount);
     this.eventEmitter.emit(Events.Account.UPDATED, new AccountUpdatedEvent(savedAccount));
-    this.logger.log(`Updated account - AccountID: ${savedAccount.id}`);
+    this.logger.log(`updateAccount() - success | accountId=${savedAccount.id}`);
     return savedAccount;
   }
 
-  async deleteAccount(userId: string, id: string): Promise<Account> {
-    this.logger.debug(`Deleting account - AccountID: ${id}`);
-    const account = await this.getAccountById(userId, id);
-
-    if (!account) {
-      this.logger.warn(`Account deletion failed - AccountID: ${id} - Reason: Account not found`);
-      throw new AccountNotFoundException(id);
-    }
-
+  async deleteAccount(userId: string, accountId: string): Promise<Account> {
+    this.logger.debug(`deleteAccount() - start | userId=${userId}, accountId=${accountId}`);
+    const account = await this.getAccountById(userId, accountId);
     await this.accountRepository.remove(account);
     this.eventEmitter.emit(Events.Account.DELETED, new AccountDeletedEvent(account));
-    this.logger.log(`Deleted account - AccountID: ${id}`);
+    this.logger.log(`deleteAccount() - success | accountId=${accountId}`);
     return account;
   }
 }

@@ -2,6 +2,7 @@
 export * from './env.config';
 export * from './event-handlers.config';
 export * from './events.config';
+export * from './headers.config';
 export * from './timers.config';
 export * from './urls.config';
 export * from './websocket.config';

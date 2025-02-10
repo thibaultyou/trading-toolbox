@@ -14,16 +14,15 @@ export class OrderModuleExchangeTerminatedEventHandler {
 
   @OnEvent(Events.Exchange.TERMINATED)
   handle(event: ExchangeTerminatedEvent) {
-    const actionContext = `${Events.Exchange.TERMINATED} | AccountID: ${event.accountId}`;
+    const accountId = event.accountId;
+    const actionContext = `${Events.Exchange.TERMINATED} | accountId=${accountId}`;
+    this.logger.debug(`handle() - start | ${actionContext}`);
 
     try {
       this.orderService.stopTrackingAccount(event.accountId);
-      this.logger.log(actionContext);
+      this.logger.log(`handle() - success | ${actionContext}, tracking=stopped`);
     } catch (error) {
-      this.logger.error(
-        `${actionContext} - Failed to remove account from order watch list - Error: ${error.message}`,
-        error.stack
-      );
+      this.logger.error(`handle() - error | ${actionContext}, msg=${error.message}`, error.stack);
     }
   }
 }

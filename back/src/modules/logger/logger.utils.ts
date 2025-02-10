@@ -19,7 +19,7 @@ export const logError =
   (logger: Logger, message: string): ((e: Error) => TE.TaskEither<Error, never>) =>
   (e: Error) =>
     TE.leftIO(() => {
-      log(logger, 'error', `${message} - Error: ${e.message}`)();
+      log(logger, 'error', `${message} - error | msg=${e.message}`)();
       return e;
     });
 

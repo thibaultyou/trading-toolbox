@@ -1,7 +1,13 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 
-export class TickerPriceNotFoundException extends HttpException {
-  constructor(accountName: string, symbol: string) {
-    super(`Ticker price not found - Account: ${accountName} - Symbol: ${symbol}`, HttpStatus.NOT_FOUND);
+import { BaseCustomException } from '@common/exceptions/base-custom.exception';
+
+export class TickerPriceNotFoundException extends BaseCustomException {
+  constructor(accountId: string, symbol: string) {
+    super(
+      'TICKER_PRICE_NOT_FOUND',
+      `Ticker price not found | accountId=${accountId}, symbol=${symbol}`,
+      HttpStatus.NOT_FOUND
+    );
   }
 }

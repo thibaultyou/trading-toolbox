@@ -8,22 +8,21 @@ import { TickerService } from '../ticker.service';
 
 @Injectable()
 export class TickerModuleExchangeInitializedEventHandler {
-  private logger = new Logger(EventHandlersContext.TickerModule);
+  private readonly logger = new Logger(EventHandlersContext.TickerModule);
 
-  constructor(private tickerService: TickerService) {}
+  constructor(private readonly tickerService: TickerService) {}
 
   @OnEvent(Events.Exchange.INITIALIZED)
   async handle(event: ExchangeInitializedEvent) {
-    const actionContext = `${Events.Exchange.INITIALIZED} | AccountID: ${event.accountId}`;
+    const accountId = event.accountId;
+    const actionContext = `${Events.Exchange.INITIALIZED} | accountId=${accountId}`;
+    this.logger.debug(`handle() - start | ${actionContext}`);
 
     try {
-      await this.tickerService.startTrackingAccount(event.accountId);
-      this.logger.log(actionContext);
+      await this.tickerService.startTrackingAccount(accountId);
+      this.logger.log(`handle() - success | ${actionContext}, tracking=started`);
     } catch (error) {
-      this.logger.error(
-        `${actionContext} - Failed to add account to ticker watch list - Error: ${error.message}`,
-        error.stack
-      );
+      this.logger.error(`handle() - error | ${actionContext}, msg=${error.message}`, error.stack);
     }
   }
 }

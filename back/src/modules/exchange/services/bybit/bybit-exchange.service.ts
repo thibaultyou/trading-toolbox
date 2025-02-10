@@ -1,33 +1,23 @@
 import * as ccxt from 'ccxt';
 
-import { Account } from '@account/entities/account.entity';
-
-import { BaseExchangeService } from './base-exchange.service';
-import { ExchangeInitializationException, InvalidCredentialsException } from '../exchange.exceptions';
+import { ExchangeInitializationException, InvalidCredentialsException } from '../../exceptions/exchange.exceptions';
+import { BaseExchangeService } from '../base-exchange.service';
 
 export class BybitExchangeService extends BaseExchangeService {
-  constructor(account: Account) {
-    super(account);
-  }
-
   async initialize(): Promise<boolean> {
+    this.logger.debug(`initialize() - start | accountId=${this.account.id}`);
+
     try {
       this.exchange = new ccxt.bybit({
         apiKey: this.account.key,
         secret: this.account.secret
       });
       await this.getBalances();
+      this.logger.log(`initialize() - success | accountId=${this.account.id}`);
       return true;
-      // return pipe(
-      //   this.getBalances(),
-      //   TE.match(
-      //     (error) => {
-      //       throw error;
-      //     },
-      //     () => true
-      //   )
-      // )();
     } catch (error) {
+      this.logger.error(`initialize() - error | accountId=${this.account.id}, msg=${error.message}`, error.stack);
+
       if (error instanceof ccxt.AuthenticationError) {
         throw new InvalidCredentialsException(this.account.id);
       } else if (error instanceof ccxt.ExchangeError) {

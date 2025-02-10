@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Interval } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -13,90 +14,92 @@ import { StrategyMapperService } from './services/strategy-mapper.service';
 import { StrategyFactory } from './strategies/strategy.factory';
 
 @Injectable()
-export class StrategyService implements OnModuleInit {
-  private logger = new Logger(StrategyService.name);
+export class StrategyService {
+  private readonly logger = new Logger(StrategyService.name);
 
   constructor(
     @InjectRepository(Strategy)
-    private strategyRepository: Repository<Strategy>,
-    private strategyFactory: StrategyFactory,
-    private strategyMapper: StrategyMapperService
+    private readonly strategyRepository: Repository<Strategy>,
+    private readonly strategyFactory: StrategyFactory,
+    private readonly strategyMapper: StrategyMapperService
   ) {}
 
-  async onModuleInit() {
-    this.logger.debug('Initializing module');
-    setInterval(() => {
-      this.processStrategies();
-    }, Timers.STRATEGIES_CHECK_COOLDOWN);
-    this.logger.log('Module initialized successfully');
+  @Interval(Timers.STRATEGIES_CHECK_COOLDOWN)
+  loop(): void {
+    this.processStrategies();
   }
 
   async getAllStrategies(userId: string): Promise<Strategy[]> {
-    this.logger.debug(`Fetching all strategies for user - UserID: ${userId}`);
+    this.logger.debug(`getAllStrategies() - start | userId=${userId}`);
+
     const strategies = await this.strategyRepository.find({ where: { userId } });
-    this.logger.log(`Fetched strategies - UserID: ${userId} - Count: ${strategies.length}`);
+    this.logger.log(`getAllStrategies() - success | userId=${userId}, count=${strategies.length}`);
     return strategies;
   }
 
   async getAllStrategiesForSystem(): Promise<Strategy[]> {
-    this.logger.debug('Fetching all strategies across all users');
+    this.logger.debug(`getAllStrategiesForSystem() - start`);
+
     const strategies = await this.strategyRepository.find();
-    this.logger.log(`Fetched all strategies - Count: ${strategies.length}`);
+    this.logger.log(`getAllStrategiesForSystem() - success | count=${strategies.length}`);
     return strategies;
   }
 
   async getStrategyById(userId: string, id: string): Promise<Strategy> {
-    this.logger.debug(`Fetching strategy - UserID: ${userId} - StrategyID: ${id}`);
+    this.logger.debug(`getStrategyById() - start | userId=${userId}, strategyId=${id}`);
+
     const strategy = await this.strategyRepository.findOne({
-      where: {
-        id: id,
-        userId: userId
-      }
+      where: { id, userId }
     });
 
     if (!strategy) {
-      this.logger.warn(`Strategy not found - UserID: ${userId} - StrategyID: ${id}`);
+      this.logger.warn(`getStrategyById() - not found | userId=${userId}, strategyId=${id}`);
       throw new StrategyNotFoundException(id);
     }
 
-    this.logger.debug(`Fetched strategy - UserID: ${userId} - StrategyID: ${id}`);
+    this.logger.debug(`getStrategyById() - success | userId=${userId}, strategyId=${id}`);
     return strategy;
   }
 
   async createStrategy(userId: string, dto: StrategyCreateRequestDto): Promise<Strategy> {
-    this.logger.debug(`Creating new strategy - UserID: ${userId}`);
-    const strategy = this.strategyMapper.fromCreateDto(dto, userId);
+    this.logger.debug(`createStrategy() - start | userId=${userId}`);
+
+    const strategy = this.strategyMapper.createFromDto(dto, userId);
     const savedStrategy = await this.strategyRepository.save(strategy);
     this.logger.log(
-      `Created new strategy - UserID: ${userId} - StrategyID: ${savedStrategy.id} - Type: ${savedStrategy.type}`
+      `createStrategy() - success | userId=${userId}, strategyId=${savedStrategy.id}, type=${savedStrategy.type}`
     );
     return savedStrategy;
   }
 
   async updateStrategy(userId: string, id: string, dto: StrategyUpdateRequestDto): Promise<Strategy> {
-    this.logger.debug(`Updating strategy - UserID: ${userId} - StrategyID: ${id}`);
+    this.logger.debug(`updateStrategy() - start | userId=${userId}, strategyId=${id}`);
+
     const strategy = await this.getStrategyById(userId, id);
     const updatedStrategy = this.strategyMapper.updateFromDto(strategy, dto);
     const savedStrategy = await this.strategyRepository.save(updatedStrategy);
-    this.logger.log(`Updated strategy - UserID: ${userId} - StrategyID: ${id}`);
+    this.logger.log(`updateStrategy() - success | userId=${userId}, strategyId=${id}`);
     return savedStrategy;
   }
 
   async deleteStrategy(userId: string, id: string): Promise<boolean> {
-    this.logger.debug(`Deleting strategy - UserID: ${userId} - StrategyID: ${id}`);
+    this.logger.debug(`deleteStrategy() - start | userId=${userId}, strategyId=${id}`);
+
     const strategy = await this.getStrategyById(userId, id);
     await this.strategyRepository.remove(strategy);
-    this.logger.log(`Deleted strategy - UserID: ${userId}, StrategyID: ${id}`);
+
+    this.logger.log(`deleteStrategy() - success | userId=${userId}, strategyId=${id}`);
     return true;
   }
 
   async processOrderExecutionData(executionData: IExecutionData) {
-    this.logger.debug(`Processing order execution data - OrderID: ${executionData.orderId}`);
+    this.logger.debug(`processOrderExecutionData() - start | orderId=${executionData.orderId}`);
+
     const relevantStrategies = await this.strategyRepository.find({
       where: { orders: executionData.orderId }
     });
     this.logger.debug(
-      `Found relevant strategies - Count: ${relevantStrategies.length} - OrderID: ${executionData.orderId}`
+      `processOrderExecutionData() - found strategies | count=${relevantStrategies.length}, orderId=${executionData.orderId}`
     );
 
     await Promise.all(
@@ -104,57 +107,60 @@ export class StrategyService implements OnModuleInit {
         try {
           const instance = this.strategyFactory.createStrategy(strategy.type);
           this.logger.debug(
-            `Handling order execution - StrategyID: ${strategy.id} - OrderID: ${executionData.orderId}`
+            `processOrderExecutionData() - handleExecution | strategyId=${strategy.id}, orderId=${executionData.orderId}`
           );
+
           await instance.handleOrderExecution(strategy.accountId, strategy, executionData);
-          this.logger.debug(`Handled order execution - StrategyID: ${strategy.id} - OrderID: ${executionData.orderId}`);
+
+          this.logger.debug(
+            `processOrderExecutionData() - success | strategyId=${strategy.id}, orderId=${executionData.orderId}`
+          );
 
           await this.strategyRepository.save(strategy);
         } catch (error) {
           this.logger.error(
-            `Order execution processing failed - StrategyID: ${strategy.id} - OrderID: ${executionData.orderId} - Error: ${error.message}`,
+            `processOrderExecutionData() - error | strategyId=${strategy.id}, orderId=${executionData.orderId}, msg=${error.message}`,
             error.stack
           );
         }
       })
     );
-    this.logger.debug(`Completed processing order execution data - OrderID: ${executionData.orderId}`);
+
+    this.logger.debug(`processOrderExecutionData() - complete | orderId=${executionData.orderId}`);
   }
 
   private async processStrategy(strategy: Strategy) {
-    this.logger.debug(`Processing strategy - StrategyID: ${strategy.id}`);
+    this.logger.debug(`processStrategy() - start | strategyId=${strategy.id}`);
     const instance = this.strategyFactory.createStrategy(strategy.type);
 
     try {
       await instance.process(strategy.accountId, strategy);
-      this.logger.debug(`Processed strategy - StrategyID: ${strategy.id}`);
+      this.logger.log(`processStrategy() - success | strategyId=${strategy.id}`);
     } catch (error) {
-      this.logger.error(
-        `Strategy processing failed - StrategyID: ${strategy.id} - Error: ${error.message}`,
-        error.stack
-      );
+      this.logger.error(`processStrategy() - error | strategyId=${strategy.id}, msg=${error.message}`, error.stack);
     }
   }
 
   private async processStrategies() {
-    this.logger.debug('Starting to process all strategies');
+    this.logger.debug('processStrategies() - start');
 
     try {
       const strategies = await this.getAllStrategiesForSystem();
-      this.logger.debug(`Processing strategies - Count: ${strategies.length}`);
+      this.logger.debug(`processStrategies() - info | count=${strategies.length}`);
 
-      const strategyPromises = strategies.map(async (strategy) => {
-        try {
-          await this.processStrategy(strategy);
-        } catch (strategyError) {
-          this.logger.error(`Error processing strategy - StrategyID: ${strategy.id}`, strategyError.stack);
-        }
-      });
-      await Promise.all(strategyPromises);
+      const promises = strategies.map((strategy) =>
+        this.processStrategy(strategy).catch((strategyError) => {
+          this.logger.error(
+            `processStrategies() - errorInsideMap | strategyId=${strategy.id}, msg=${strategyError.message}`,
+            strategyError.stack
+          );
+        })
+      );
+      await Promise.all(promises);
 
-      this.logger.debug('Completed processing all strategies');
+      this.logger.debug('processStrategies() - complete');
     } catch (error) {
-      this.logger.error('Error processing strategies', error.stack);
+      this.logger.error(`processStrategies() - error | msg=${error.message}`, error.stack);
     }
   }
 }
