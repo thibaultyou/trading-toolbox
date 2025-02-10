@@ -1,9 +1,25 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "../",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^@health/(.*)$": "<rootDir>/src/modules/health/$1",
+    "^@config$": "<rootDir>/src/config",
+    "^@account/(.*)$": "<rootDir>/src/modules/account/$1",
+    "^@env/(.*)$": "<rootDir>/src/modules/env/$1",
+    "^@exchange/(.*)$": "<rootDir>/src/modules/exchange/$1",
+    "^@logger/(.*)$": "<rootDir>/src/modules/logger/$1",
+    "^@market/(.*)$": "<rootDir>/src/modules/market/$1",
+    "^@order/(.*)$": "<rootDir>/src/modules/order/$1",
+    "^@position/(.*)$": "<rootDir>/src/modules/position/$1",
+    "^@strategy/(.*)$": "<rootDir>/src/modules/strategy/$1",
+    "^@ticker/(.*)$": "<rootDir>/src/modules/ticker/$1",
+    "^@user/(.*)$": "<rootDir>/src/modules/user/$1",
+    "^@wallet/(.*)$": "<rootDir>/src/modules/wallet/$1",
+    "^@test/(.*)$": "<rootDir>/test/$1"
   }
 }

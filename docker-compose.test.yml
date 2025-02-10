@@ -2,24 +2,25 @@ services:
   proxy:
     image: nginx:1.25.4-alpine3.18-slim
     restart: unless-stopped
-    ports:
-      - "0.0.0.0:1234:80"
     volumes:
       - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "0.0.0.0:1234:80"
     depends_on:
       - server
       - adminer
 
   server:
     build: ./back
-    command: npm run start:prod
-    restart: unless-stopped
+    command: npm run test:e2e
+    restart: "no"
     ports:
       - "0.0.0.0:4000:4000"
-    environment:
-      NODE_ENV: production
+    volumes:
+      - ./back:/app
+      - /app/node_modules
     env_file:
-      - .env
+      - .env.test
     depends_on:
       - db
 
@@ -27,17 +28,21 @@ services:
     image: postgres:16.2-alpine3.19
     restart: unless-stopped
     ports:
-      - "0.0.0.0:5432:5432"
+      - "0.0.0.0:5433:5432"
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db-data-test:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
     env_file:
-      - .env
+      - .env.test
 
   adminer:
     image: adminer:4.8.1-standalone
     restart: unless-stopped
     ports:
-      - "0.0.0.0:6000:8080"
+      - "0.0.0.0:6001:8080"
 
 volumes:
-  db-data:
+  db-data-test:

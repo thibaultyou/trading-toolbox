@@ -6,8 +6,8 @@ database.db
 z_dir2prompt_output.txt
 
 # Compiled output
-dist
-node_modules
+dist/
+node_modules/
 
 # Logs
 logs
@@ -18,7 +18,7 @@ npm-debug.log*
 .DS_Store
 
 # Tests
-/coverage
+coverage/
 
 # VSCode
 .vscode/*

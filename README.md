@@ -1,129 +1,187 @@
 # Trading Toolbox
 
-Trading Toolbox is a personal project designed for executing trading operations on exchanges. It aims to monitor trades, execute actions based on predefined conditions, and apply advanced trading strategies.
+A personal project that facilitates trading operations on supported exchanges. Its core capabilities include monitoring trades, executing actions based on predefined conditions, and experimenting with advanced trading strategies.
 
-## 🚨 Important Notice
+## ⚠️ Important Notice
 
-**WARNING: This project is a personal endeavor, in active development, and NOT intended for public use or real trading.**
+**This project is for personal and educational purposes only. It is not production-ready or recommended for real-world trading.**  
+- **Experimental**: Features may be incomplete and can change without prior notice.  
+- **Unstable & Unverified**: The code is largely untested and may contain bugs.  
+- **High Risk**: Using this software for actual trading could lead to financial loss.  
+- **No Warranty**: Provided “as is” without any guarantees of performance or reliability.  
 
-- **Personal Use Only**: This application is designed for personal experimentation and learning. It is not intended for use by others or in any production environment.
-- **Experimental Status**: This project is a work in progress. Features may be incomplete, unstable, or subject to significant changes without notice.
-- **Quality Concerns**: The codebase is largely untested and may not adhere to best practices. Expect bugs and performance issues.
-- **High Risk**: This software is provided "as is", without any warranties. Any use, especially for actual trading, could result in significant financial losses.
-- **Not Production-Ready**: This application is not suitable for deployment in a production environment or for handling real financial transactions.
+By using this project, you acknowledge these risks and understand it is **not** intended for critical or financial operations.
 
-By proceeding, you acknowledge these limitations and accept all associated risks. The creator strongly advises against using this software for any critical or financial operations at this stage.
+## ✨ Features
 
-## 🎯 Features
-
-The Trading Toolbox currently supports the following features:
-
-- **User Management**: Create and manage user accounts.
-- **Trading Accounts Management**: Link and manage Bybit trading accounts to user profiles.
-- **Exchange Monitoring**: Periodically check for exchange items such as markets, orders, and positions.
-- **Real-time Updates**: Provide real-time updates for wallets, executed orders, and ticker price fluctuations.
-- **Trading Strategies**: Provide a framework to implement and reference trading strategies based on certain conditions and settings (Work in Progress).
+- **User Management** – Register and manage user accounts.  
+- **Trading Accounts** – Connect and handle Bybit and Bitget accounts.  
+- **Exchange Monitoring** – Monitor market data, orders, and positions in real time.  
+- **Real-time Updates** – Get live wallet balances, order status, and pricing feeds.  
+- **Strategy Framework** – Implement and test trading strategies (currently in development).
 
 ## 🚀 Getting Started
 
-Follow these instructions to set up the project on your local machine for development and testing purposes.
+These instructions will help you set up the project on your local machine for development and testing.
 
 ### Prerequisites
 
-- Docker
-- Docker Compose
-- Basic understanding of Docker concepts
+- **[Docker & Docker Compose](https://docs.docker.com/get-docker/)**  
+- [**Just**](https://github.com/casey/just) (a command runner)  
+- Basic Docker and command-line knowledge
 
 ### Installation
 
-1. **Clone the repository:**
-   ```sh
+1. **Clone the repository**:
+   ```bash
    git clone https://github.com/yourusername/tradingtoolbox.git
    cd tradingtoolbox
    ```
 
-2. **Set up environment variables:**
-   ```sh
-   cp .env.example .env
-   ```
-   Edit the `.env` file as needed.
-
-3. **Launch the application:**
-   - For production:
-     ```sh
-     docker-compose up -d
+2. **Configure Environment Variables**:
+   - For development/production:
+     ```bash
+     cp .env.example .env
      ```
-   - For development (with live reloading):
-     ```sh
-     docker-compose -f docker-compose.dev.yml up -d
+     Edit `.env` as needed.
+   - For testing:
+     ```bash
+     cp .env.example .env.test
+     ```
+     Modify `.env.test` to use a separate test database, credentials, etc.
+
+3. **Using the Justfile**:
+   - The [Justfile](https://github.com/casey/just) provides recipes to manage Docker Compose contexts and local npm scripts (build, start, test, lint, etc.).
+   - Common commands:
+     - **Development**:
+       ```bash
+       just dev
+       ```
+     - **Production**:
+       ```bash
+       just prod
+       ```
+     - **End-to-End Tests**:
+       ```bash
+       just test
+       ```
+     - **Local Server (Dev)**:
+       ```bash
+       just start-dev
+       ```
+     - **Local Server (Prod)**:
+       ```bash
+       just start-prod
+       ```
+     - **Clean Database Volumes**:
+       ```bash
+       # For tests:
+       just clean-test
+       # For dev:
+       just clean-dev
+       ```
+     - **Help**:
+       ```bash
+       just help
+       ```
+   > **Note**: Certain commands load environment variables using `npx dotenv-cli -e ../.env --` (or `-e ../.env.test --`) from the project root.
+
+4. **Launch via Docker (Optional)**:
+   - **Production**:
+     ```bash
+     just prod
+     ```
+   - **Development** (with live reloading):
+     ```bash
+     just dev
      ```
 
-4. **Access the application:**
-   - API Server: `http://localhost:1234/api`
-   - Adminer (Database Management): `http://localhost:6000/adminer`
-   - Swagger Documentation: `http://localhost:1234/api/docs`
+5. **Access the Application**:
+   - **API Server**: <http://localhost:1234/api>  
+   - **Adminer (Database Manager)**:  
+     - Dev: <http://localhost:6000/adminer>  
+     - Test: <http://localhost:6001/adminer>  
+   - **Swagger Docs**: <http://localhost:1234/api/docs>
 
-5. **Stop the application:**
-   ```sh
-   docker-compose down
+6. **Stop the Application**:
+   ```bash
+   just down
    ```
 
 ## 🔧 Using the API
 
-After setting up the project, you can interact with the Trading Toolbox using its API. Here's a guide to get you started:
+After setup, you can interact with the Trading Toolbox using its REST API.
 
 ### Accessing the API
 
-1. **API Client (e.g., Postman)**:
-   - Base URL: `http://localhost:1234/api`
-   - Use POST, GET, PUT, PATCH, DELETE methods as required by each endpoint
-   - Set `Content-Type: application/json` header for requests with a body
-   - For authenticated endpoints, include the JWT token in the `Authorization` header:
-     `Authorization: Bearer YOUR_JWT_TOKEN`
+1. **API Client (e.g., Postman, curl)**:
+   - **Base URL**: `http://localhost:1234/api`
+   - Use the appropriate HTTP methods (POST, GET, PUT, PATCH, DELETE).
+   - Set `Content-Type: application/json` for JSON request bodies.
+   - For authenticated endpoints, include a valid JWT in the `Authorization` header:
+     ```
+     Authorization: Bearer YOUR_JWT_TOKEN
+     ```
 
 2. **Swagger UI**:
-   - Access the interactive API documentation at `http://localhost:1234/api/docs`
-   - Click on an endpoint to expand its details
-   - Use the "Try it out" button to send requests directly from the browser
-   - For authenticated endpoints, use the "Authorize" button to enter your JWT token
+   - Access the interactive docs at <http://localhost:1234/api/docs>.
+   - Use **Try it out** to test API endpoints from your browser.
+   - Click **Authorize** to provide a JWT for secured endpoints.
 
 ### Basic Workflow
 
-1. Create a user account:
-   - Endpoint: POST `/users/register`
-   - Provide email and password
+1. **Register a User**:
+   - **Endpoint**: `POST /users/register`
+   - Example payload:
+     ```json
+     {
+       "username": "myUser",
+       "password": "myPassword"
+     }
+     ```
 
-2. Log in to get an authentication token:
-   - Endpoint: POST `/users/login`
-   - Use the received JWT token for subsequent requests
+2. **Log In to Get a JWT**:
+   - **Endpoint**: `POST /users/login`
+   - Use the returned JWT in subsequent requests.
 
-3. Configure a trading account:
-   - Endpoint: POST `/accounts`
-   - Link your Bybit account by providing API key and secret
+3. **Create a Trading Account**:
+   - **Endpoint**: `POST /accounts`
+   - Provide details like account name, API key, API secret, and exchange type.
 
-4. Choose your next steps:
+4. **Next Steps**:
+   - **Fetching Markets**: `GET /markets/accounts/{accountId}`
+   - **Creating an Order**: `POST /orders/accounts/{accountId}/orders`
+   - **Fetching Positions**: `GET /positions/accounts/{accountId}/positions`
+   - **Setting Up Strategies**:
+     - `POST /strategies`
+     - `GET /strategies`
+     - `PATCH /strategies/{id}`
 
-   Option A: Use exchange features
-   - Examples of available endpoints:
-     - Fetch markets: GET `/markets/accounts/{accountId}`
-     - Create an order: POST `/orders/accounts/{accountId}/orders`
-     - Fetch positions: GET `/positions/accounts/{accountId}/positions`
-
-   Option B: Set up trading strategies
-   - Create a strategy: POST `/strategies`
-   - Fetch strategies: GET `/strategies`
-   - Update a strategy: PATCH `/strategies/{id}`
-
-Refer to the Swagger UI documentation for detailed information on request/response formats for each endpoint.
+Refer to the [Swagger documentation](http://localhost:1234/api/docs) for complete request/response formats.
 
 ## 🧪 Testing
 
-Currently, the project lacks a comprehensive test suite. This is a known issue and a priority for future development.
+Comprehensive testing includes both unit and end-to-end tests.
+
+- **Local Testing**:
+  - **Unit Tests**:
+    ```bash
+    just test-unit
+    ```
+  - **End-to-End Tests** (runs in an isolated test environment using `.env.test`):
+    ```bash
+    just test
+    ```
+  - **Watch Mode** or **Coverage**:
+    ```bash
+    just test-watch
+    just test-cov
+    ```
 
 ## 📜 License
 
-This project is licensed under the CC BY-NC-ND 4.0 License. See [LICENSE.md](LICENSE.md) for details.
+This project is licensed under the **CC BY-NC-ND 4.0 License**. See [LICENSE.md](LICENSE.md) for more information.
 
 ---
 
-**Disclaimer**: This software is for personal educational and research purposes only. Do not use it for real trading or financial decisions without thorough testing and professional advice.
+**Disclaimer**: This software is for personal, educational, and research purposes only. **Do not** use it for real trading or financial decisions without extensive testing and professional advice.

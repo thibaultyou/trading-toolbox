@@ -2,10 +2,10 @@ services:
   proxy:
     image: nginx:1.25.4-alpine3.18-slim
     restart: unless-stopped
-    volumes:
-      - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "0.0.0.0:1234:80"
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - server
       - adminer
@@ -14,19 +14,13 @@ services:
     build: ./back
     command: npm run start:dev
     restart: unless-stopped
+    ports:
+      - "0.0.0.0:4000:4000"
     volumes:
       - ./back:/app
       - /app/node_modules
-    ports:
-      - "0.0.0.0:4000:4000"
-    environment:
-      NODE_ENV: ${NODE_ENV}
-      DATABASE_HOST: ${DATABASE_HOST}
-      DATABASE_PORT: ${DATABASE_PORT}
-      DATABASE_USER: ${DATABASE_USER}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      DATABASE_NAME: ${DATABASE_NAME}
-      JWT_SIGNING_SECRET: ${JWT_SIGNING_SECRET}
+    env_file:
+      - .env
     depends_on:
       - db
 
@@ -36,11 +30,13 @@ services:
     ports:
       - "0.0.0.0:5432:5432"
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db-data-dev:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
+    env_file:
+      - .env
 
   adminer:
     image: adminer:4.8.1-standalone
@@ -49,4 +45,4 @@ services:
       - "0.0.0.0:6000:8080"
 
 volumes:
-  db-data:
+  db-data-dev:
