@@ -21,6 +21,7 @@
     "allowJs": true,
     "baseUrl": "./",
     "paths": {
+      "@src/*": ["src/*"],
       "@common/*": ["src/common/*"],
       "@config": ["src/config"],
       "@account/*": ["src/modules/account/*"],

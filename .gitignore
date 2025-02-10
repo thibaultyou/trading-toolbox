@@ -2,6 +2,7 @@
 database.db
 .env
 .env.local
+.env.test
 .promptignore
 z_dir2prompt_output.txt
 

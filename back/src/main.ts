@@ -11,6 +11,7 @@ import { AppModule } from './app.module';
 
 const bootstrap = async () => {
   const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks();
   app.use(new CorrelationIdMiddleware().use);
   app.useLogger(new AppLogger(envConfig));
 

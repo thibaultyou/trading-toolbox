@@ -31,8 +31,8 @@ prod:
 # Run end-to-end tests in an isolated test environment (uses .env.test).
 test:
 	@echo "Running end-to-end tests (using .env.test)..."
-	docker-compose -f docker-compose.test.yml up --abort-on-container-exit
-	docker-compose -f docker-compose.test.yml down -v
+	docker-compose --env-file .env.test -f docker-compose.test.yml up --abort-on-container-exit
+	docker-compose --env-file .env.test -f docker-compose.test.yml down -v
 
 # Stop all Docker containers.
 down:

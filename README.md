@@ -1,3 +1,10 @@
+Here’s an updated **README.md** that includes instructions for handling API keys in the test environment. The main changes:
+
+1. **Added** a section about using `.env.test.example` vs. a private `.env.test`.  
+2. **Clarified** how to set the credentials for Bybit and Bitget test/sandbox usage.  
+3. **Noted** the need to avoid committing real keys.
+
+```md
 # Trading Toolbox
 
 A personal project that facilitates trading operations on supported exchanges. Its core capabilities include monitoring trades, executing actions based on predefined conditions, and experimenting with advanced trading strategies.
@@ -46,9 +53,11 @@ These instructions will help you set up the project on your local machine for de
      Edit `.env` as needed.
    - For testing:
      ```bash
-     cp .env.example .env.test
+     cp .env.test.example .env.test
      ```
-     Modify `.env.test` to use a separate test database, credentials, etc.
+     - This `.env.test.example` has **placeholder** API keys for Bybit and Bitget. 
+     - **Update** your local `.env.test` file with **actual** test/sandbox keys (never commit these real keys).  
+     - **Ensure** `.env.test` is in your `.gitignore` so it remains private.
 
 3. **Using the Justfile**:
    - The [Justfile](https://github.com/casey/just) provides recipes to manage Docker Compose contexts and local npm scripts (build, start, test, lint, etc.).
@@ -65,6 +74,7 @@ These instructions will help you set up the project on your local machine for de
        ```bash
        just test
        ```
+       This uses `.env.test` (or CI environment variables) so you can run e2e tests with real exchange credentials (preferably on Bybit and/or Bitget testnet).
      - **Local Server (Dev)**:
        ```bash
        just start-dev
@@ -84,7 +94,7 @@ These instructions will help you set up the project on your local machine for de
        ```bash
        just help
        ```
-   > **Note**: Certain commands load environment variables using `npx dotenv-cli -e ../.env --` (or `-e ../.env.test --`) from the project root.
+   > **Note**: Certain commands load environment variables using `npx dotenv-cli -e ../.env --` (or `-e ../.env.test --`) from the project root.  
 
 4. **Launch via Docker (Optional)**:
    - **Production**:
@@ -146,7 +156,7 @@ After setup, you can interact with the Trading Toolbox using its REST API.
 
 3. **Create a Trading Account**:
    - **Endpoint**: `POST /accounts`
-   - Provide details like account name, API key, API secret, and exchange type.
+   - Provide details like account name, API key, API secret, and exchange type (e.g. `bybit` or `bitget`).
 
 4. **Next Steps**:
    - **Fetching Markets**: `GET /markets/accounts/{accountId}`
@@ -172,6 +182,7 @@ Comprehensive testing includes both unit and end-to-end tests.
     ```bash
     just test
     ```
+    - Make sure `.env.test` is present and has test/sandbox API keys for Bybit/Bitget.
   - **Watch Mode** or **Coverage**:
     ```bash
     just test-watch
@@ -185,3 +196,4 @@ This project is licensed under the **CC BY-NC-ND 4.0 License**. See [LICENSE.md]
 ---
 
 **Disclaimer**: This software is for personal, educational, and research purposes only. **Do not** use it for real trading or financial decisions without extensive testing and professional advice.
+```
