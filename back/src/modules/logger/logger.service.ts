@@ -1,29 +1,26 @@
-import { LoggerService } from '@nestjs/common';
+import { Injectable, LoggerService } from '@nestjs/common';
 import { createLogger, format, transports } from 'winston';
 
 import { asyncLocalStorage } from '@common/async-context';
-import { InjectConfig } from '@common/decorators/inject-env.decorator';
-import { IEnvConfiguration } from '@config';
+import { ConfigService } from '@config';
 
 import { ILogger } from './logger.interface';
 
+@Injectable()
 export class AppLogger implements LoggerService {
   private logger: ILogger & { setContext: (context: string) => void };
-  private context = '';
+  private context = 'App';
 
-  constructor(
-    @InjectConfig() private config: IEnvConfiguration,
-    context?: string
-  ) {
-    this.context = context;
+  constructor(private readonly configService: ConfigService) {
     this.logger = this.createAppLogger();
   }
 
   private createAppLogger(): ILogger & { setContext: (context: string) => void } {
+    const nodeEnv = this.configService.env.NODE_ENV;
     const logger = createLogger({
-      level: this.config.NODE_ENV === 'development' ? 'debug' : 'info',
+      level: nodeEnv === 'development' ? 'debug' : 'info',
       format:
-        this.config.NODE_ENV === 'development'
+        nodeEnv === 'development'
           ? format.combine(
               format.colorize(),
               format.timestamp({ format: 'YYYY/MM/DD,HH:mm:ss' }),

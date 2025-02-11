@@ -1,16 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { EventHandlersContext, Events } from '@config';
+import { ConfigService, Events } from '@config';
 import { ExchangeInitializedEvent } from '@exchange/events/exchange-initialized.event';
 
 import { MarketService } from '../market.service';
 
 @Injectable()
 export class MarketModuleExchangeInitializedEventHandler {
-  private logger = new Logger(EventHandlersContext.MarketModule);
+  private logger = new Logger(this.configService.handlers.MarketModule);
 
-  constructor(private marketService: MarketService) {}
+  constructor(
+    private marketService: MarketService,
+    private readonly configService: ConfigService
+  ) {}
 
   @OnEvent(Events.Exchange.INITIALIZED)
   async handle(event: ExchangeInitializedEvent) {

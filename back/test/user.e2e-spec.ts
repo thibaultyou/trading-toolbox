@@ -90,10 +90,7 @@ describe('User Module (e2e)', () => {
   });
 
   it('DELETE /users - should delete the authenticated user', async () => {
-    await request(httpServer)
-      .delete('/users')
-      .set('Authorization', `Bearer ${jwtToken}`)
-      .expect(HttpStatus.NO_CONTENT);
+    await request(httpServer).delete('/users').set('Authorization', `Bearer ${jwtToken}`).expect(HttpStatus.NO_CONTENT);
   });
 
   it('POST /users/login - should fail with 401 Unauthorized for a deleted user', async () => {

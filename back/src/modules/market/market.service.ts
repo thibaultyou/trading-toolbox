@@ -5,7 +5,7 @@ import { Interval } from '@nestjs/schedule';
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
 import { IAccountSynchronizer } from '@common/interfaces/account-synchronizer.interface';
 import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
-import { Events, Timers } from '@config';
+import { ConfigService, Timers } from '@config';
 import { ExchangeService } from '@exchange/exchange.service';
 
 import { MarketsUpdatedEvent } from './events/markets-updated.event';
@@ -21,7 +21,8 @@ export class MarketService implements IAccountTracker, IAccountSynchronizer<IMar
   constructor(
     private eventEmitter: EventEmitter2,
     private exchangeService: ExchangeService,
-    private marketMapper: MarketMapperService
+    private marketMapper: MarketMapperService,
+    private readonly configService: ConfigService
   ) {}
 
   @Interval(Timers.MARKETS_CACHE_COOLDOWN)
@@ -114,7 +115,10 @@ export class MarketService implements IAccountTracker, IAccountSynchronizer<IMar
         .sort((a, b) => a.id.localeCompare(b.id));
       this.markets.set(accountId, mappedMarkets);
 
-      this.eventEmitter.emit(Events.Market.BULK_UPDATED, new MarketsUpdatedEvent(accountId, mappedMarkets));
+      this.eventEmitter.emit(
+        this.configService.events.Market.BULK_UPDATED,
+        new MarketsUpdatedEvent(accountId, mappedMarkets)
+      );
       this.logger.log(`refreshAccount() - success | accountId=${accountId}, count=${mappedMarkets.length}`);
       return mappedMarkets;
     } catch (error) {
@@ -133,7 +137,10 @@ export class MarketService implements IAccountTracker, IAccountSynchronizer<IMar
         .sort((a, b) => a.id.localeCompare(b.id));
       this.markets.set(accountId, mappedMarkets);
 
-      this.eventEmitter.emit(Events.Market.BULK_UPDATED, new MarketsUpdatedEvent(accountId, mappedMarkets));
+      this.eventEmitter.emit(
+        this.configService.events.Market.BULK_UPDATED,
+        new MarketsUpdatedEvent(accountId, mappedMarkets)
+      );
       this.logger.log(`syncAccount() - success | accountId=${accountId}, count=${mappedMarkets.length}`);
       return mappedMarkets;
     } catch (error) {

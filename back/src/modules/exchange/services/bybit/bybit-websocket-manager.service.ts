@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WebsocketClient, WSClientConfigurableOptions } from 'bybit-api';
 
 import { AccountService } from '@account/account.service';
-import { Events } from '@config';
+import { ConfigService } from '@config';
 import { TrackingFailedException } from '@exchange/exceptions/exchange.exceptions';
 
 import { ExecutionDataReceivedEvent } from '../../events/execution-data-received.event';
@@ -21,7 +21,8 @@ export class BybitWebsocketManagerService implements IExchangeWebsocketService {
 
   constructor(
     private readonly eventEmitter: EventEmitter2,
-    private readonly accountService: AccountService
+    private readonly accountService: AccountService,
+    private readonly configService: ConfigService
   ) {}
 
   async startTrackingAccount(accountId: string): Promise<void> {
@@ -154,29 +155,44 @@ export class BybitWebsocketManagerService implements IExchangeWebsocketService {
 
   private handleExecutionUpdate(accountId: string, message: any): void {
     this.logger.debug(`handleExecutionUpdate() - start | accountId=${accountId}`);
-    this.eventEmitter.emit(Events.Data.EXECUTION_RECEIVED, new ExecutionDataReceivedEvent(accountId, message.data));
+    this.eventEmitter.emit(
+      this.configService.events.Data.EXECUTION_RECEIVED,
+      new ExecutionDataReceivedEvent(accountId, message.data)
+    );
   }
 
   private handleOrderUpdate(accountId: string, message: any): void {
     this.logger.debug(`handleOrderUpdate() - start | accountId=${accountId}`);
-    this.eventEmitter.emit(Events.Data.ORDER_UPDATED, new OrderDataUpdatedEvent(accountId, message.data));
+    this.eventEmitter.emit(
+      this.configService.events.Data.ORDER_UPDATED,
+      new OrderDataUpdatedEvent(accountId, message.data)
+    );
   }
 
   private handlePositionUpdate(accountId: string, message: any): void {
     this.logger.debug(`handlePositionUpdate() - start | accountId=${accountId}`);
-    this.eventEmitter.emit(Events.Data.POSITION_UPDATED, new PositionDataUpdatedEvent(accountId, message.data));
+    this.eventEmitter.emit(
+      this.configService.events.Data.POSITION_UPDATED,
+      new PositionDataUpdatedEvent(accountId, message.data)
+    );
   }
 
   private handleTickerUpdate(accountId: string, message: any): void {
     // NOTE Avoiding logs here to prevent high frequency noise
     const marketId = message.topic.substring('tickers.'.length);
     // this.logger.debug(`handleTickerUpdate() - start | accountId=${accountId}, marketId=${marketId}`);
-    this.eventEmitter.emit(Events.Data.TICKER_UPDATED, new TickerDataUpdatedEvent(accountId, marketId, message.data));
+    this.eventEmitter.emit(
+      this.configService.events.Data.TICKER_UPDATED,
+      new TickerDataUpdatedEvent(accountId, marketId, message.data)
+    );
   }
 
   private handleWalletUpdate(accountId: string, message: any): void {
     this.logger.debug(`handleWalletUpdate() - start | accountId=${accountId}`);
-    this.eventEmitter.emit(Events.Data.WALLET_UPDATED, new WalletDataUpdatedEvent(accountId, message.data));
+    this.eventEmitter.emit(
+      this.configService.events.Data.WALLET_UPDATED,
+      new WalletDataUpdatedEvent(accountId, message.data)
+    );
   }
 
   private cleanResources(accountId: string): void {

@@ -2,8 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { Position } from 'ccxt';
 
 import { IBaseMapper } from '@common/interfaces/base-mapper.interface';
-import { fromSymbolToMarketId, getUnifiedOrderSide } from '@common/utils/trading.utils';
+import { getUnifiedOrderSide } from '@order/order.utils';
 import { PositionDto } from '@position/dtos/position.dto';
+import { fromSymbolToMarketId } from '@position/position.utils';
 import { IPosition } from '@position/types/position.interface';
 
 @Injectable()

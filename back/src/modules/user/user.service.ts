@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Events } from '@config';
+import { ConfigService } from '@config';
 
 import { UserCreateRequestDto } from './dtos/user-create.request.dto';
 import { UserLoginRequestDto } from './dtos/user-login.request.dto';
@@ -34,7 +34,8 @@ export class UserService {
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
     private readonly eventEmitter: EventEmitter2,
-    private readonly userMapper: UserMapperService
+    private readonly userMapper: UserMapperService,
+    private readonly configService: ConfigService
   ) {}
 
   async createUser(dto: UserCreateRequestDto): Promise<UserDto> {
@@ -49,7 +50,10 @@ export class UserService {
 
       const savedUser = await this.saveUser(userData);
       const userDto = this.userMapper.toDto(savedUser);
-      this.eventEmitter.emit(Events.User.CREATED, new UserCreatedEvent(userDto.id, userDto.username));
+      this.eventEmitter.emit(
+        this.configService.events.User.CREATED,
+        new UserCreatedEvent(userDto.id, userDto.username)
+      );
       this.logger.log(`createUser() - success | userId=${userDto.id}, username=${userDto.username}`);
       return userDto;
     } catch (error) {
@@ -116,7 +120,10 @@ export class UserService {
 
       const savedUser = await this.usersRepository.save(updatedUser);
       const userDto = this.userMapper.toDto(savedUser);
-      this.eventEmitter.emit(Events.User.UPDATED, new UserUpdatedEvent(userDto.id, userDto.username));
+      this.eventEmitter.emit(
+        this.configService.events.User.UPDATED,
+        new UserUpdatedEvent(userDto.id, userDto.username)
+      );
       this.logger.log(`updateUser() - success | userId=${userDto.id}, username=${userDto.username}`);
       return userDto;
     } catch (error) {
@@ -135,7 +142,7 @@ export class UserService {
       const user = await this.findUserById(userId);
       await this.usersRepository.remove(user);
 
-      this.eventEmitter.emit(Events.User.DELETED, new UserDeletedEvent(userId));
+      this.eventEmitter.emit(this.configService.events.User.DELETED, new UserDeletedEvent(userId));
       this.logger.log(`deleteUser() - success | userId=${userId}, username=${user.username}`);
     } catch (error) {
       this.logger.error(`deleteUser() - error | userId=${userId}, msg=${error.message}`, error.stack);

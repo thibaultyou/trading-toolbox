@@ -5,7 +5,7 @@ import { Interval } from '@nestjs/schedule';
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
 import { IAccountSynchronizer } from '@common/interfaces/account-synchronizer.interface';
 import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
-import { Events, Timers } from '@config';
+import { ConfigService, Timers } from '@config';
 import { ExchangeService } from '@exchange/exchange.service';
 
 import { OrderCreateRequestDto } from './dtos/order-create.request.dto';
@@ -32,7 +32,8 @@ export class OrderService implements IAccountTracker, IAccountSynchronizer<IOrde
   constructor(
     private readonly eventEmitter: EventEmitter2,
     private readonly exchangeService: ExchangeService,
-    private readonly orderMapper: OrderMapperService
+    private readonly orderMapper: OrderMapperService,
+    private readonly configService: ConfigService
   ) {}
 
   @Interval(Timers.ORDERS_CACHE_COOLDOWN)
@@ -262,7 +263,7 @@ export class OrderService implements IAccountTracker, IAccountSynchronizer<IOrde
       );
       const updatedOrder = this.orderMapper.fromExternal(updatedExternalOrder);
       this.eventEmitter.emit(
-        Events.Order.UPDATED,
+        this.configService.events.Order.UPDATED,
         new OrderUpdatedEvent(accountId, updatedOrder.id, updatedOrder.linkId)
       );
       this.logger.log(`updateOrder() - success | accountId=${accountId}, orderId=${orderId}`);
@@ -287,7 +288,10 @@ export class OrderService implements IAccountTracker, IAccountSynchronizer<IOrde
 
       if (changed) {
         this.openOrders.set(accountId, newOrders);
-        this.eventEmitter.emit(Events.Order.BULK_UPDATED, new OrdersUpdatedEvent(accountId, newOrders));
+        this.eventEmitter.emit(
+          this.configService.events.Order.BULK_UPDATED,
+          new OrdersUpdatedEvent(accountId, newOrders)
+        );
         this.logger.log(`syncAccount() - updated | accountId=${accountId}, count=${newOrders.length}`);
       } else {
         this.logger.debug(`syncAccount() - skip | accountId=${accountId}, reason=Unchanged`);

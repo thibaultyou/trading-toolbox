@@ -1,16 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { EventHandlersContext, Events } from '@config';
+import { ConfigService, Events } from '@config';
 import { ExchangeTerminatedEvent } from '@exchange/events/exchange-terminated.event';
 
 import { OrderService } from '../order.service';
 
 @Injectable()
 export class OrderModuleExchangeTerminatedEventHandler {
-  private logger = new Logger(EventHandlersContext.OrderModule);
+  private logger = new Logger(this.configService.handlers.OrderModule);
 
-  constructor(private orderService: OrderService) {}
+  constructor(
+    private orderService: OrderService,
+    private readonly configService: ConfigService
+  ) {}
 
   @OnEvent(Events.Exchange.TERMINATED)
   handle(event: ExchangeTerminatedEvent) {

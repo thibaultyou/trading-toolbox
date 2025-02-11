@@ -2,7 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 
 import { AccountService } from '@account/account.service';
-import { VALIDATE_ACCOUNT_KEY } from '@common/decorators/account-validation.decorator';
+import { VALIDATE_ACCOUNT_KEY } from '@config';
 
 @Injectable()
 export class AccountValidationGuard implements CanActivate {

@@ -2,11 +2,16 @@ import { Logger } from '@nestjs/common';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 
-import { websocketConfig } from '@config';
+import { envConfig } from '@config';
 
 import { IWalletAccount } from './types/wallet-account.interface';
 
-@WebSocketGateway(websocketConfig)
+@WebSocketGateway({
+  cors: {
+    origin: envConfig.WS_CORS_ORIGIN.split(',')
+  },
+  namespace: envConfig.WS_NAMESPACE
+})
 export class WalletGateway {
   private readonly logger = new Logger(WalletGateway.name);
 

@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository } from 'typeorm';
 
-import { Events } from '@config';
+import { ConfigService } from '@config';
 import { ExchangeFactory } from '@exchange/services/exchange-service.factory';
 import { User } from '@user/entities/user.entity';
 
@@ -23,10 +23,11 @@ export class AccountService {
 
   constructor(
     @InjectRepository(Account)
-    private accountRepository: Repository<Account>,
-    private eventEmitter: EventEmitter2,
-    private exchangeFactory: ExchangeFactory,
-    private accountMapper: AccountMapperService
+    private readonly accountRepository: Repository<Account>,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly exchangeFactory: ExchangeFactory,
+    private readonly accountMapper: AccountMapperService,
+    private readonly configService: ConfigService
   ) {}
 
   async getUserAccounts(userId: string): Promise<Account[]> {
@@ -113,7 +114,7 @@ export class AccountService {
     }
 
     const savedAccount = await this.accountRepository.save(account);
-    this.eventEmitter.emit(Events.Account.CREATED, new AccountCreatedEvent(savedAccount));
+    this.eventEmitter.emit(this.configService.events.Account.CREATED, new AccountCreatedEvent(savedAccount));
     this.logger.log(`createAccount() - success | accountId=${savedAccount.id}, name=${savedAccount.name}`);
     return savedAccount;
   }
@@ -155,7 +156,7 @@ export class AccountService {
 
     const updatedAccount = this.accountMapper.updateFromDto(account, dto);
     const savedAccount = await this.accountRepository.save(updatedAccount);
-    this.eventEmitter.emit(Events.Account.UPDATED, new AccountUpdatedEvent(savedAccount));
+    this.eventEmitter.emit(this.configService.events.Account.UPDATED, new AccountUpdatedEvent(savedAccount));
     this.logger.log(`updateAccount() - success | accountId=${savedAccount.id}`);
     return savedAccount;
   }
@@ -166,7 +167,7 @@ export class AccountService {
     const savedId = account.id;
     await this.accountRepository.remove(account);
     account.id = savedId;
-    this.eventEmitter.emit(Events.Account.DELETED, new AccountDeletedEvent(account));
+    this.eventEmitter.emit(this.configService.events.Account.DELETED, new AccountDeletedEvent(account));
     this.logger.log(`deleteAccount() - success | accountId=${accountId}`);
     return account;
   }

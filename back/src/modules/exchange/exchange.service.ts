@@ -5,7 +5,7 @@ import { Balances, Market, Order, Position, Ticker } from 'ccxt';
 
 import { AccountService } from '@account/account.service';
 import { Account } from '@account/entities/account.entity';
-import { Events, Timers } from '@config';
+import { ConfigService, Timers } from '@config';
 import { OrderSide } from '@order/types/order-side.enum';
 import { OrderType } from '@order/types/order-type.enum';
 
@@ -23,7 +23,8 @@ export class ExchangeService {
   constructor(
     private readonly eventEmitter: EventEmitter2,
     private readonly exchangeFactory: ExchangeFactory,
-    private readonly accountService: AccountService
+    private readonly accountService: AccountService,
+    private readonly configService: ConfigService
   ) {}
 
   @Timeout(Timers.EXCHANGES_INIT_DELAY)
@@ -55,7 +56,7 @@ export class ExchangeService {
       this.exchanges.set(account.id, exchange);
 
       this.logger.log(`initializeExchange() - success | accountId=${accountId}`);
-      this.eventEmitter.emit(Events.Exchange.INITIALIZED, new ExchangeInitializedEvent(account.id));
+      this.eventEmitter.emit(this.configService.events.Exchange.INITIALIZED, new ExchangeInitializedEvent(account.id));
     } catch (error) {
       this.logger.error(`initializeExchange() - error | accountId=${accountId}, msg=${error.message}`, error.stack);
     }
@@ -349,7 +350,7 @@ export class ExchangeService {
       this.exchanges.delete(accountId);
 
       this.logger.log(`cleanResources() - success | accountId=${accountId}`);
-      this.eventEmitter.emit(Events.Exchange.TERMINATED, new ExchangeTerminatedEvent(accountId));
+      this.eventEmitter.emit(this.configService.events.Exchange.TERMINATED, new ExchangeTerminatedEvent(accountId));
     } catch (error) {
       this.logger.error(`cleanResources() - error | accountId=${accountId}, msg=${error.message}`, error.stack);
       throw new ExchangeOperationFailedException('cleanResources', error.message);

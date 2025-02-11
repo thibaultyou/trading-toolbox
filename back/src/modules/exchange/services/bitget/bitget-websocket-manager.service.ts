@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WebsocketClientV2, DefaultLogger } from 'bitget-api';
 
 import { AccountService } from '@account/account.service';
-import { Events } from '@config';
+import { ConfigService } from '@config';
 import { ExecutionDataReceivedEvent } from '@exchange/events/execution-data-received.event';
 import { OrderDataUpdatedEvent } from '@exchange/events/order-data-updated.event';
 import { PositionDataUpdatedEvent } from '@exchange/events/position-data-updated.event';
@@ -22,7 +22,8 @@ export class BitgetWebsocketManagerService implements IExchangeWebsocketService 
 
   constructor(
     private readonly eventEmitter: EventEmitter2,
-    private readonly accountService: AccountService
+    private readonly accountService: AccountService,
+    private readonly configService: ConfigService
   ) {}
 
   async startTrackingAccount(accountId: string): Promise<void> {
@@ -196,18 +197,27 @@ export class BitgetWebsocketManagerService implements IExchangeWebsocketService 
       if (fillQty > 0) {
         // Execution event
         this.logger.debug(`handleOrdersAndExecutions() - execution | accountId=${accountId}`);
-        this.eventEmitter.emit(Events.Data.EXECUTION_RECEIVED, new ExecutionDataReceivedEvent(accountId, [update]));
+        this.eventEmitter.emit(
+          this.configService.events.Data.EXECUTION_RECEIVED,
+          new ExecutionDataReceivedEvent(accountId, [update])
+        );
       } else {
         // Order event
         this.logger.debug(`handleOrdersAndExecutions() - orderUpdate | accountId=${accountId}`);
-        this.eventEmitter.emit(Events.Data.ORDER_UPDATED, new OrderDataUpdatedEvent(accountId, [update]));
+        this.eventEmitter.emit(
+          this.configService.events.Data.ORDER_UPDATED,
+          new OrderDataUpdatedEvent(accountId, [update])
+        );
       }
     }
   }
 
   private handlePositionUpdate(accountId: string, message: any): void {
     this.logger.debug(`handlePositionUpdate() - start | accountId=${accountId}`);
-    this.eventEmitter.emit(Events.Data.POSITION_UPDATED, new PositionDataUpdatedEvent(accountId, message.data));
+    this.eventEmitter.emit(
+      this.configService.events.Data.POSITION_UPDATED,
+      new PositionDataUpdatedEvent(accountId, message.data)
+    );
   }
 
   private handleTickerUpdate(accountId: string, message: any): void {
@@ -215,12 +225,18 @@ export class BitgetWebsocketManagerService implements IExchangeWebsocketService 
     const marketId = message.arg?.instId || 'unknown';
     const tickerData = message.data?.[0] || {};
     // this.logger.debug(`handleTickerUpdate() - start | accountId=${accountId}, marketId=${marketId}`);
-    this.eventEmitter.emit(Events.Data.TICKER_UPDATED, new TickerDataUpdatedEvent(accountId, marketId, tickerData));
+    this.eventEmitter.emit(
+      this.configService.events.Data.TICKER_UPDATED,
+      new TickerDataUpdatedEvent(accountId, marketId, tickerData)
+    );
   }
 
   private handleWalletUpdate(accountId: string, message: any): void {
     this.logger.debug(`handleWalletUpdate() - start | accountId=${accountId}`);
-    this.eventEmitter.emit(Events.Data.WALLET_UPDATED, new WalletDataUpdatedEvent(accountId, message.data));
+    this.eventEmitter.emit(
+      this.configService.events.Data.WALLET_UPDATED,
+      new WalletDataUpdatedEvent(accountId, message.data)
+    );
   }
 
   private cleanResources(accountId: string): void {

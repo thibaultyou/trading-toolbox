@@ -21,11 +21,9 @@
     "allowJs": true,
     "baseUrl": "./",
     "paths": {
-      "@src/*": ["src/*"],
       "@common/*": ["src/common/*"],
-      "@config": ["src/config"],
       "@account/*": ["src/modules/account/*"],
-      "@env/*": ["src/modules/env/*"],
+      "@config": ["src/modules/config"],
       "@exchange/*": ["src/modules/exchange/*"],
       "@health/*": ["src/modules/health/*"],
       "@logger/*": ["src/modules/logger/*"],
@@ -36,6 +34,7 @@
       "@ticker/*": ["src/modules/ticker/*"],
       "@user/*": ["src/modules/user/*"],
       "@wallet/*": ["src/modules/wallet/*"],
+      "@src/*": ["src/*"],
       "@test/*": ["test/*"]
     }
   }

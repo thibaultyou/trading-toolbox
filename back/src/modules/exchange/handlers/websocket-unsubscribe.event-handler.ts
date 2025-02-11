@@ -2,18 +2,19 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
 import { AccountService } from '@account/account.service';
-import { Events, EventHandlersContext } from '@config';
+import { ConfigService, Events } from '@config';
 
 import { WebSocketUnsubscribeEvent } from '../events/websocket-unsubscribe.event';
 import { ExchangeWebsocketFactory } from '../services/exchange-websocket-factory';
 
 @Injectable()
 export class ExchangeModuleWebSocketUnsubscribeEventEventHandler {
-  private readonly logger = new Logger(EventHandlersContext.ExchangeModule);
+  private readonly logger = new Logger(this.configService.handlers.ExchangeModule);
 
   constructor(
     private readonly exchangeWebsocketFactory: ExchangeWebsocketFactory,
-    private readonly accountService: AccountService
+    private readonly accountService: AccountService,
+    private readonly configService: ConfigService
   ) {}
 
   @OnEvent(Events.Websocket.UNSUBSCRIBE)

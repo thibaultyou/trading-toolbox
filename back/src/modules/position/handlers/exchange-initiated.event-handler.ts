@@ -1,16 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { EventHandlersContext, Events } from '@config';
+import { ConfigService, Events } from '@config';
 import { ExchangeInitializedEvent } from '@exchange/events/exchange-initialized.event';
 
 import { PositionService } from '../position.service';
 
 @Injectable()
 export class PositionModuleExchangeInitializedEventHandler {
-  private readonly logger = new Logger(EventHandlersContext.PositionModule);
+  private readonly logger = new Logger(this.configService.handlers.PositionModule);
 
-  constructor(private readonly positionService: PositionService) {}
+  constructor(
+    private readonly positionService: PositionService,
+    private readonly configService: ConfigService
+  ) {}
 
   @OnEvent(Events.Exchange.INITIALIZED)
   async handle(event: ExchangeInitializedEvent) {

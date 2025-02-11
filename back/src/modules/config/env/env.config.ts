@@ -2,12 +2,12 @@ import { z } from 'zod';
 
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  DATABASE_HOST: z.string().default('db'),
+  DATABASE_HOST: z.string().min(1, 'DATABASE_HOST is required'),
   DATABASE_PORT: z.coerce.number().int().positive().default(5432),
-  DATABASE_USER: z.string(),
-  DATABASE_PASSWORD: z.string(),
-  DATABASE_NAME: z.string(),
-  JWT_SIGNING_SECRET: z.string(),
+  DATABASE_USER: z.string().min(1, 'DATABASE_USER is required'),
+  DATABASE_PASSWORD: z.string().min(1, 'DATABASE_PASSWORD is required'),
+  DATABASE_NAME: z.string().min(1, 'DATABASE_NAME is required'),
+  JWT_SIGNING_SECRET: z.string().min(1, 'JWT_SIGNING_SECRET is required'),
   WS_CORS_ORIGIN: z.string().default('*'),
   WS_NAMESPACE: z.string().default('/ws')
 });
@@ -25,5 +25,3 @@ export const envConfig: IEnvConfiguration = EnvSchema.parse({
   WS_CORS_ORIGIN: process.env.WS_CORS_ORIGIN,
   WS_NAMESPACE: process.env.WS_NAMESPACE
 });
-
-export const CONFIG_TOKEN = 'CONFIG' as const;

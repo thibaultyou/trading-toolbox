@@ -5,7 +5,7 @@ import { Interval } from '@nestjs/schedule';
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
 import { IAccountSynchronizer } from '@common/interfaces/account-synchronizer.interface';
 import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
-import { Events, Timers } from '@config';
+import { ConfigService, Timers } from '@config';
 import { WebSocketSubscribeEvent } from '@exchange/events/websocket-subscribe.event';
 import { WebSocketUnsubscribeEvent } from '@exchange/events/websocket-unsubscribe.event';
 import { ExchangeService } from '@exchange/exchange.service';
@@ -25,7 +25,8 @@ export class TickerService implements IAccountTracker, IAccountSynchronizer<Map<
     private readonly eventEmitter: EventEmitter2,
     private readonly exchangeService: ExchangeService,
     private readonly orderService: OrderService,
-    private readonly positionService: PositionService
+    private readonly positionService: PositionService,
+    private readonly configService: ConfigService
   ) {}
 
   @Interval(Timers.TICKERS_CACHE_COOLDOWN)
@@ -142,7 +143,7 @@ export class TickerService implements IAccountTracker, IAccountSynchronizer<Map<
   private async subscribeToTickers(accountId: string, tickers: string[]): Promise<void> {
     this.logger.debug(`subscribeToTickers() - start | accountId=${accountId}, tickers=[${tickers.join(',')}]`);
     this.eventEmitter.emit(
-      Events.Websocket.SUBSCRIBE,
+      this.configService.events.Websocket.SUBSCRIBE,
       new WebSocketSubscribeEvent(
         accountId,
         tickers.map((t) => `tickers.${t}`)
@@ -154,7 +155,7 @@ export class TickerService implements IAccountTracker, IAccountSynchronizer<Map<
   private async unsubscribeFromTickers(accountId: string, tickers: string[]): Promise<void> {
     this.logger.debug(`unsubscribeFromTickers() - start | accountId=${accountId}, tickers=[${tickers.join(',')}]`);
     this.eventEmitter.emit(
-      Events.Websocket.UNSUBSCRIBE,
+      this.configService.events.Websocket.UNSUBSCRIBE,
       new WebSocketUnsubscribeEvent(
         accountId,
         tickers.map((t) => `tickers.${t}`)

@@ -1,16 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
-import { EventHandlersContext, Events } from '@config';
+import { Events, ConfigService } from '@config';
 import { WalletDataUpdatedEvent } from '@exchange/events/wallet-data-updated.event';
 
 import { WalletService } from '../wallet.service';
 
 @Injectable()
 export class WalletModuleWalletDataUpdatedEventHandler {
-  private readonly logger = new Logger(EventHandlersContext.WalletModule);
+  private readonly logger = new Logger(this.configService.handlers.WalletModule);
 
-  constructor(private readonly walletService: WalletService) {}
+  constructor(
+    private readonly walletService: WalletService,
+    private readonly configService: ConfigService
+  ) {}
 
   @OnEvent(Events.Data.WALLET_UPDATED)
   async handle(event: WalletDataUpdatedEvent): Promise<void> {

@@ -21,10 +21,7 @@ describe('Account Module (e2e)', () => {
     const randomUsername = 'testuser' + Date.now();
     const password = 'password123';
 
-    await request(httpServer)
-      .post('/users/register')
-      .send({ username: randomUsername, password })
-      .expect(201);
+    await request(httpServer).post('/users/register').send({ username: randomUsername, password }).expect(201);
 
     const loginResponse = await request(httpServer)
       .post('/users/login')
@@ -61,10 +58,7 @@ describe('Account Module (e2e)', () => {
   });
 
   it('GET /accounts - should retrieve all accounts for the authenticated user', async () => {
-    const response = await request(httpServer)
-      .get('/accounts')
-      .set('Authorization', `Bearer ${jwtToken}`)
-      .expect(200);
+    const response = await request(httpServer).get('/accounts').set('Authorization', `Bearer ${jwtToken}`).expect(200);
 
     expect(Array.isArray(response.body)).toBe(true);
     const account = response.body.find((acc) => acc.id === createdAccountId);

@@ -6,7 +6,8 @@ import { Order } from 'ccxt';
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
 import { IAccountSynchronizer } from '@common/interfaces/account-synchronizer.interface';
 import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
-import { Events, Timers } from '@config';
+import { ConfigService } from '@config';
+import { Timers } from '@config';
 import { ExchangeService } from '@exchange/exchange.service';
 import { OrderSide } from '@order/types/order-side.enum';
 
@@ -24,7 +25,8 @@ export class PositionService implements IAccountTracker, IAccountSynchronizer<IP
   constructor(
     private readonly eventEmitter: EventEmitter2,
     private readonly exchangeService: ExchangeService,
-    private readonly positionMapper: PositionMapperService
+    private readonly positionMapper: PositionMapperService,
+    private readonly configService: ConfigService
   ) {}
 
   @Interval(Timers.POSITIONS_CACHE_COOLDOWN)
@@ -98,7 +100,7 @@ export class PositionService implements IAccountTracker, IAccountSynchronizer<IP
         `closePosition() - success | accountId=${accountId}, marketId=${marketId}, side=${side}, orderId=${order.id}`
       );
 
-      this.eventEmitter.emit(Events.Position.CLOSED, new PositionClosedEvent(accountId, order));
+      this.eventEmitter.emit(this.configService.events.Position.CLOSED, new PositionClosedEvent(accountId, order));
       return order;
     } catch (error) {
       this.logger.error(
@@ -117,7 +119,10 @@ export class PositionService implements IAccountTracker, IAccountSynchronizer<IP
       const newPositions = externalPositions.map((pos) => this.positionMapper.fromExternal(pos));
       this.positions.set(accountId, newPositions);
       this.logger.log(`syncAccount() - success | accountId=${accountId}, count=${newPositions.length}`);
-      this.eventEmitter.emit(Events.Data.POSITION_UPDATED, new PositionsUpdatedEvent(accountId, newPositions));
+      this.eventEmitter.emit(
+        this.configService.events.Data.POSITION_UPDATED,
+        new PositionsUpdatedEvent(accountId, newPositions)
+      );
       return newPositions;
     } catch (error) {
       this.logger.error(`syncAccount() - error | accountId=${accountId}, msg=${error.message}`, error.stack);

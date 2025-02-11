@@ -1,3 +1,7 @@
+/**
+ * Event types used in the system, categorized by domain.
+ * Each category contains relevant events that can be emitted.
+ */
 export const Events = {
   Account: {
     CREATED: 'ACCOUNT.CREATED',
@@ -43,6 +47,6 @@ export const Events = {
   Wallet: {
     BULK_UPDATED: 'WALLETS.UPDATED'
   }
-} as const;
+};
 
-export type EventType = (typeof Events)[keyof typeof Events][keyof (typeof Events)[keyof typeof Events]];
+export type EventsType = typeof Events;

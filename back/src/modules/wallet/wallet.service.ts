@@ -4,7 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AccountNotFoundException } from '@account/exceptions/account.exceptions';
 import { IAccountSynchronizer } from '@common/interfaces/account-synchronizer.interface';
 import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
-import { Events } from '@config';
+import { ConfigService } from '@config';
 import { ExchangeService } from '@exchange/exchange.service';
 import { IWalletData } from '@exchange/types/wallet-data.interface';
 
@@ -21,7 +21,8 @@ export class WalletService implements IAccountTracker, IAccountSynchronizer<IWal
   constructor(
     private readonly eventEmitter: EventEmitter2,
     private readonly exchangeService: ExchangeService,
-    private readonly walletMapper: WalletMapperService
+    private readonly walletMapper: WalletMapperService,
+    private readonly configService: ConfigService
     // private readonly walletGateway: WalletGateway, // NOTE Needed for serveer-side updates
   ) {}
 
@@ -104,7 +105,10 @@ export class WalletService implements IAccountTracker, IAccountSynchronizer<IWal
       this.logger.log(
         `processWalletData() - success | accountId=${accountId}, usdtBalance=${newUsdtEquity.toFixed(2)}`
       );
-      this.eventEmitter.emit(Events.Wallet.BULK_UPDATED, new WalletsUpdatedEvent(accountId, newUsdtEquity));
+      this.eventEmitter.emit(
+        this.configService.events.Wallet.BULK_UPDATED,
+        new WalletsUpdatedEvent(accountId, newUsdtEquity)
+      );
 
       // NOTE Broadcast changes via websockets:
       // this.walletGateway.sendWalletsUpdate(accountId, updatedWallet);
@@ -134,7 +138,10 @@ export class WalletService implements IAccountTracker, IAccountSynchronizer<IWal
       const usdtEquity = extractUSDTEquity(walletAccount);
       this.logger.log(`syncAccount() - success | accountId=${accountId}, usdtBalance=${usdtEquity.toFixed(2)}`);
 
-      this.eventEmitter.emit(Events.Wallet.BULK_UPDATED, new WalletsUpdatedEvent(accountId, usdtEquity));
+      this.eventEmitter.emit(
+        this.configService.events.Wallet.BULK_UPDATED,
+        new WalletsUpdatedEvent(accountId, usdtEquity)
+      );
       return walletAccount;
     } catch (error) {
       this.logger.error(`syncAccount() - error | accountId=${accountId}, msg=${error.message}`, error.stack);

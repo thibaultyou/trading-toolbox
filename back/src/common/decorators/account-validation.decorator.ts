@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
 
-export const VALIDATE_ACCOUNT_KEY = 'validateAccount';
+import { VALIDATE_ACCOUNT_KEY } from '@config';
 
 export const ValidateAccount = () => SetMetadata(VALIDATE_ACCOUNT_KEY, true);
