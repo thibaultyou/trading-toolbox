@@ -29,7 +29,7 @@ import { ConfigService } from './modules/config/config.service';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const env = configService.env; // Our env is now from configService
+        const env = configService.env;
         return {
           type: 'postgres',
           host: env.DATABASE_HOST,

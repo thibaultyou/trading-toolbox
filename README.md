@@ -1,135 +1,96 @@
 # Trading Toolbox
 
-A personal project that facilitates trading operations on supported exchanges. Its core capabilities include monitoring trades, executing actions based on predefined conditions, and experimenting with advanced trading strategies.
+A personal tool to manage trading operations on supported exchanges. Key features include monitoring trades, executing actions based on conditions, and testing trading strategies.
 
 ## ⚠️ Important Notice
 
-**This project is for personal and educational purposes only. It is not production-ready or recommended for real-world trading.**  
-- **Experimental**: Features may be incomplete and can change without prior notice.  
-- **Unstable & Unverified**: The code is largely untested and may contain bugs.  
-- **High Risk**: Using this software for actual trading could lead to financial loss.  
-- **No Warranty**: Provided “as is” without any guarantees of performance or reliability.  
+This project is for **personal and educational use only**.  
+- **Not production-ready**: Code may change or be unstable.  
+- **Risk**: Using this for real trading could lead to financial loss.  
+- **No Warranty**: No guarantees on performance or reliability.
 
-By using this project, you acknowledge these risks and understand it is **not** intended for critical or financial operations.
+By using this project, you accept these risks.
 
 ## ✨ Features
 
-- **User Management** – Register and manage user accounts.  
-- **Trading Accounts** – Connect and handle Bybit and Bitget accounts.  
-- **Exchange Monitoring** – Monitor market data, orders, and positions in real time.  
-- **Real-time Updates** – Get live wallet balances, order status, and pricing feeds.  
-- **Strategy Framework** – Implement and test trading strategies (currently in development).
+- **User Management**: Register and manage users.  
+- **Trading Accounts**: Connect to Bybit and Bitget accounts.  
+- **Market Monitoring**: View live data, orders, and positions.  
+- **Real-time Updates**: Get wallet balances, order status, etc.  
+- **Strategy Framework**: Develop and test trading strategies (in progress).
 
 ## 🚀 Getting Started
 
-These instructions will help you set up the project on your local machine for development and testing.
-
 ### Prerequisites
 
-- **[Docker & Docker Compose](https://docs.docker.com/get-docker/)**  
-- [**Just**](https://github.com/casey/just) (a command runner)  
-- Basic Docker and command-line knowledge
+- **[Docker](https://docs.docker.com/get-docker/)**
+- **[Just](https://github.com/casey/just)**
+- Basic command-line knowledge
 
 ### Installation
 
 1. **Clone the repository**:
+
    ```bash
-   git clone https://github.com/yourusername/tradingtoolbox.git
-   cd tradingtoolbox
+   git clone https://github.com/thibaultyou/trading-toolbox.git
+   cd trading-toolbox
    ```
 
 2. **Configure Environment Variables**:
-   - For development/production:
+   - Copy the appropriate `.env` file for your environment:
+
      ```bash
-     cp .env.example .env
-     ```
-     Edit `.env` as needed.
-   - For testing:
-     ```bash
+     cp .env.prod.example .env.prod
+     cp .env.dev.example .env.dev
      cp .env.test.example .env.test
      ```
-     - This `.env.test.example` has **placeholder** API keys for Bybit and Bitget. 
-     - **Update** your local `.env.test` file with **actual** test/sandbox keys (never commit these real keys).  
-     - **Ensure** `.env.test` is in your `.gitignore` so it remains private.
+
+   - **Edit the `.env` files** as needed for your setup. The `.env.test` file contains placeholder API keys for Bybit/Bitget; **replace these with your actual sandbox keys**.
+
+   - **Proxy Settings**: This is also where you'll configure your proxy settings. In the `.env` file, you can adjust the following values:
+
+     ```env
+     # Proxy Settings
+     PROXY_PORT=2001
+     SERVER_PORT=4001
+     ADMINER_PORT=6001
+     PROXY_HOST=localhost
+     ```
+
+   These settings determine the ports and host used by the proxy server and the associated services.
 
 3. **Using the Justfile**:
-   - The [Justfile](https://github.com/casey/just) provides recipes to manage Docker Compose contexts and local npm scripts (build, start, test, lint, etc.).
-   - Common commands:
-     - **Development**:
-       ```bash
-       just dev
-       ```
-     - **Production**:
-       ```bash
-       just prod
-       ```
-     - **End-to-End Tests**:
-       ```bash
-       just test
-       ```
-       This uses `.env.test` (or CI environment variables) so you can run e2e tests with real exchange credentials (preferably on Bybit and/or Bitget testnet).
-     - **Local Server (Dev)**:
-       ```bash
-       just start-dev
-       ```
-     - **Local Server (Prod)**:
-       ```bash
-       just start-prod
-       ```
-     - **Clean Database Volumes**:
-       ```bash
-       # For tests:
-       just clean-test
-       # For dev:
-       just clean-dev
-       ```
-     - **Help**:
-       ```bash
-       just help
-       ```
-   > **Note**: Certain commands load environment variables using `npx dotenv-cli -e ../.env --` (or `-e ../.env.test --`) from the project root.  
+   The Justfile manages Docker Compose contexts and npm scripts.
 
-4. **Launch via Docker (Optional)**:
-   - **Production**:
-     ```bash
-     just prod
-     ```
-   - **Development** (with live reloading):
-     ```bash
-     just dev
-     ```
+   Common commands:
+   - **Start production**: `just prod`
+   - **Start development**: `just dev`
+   - **Run tests**: `just test`
+   - **Clean up**: `just clean-prod`, `just clean-dev`, `just clean-test`
+   - **Help**: `just help` (lists all available commands)
 
-5. **Access the Application**:
-   - **API Server**: <http://localhost:1234/api>  
-   - **Adminer (Database Manager)**:  
-     - Dev: <http://localhost:6000/adminer>  
-     - Test: <http://localhost:6001/adminer>  
-   - **Swagger Docs**: <http://localhost:1234/api/docs>
+4. **Monitoring the running Application**:
 
-6. **Stop the Application**:
+   ```bash
+   just logs
+   ```
+
+5. **Stop the Application**:
+
    ```bash
    just down
    ```
 
 ## 🔧 Using the API
 
-After setup, you can interact with the Trading Toolbox using its REST API.
+After setup, interact with the API using the following options:
 
-### Accessing the API
+1. **Swagger UI**: Visit `http://<your_proxy_host>:<proxy_port>/api/docs` for interactive documentation and API testing.
 
-1. **API Client (e.g., Postman, curl)**:
-   - **Base URL**: `http://localhost:1234/api`
-   - Use the appropriate HTTP methods (POST, GET, PUT, PATCH, DELETE).
-   - Set `Content-Type: application/json` for JSON request bodies.
-   - For authenticated endpoints, include a valid JWT in the `Authorization` header:
-     ```
-     Authorization: Bearer YOUR_JWT_TOKEN
-     ```
-
-2. **Swagger UI**:
-   - Access the interactive docs at <http://localhost:1234/api/docs>.
-   - Use **Try it out** to test API endpoints from your browser.
-   - Click **Authorize** to provide a JWT for secured endpoints.
+2. **API Client (e.g., Postman, curl)**:
+   - **Base URL**: `http://<your_proxy_host>:<proxy_port>/api`
+   - For authenticated endpoints, provide the JWT token in the Authorization header:  
+     `Authorization: Bearer YOUR_JWT_TOKEN`
 
 ### Basic Workflow
 
@@ -160,27 +121,18 @@ After setup, you can interact with the Trading Toolbox using its REST API.
      - `GET /strategies`
      - `PATCH /strategies/{id}`
 
-Refer to the [Swagger documentation](http://localhost:1234/api/docs) for complete request/response formats.
+Refer to the Swagger UI for more details.
 
 ## 🧪 Testing
 
-Comprehensive testing includes both unit and end-to-end tests.
+Comprehensive tests are available:
 
-- **Local Testing**:
-  - **Unit Tests**:
-    ```bash
-    just test-unit
-    ```
-  - **End-to-End Tests** (runs in an isolated test environment using `.env.test`):
-    ```bash
-    just test
-    ```
-    - Make sure `.env.test` is present and has test/sandbox API keys for Bybit/Bitget.
-  - **Watch Mode** or **Coverage**:
-    ```bash
-    just test-watch
-    just test-cov
-    ```
+- **Unit Tests**: `just test-unit`
+- **End-to-End Tests**: `just test`
+- **Test in Watch Mode**: `just test-watch`
+- **Test Coverage**: `just test-cov`
+
+Ensure `.env.test` is configured with valid test credentials.
 
 ## 📜 License
 

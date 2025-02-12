@@ -2,10 +2,20 @@ services:
   proxy:
     image: nginx:1.25.4-alpine3.18-slim
     restart: unless-stopped
-    volumes:
-      - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
-      - "0.0.0.0:1234:80"
+      - "0.0.0.0:${PROXY_PORT}:80"
+    volumes:
+      - ./proxy/nginx.template.conf:/etc/nginx/nginx.template.conf:ro
+    environment:
+      SERVER_PORT: ${SERVER_PORT}
+      ADMINER_PORT: ${ADMINER_PORT}
+      PROXY_HOST: ${PROXY_HOST}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+          envsubst < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf && \
+          nginx -g 'daemon off;'
     depends_on:
       - server
       - adminer
@@ -15,7 +25,7 @@ services:
     command: npm run test:e2e
     restart: "no"
     ports:
-      - "0.0.0.0:4000:4000"
+      - "0.0.0.0:${SERVER_PORT}:4000"
     volumes:
       - ./back:/app
       - /app/node_modules
@@ -28,7 +38,7 @@ services:
     image: postgres:16.2-alpine3.19
     restart: unless-stopped
     ports:
-      - "0.0.0.0:5433:5432"
+      - "0.0.0.0:${DATABASE_PORT}:5432"
     volumes:
       - db-data-test:/var/lib/postgresql/data
     environment:
@@ -42,7 +52,7 @@ services:
     image: adminer:4.8.1-standalone
     restart: unless-stopped
     ports:
-      - "0.0.0.0:6001:8080"
+      - "0.0.0.0:${ADMINER_PORT}:8080"
 
 volumes:
   db-data-test:

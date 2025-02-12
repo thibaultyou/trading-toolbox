@@ -22,15 +22,14 @@ services:
 
   server:
     build: ./back
-    command: npm run start:dev
+    command: npm run start:prod
     restart: unless-stopped
     ports:
       - "0.0.0.0:${SERVER_PORT}:4000"
-    volumes:
-      - ./back:/app
-      - /app/node_modules
+    environment:
+      NODE_ENV: ${NODE_ENV}
     env_file:
-      - .env
+      - .env.prod
     depends_on:
       - db
 
@@ -40,13 +39,13 @@ services:
     ports:
       - "0.0.0.0:${DATABASE_PORT}:5432"
     volumes:
-      - db-data-dev:/var/lib/postgresql/data
+      - db-data-prod:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
     env_file:
-      - .env
+      - .env.prod
 
   adminer:
     image: adminer:4.8.1-standalone
@@ -55,4 +54,4 @@ services:
       - "0.0.0.0:${ADMINER_PORT}:8080"
 
 volumes:
-  db-data-dev:
+  db-data-prod:

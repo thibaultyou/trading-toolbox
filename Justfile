@@ -2,13 +2,14 @@
 # ----------------------------------------------------------------------------
 # NOTES:
 # - This Justfile assumes you have:
-#     - .env (for dev and prod)
+#     - .env      (for development)
+#     - .env.prod (for production)
 #     - .env.test (for testing)
 #
 # - The Docker Compose files are assumed to be:
-#     - docker-compose.yml         (for production)
-#     - docker-compose.dev.yml     (for development, using volume "db-data-dev")
-#     - docker-compose.test.yml    (for testing, using volume "db-data-test" and .env.test)
+#     - docker-compose.yml      (for development)
+#     - docker-compose.prod.yml (for production)
+#     - docker-compose.test.yml (for testing)
 #
 # - We use npx dotenv-cli so that when running commands in the "back" folder,
 #   the environment variables from the project root are loaded.
@@ -21,12 +22,12 @@
 # Start the development environment (loads .env).
 dev:
 	@echo "Starting development environment (using .env)..."
-	docker-compose -f docker-compose.dev.yml up -d
+	docker-compose --env-file .env -f docker-compose.yml up -d
 
-# Start the production environment (loads .env).
+# Start the production environment (loads .env.prod).
 prod:
-	@echo "Starting production environment (using .env)..."
-	docker-compose -f docker-compose.yml up -d
+	@echo "Starting production environment (using .env.prod)..."
+	docker-compose --env-file .env.prod -f docker-compose.prod.yml up -d
 
 # Run end-to-end tests in an isolated test environment (uses .env.test).
 test:
@@ -47,21 +48,22 @@ logs:
 # Rebuild Docker images for development.
 rebuild:
 	@echo "Rebuilding development Docker images..."
-	docker-compose -f docker-compose.dev.yml build
+	docker-compose -f docker-compose.yml build
 
-# ---------------------------------------------
-# Clean Up Commands
-# ---------------------------------------------
+# Clean up development database volumes (db-data-dev).
+clean-dev:
+	@echo "Cleaning up development database volumes..."
+	-docker volume rm $(docker volume ls -q -f "name=db-data-dev")
 
 # Clean up test database volumes (db-data-test).
 clean-test:
 	@echo "Cleaning up test database volumes..."
 	-docker volume rm $(docker volume ls -q -f "name=db-data-test")
 
-# Clean up development database volumes (db-data-dev).
-clean-dev:
-	@echo "Cleaning up development database volumes..."
-	-docker volume rm $(docker volume ls -q -f "name=db-data-dev")
+# Clean up production database volumes (db-data-prod).
+clean-prod:
+	@echo "Cleaning up production database volumes..."
+	-docker volume rm $(docker volume ls -q -f "name=db-data-prod")
 
 # ---------------------------------------------
 # Local NPM Scripts (for developers)
@@ -73,10 +75,10 @@ build:
 	cd back && npm run build
 
 # Start the server in production mode.
-# Uses dotenv-cli to load the root-level .env file.
+# Uses dotenv-cli to load the root-level .env.prod file.
 start-prod:
-	@echo "Starting server in production mode (using .env)..."
-	cd back && npx dotenv-cli -e ../.env -- npm run start:prod
+	@echo "Starting server in production mode (using .env.prod)..."
+	cd back && npx dotenv-cli -e ../.env.prod -- npm run start:prod
 
 # Start the server in development mode (with live reloading).
 # Uses dotenv-cli to load the root-level .env file.
@@ -128,18 +130,19 @@ help:
 	@echo "Available commands:"
 	@echo ""
 	@echo "Docker Compose Contexts:"
-	@echo "  just dev               - Start development environment (docker-compose.dev.yml using .env)"
-	@echo "  just prod              - Start production environment (docker-compose.yml using .env)"
+	@echo "  just dev               - Start development environment (docker-compose.yml using .env)"
+	@echo "  just prod              - Start production environment (docker-compose.prod.yml using .env.prod)"
 	@echo "  just test              - Run end-to-end tests (docker-compose.test.yml using .env.test)"
 	@echo "  just down              - Stop all Docker containers"
 	@echo "  just logs              - Tail logs from Docker containers"
 	@echo "  just rebuild           - Rebuild development Docker images"
-	@echo "  just clean-test        - Clean up test database volumes (db-data-test)"
+	@echo "  just clean-prod        - Clean up production database volumes (db-data-prod)"
 	@echo "  just clean-dev         - Clean up development database volumes (db-data-dev)"
+	@echo "  just clean-test        - Clean up test database volumes (db-data-test)"
 	@echo ""
 	@echo "Local NPM Scripts (for developers):"
 	@echo "  just build             - Build the application (npm run build)"
-	@echo "  just start-prod        - Start server in production mode (loads .env from root)"
+	@echo "  just start-prod        - Start server in production mode (loads .env.prod from root)"
 	@echo "  just start-dev         - Start server in development mode (loads .env from root)"
 	@echo "  just test-unit         - Run unit tests (npm run test)"
 	@echo "  just test-e2e          - Run end-to-end tests locally (loads .env.test from root)"

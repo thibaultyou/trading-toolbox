@@ -1,7 +1,7 @@
 # Misc
 database.db
 .env
-.env.local
+.env.prod
 .env.test
 .promptignore
 z_dir2prompt_output.txt
