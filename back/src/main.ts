@@ -12,7 +12,7 @@ import { AppModule } from './app.module';
 const bootstrap = async () => {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  const port = 4000;
+  const port = configService.env.SERVER_PORT;
   const appLogger = app.get(AppLogger);
   app.enableShutdownHooks();
   app.use(new CorrelationIdMiddleware().use);

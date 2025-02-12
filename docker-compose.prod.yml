@@ -25,7 +25,7 @@ services:
     command: npm run start:prod
     restart: unless-stopped
     ports:
-      - "0.0.0.0:${SERVER_PORT}:4000"
+      - "0.0.0.0:${SERVER_PORT}:${SERVER_PORT}"
     environment:
       NODE_ENV: ${NODE_ENV}
     env_file:

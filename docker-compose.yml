@@ -15,6 +15,7 @@ services:
       - -c
       - |
           envsubst < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf && \
+          cat /etc/nginx/nginx.conf && \
           nginx -g 'daemon off;'
     depends_on:
       - server
@@ -25,7 +26,7 @@ services:
     command: npm run start:dev
     restart: unless-stopped
     ports:
-      - "0.0.0.0:${SERVER_PORT}:4000"
+      - "0.0.0.0:${SERVER_PORT}:${SERVER_PORT}"
     volumes:
       - ./back:/app
       - /app/node_modules

@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  SERVER_PORT: z.coerce.number().int().positive().default(4000),
   DATABASE_HOST: z.string().min(1, 'DATABASE_HOST is required'),
   DATABASE_PORT: z.coerce.number().int().positive().default(5432),
   DATABASE_USER: z.string().min(1, 'DATABASE_USER is required'),
@@ -16,6 +17,7 @@ export type IEnvConfiguration = z.infer<typeof EnvSchema>;
 
 export const envConfig: IEnvConfiguration = EnvSchema.parse({
   NODE_ENV: process.env.NODE_ENV,
+  SERVER_PORT: process.env.SERVER_PORT,
   DATABASE_HOST: process.env.DATABASE_HOST,
   DATABASE_PORT: process.env.DATABASE_PORT,
   DATABASE_USER: process.env.DATABASE_USER,
