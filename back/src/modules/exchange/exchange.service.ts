@@ -118,12 +118,12 @@ export class ExchangeService {
     }
   }
 
-  async getOpenOrders(accountId: string): Promise<Order[]> {
+  async getOpenOrders(accountId: string, symbol?: string): Promise<Order[]> {
     this.logger.debug(`getOpenOrders() - start | accountId=${accountId}`);
     const exchange = this.getExchange(accountId);
 
     try {
-      const orders = await exchange.getOpenOrders();
+      const orders = await exchange.getOpenOrders(symbol);
       this.logger.log(`getOpenOrders() - success | accountId=${accountId}, count=${orders.length}`);
       return orders;
     } catch (error) {

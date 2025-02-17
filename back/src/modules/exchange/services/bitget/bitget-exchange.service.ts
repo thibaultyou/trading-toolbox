@@ -85,11 +85,11 @@ export class BitgetExchangeService extends BaseExchangeService {
     }
   }
 
-  async getOpenOrders(): Promise<Order[]> {
+  async getOpenOrders(symbol?: string): Promise<Order[]> {
     this.logger.debug(`getOpenOrders() - start | accountId=${this.account.id}`);
 
     try {
-      const response = await this.client.getFuturesOpenOrders({ productType: 'USDT-FUTURES' });
+      const response = await this.client.getFuturesOpenOrders({ productType: 'USDT-FUTURES', symbol });
       const openOrdersRaw = response?.data?.entrustedList || [];
       const mappedOrders = this.mapper.fromBitgetOpenOrdersToCCXTOrders(openOrdersRaw);
       this.logger.log(`getOpenOrders() - success | accountId=${this.account.id}, count=${mappedOrders.length}`);
@@ -105,7 +105,8 @@ export class BitgetExchangeService extends BaseExchangeService {
 
     try {
       const response = await this.client.getFuturesHistoricOrders({
-        productType: 'USDT-FUTURES'
+        productType: 'USDT-FUTURES',
+        symbol
       });
       const closedOrdersRaw = response.data?.entrustedList || [];
       const mappedOrders = this.mapper.fromBitgetClosedOrdersToCCXTOrders(closedOrdersRaw);
@@ -122,7 +123,7 @@ export class BitgetExchangeService extends BaseExchangeService {
     this.logger.debug(`getOrders() - start | accountId=${this.account.id}${symbolLog}`);
 
     try {
-      const openOrders = await this.getOpenOrders();
+      const openOrders = await this.getOpenOrders(symbol);
       const closedOrders = await this.getClosedOrders(symbol);
       const merged = [...openOrders, ...closedOrders];
       this.logger.log(`getOrders() - success | accountId=${this.account.id}, total=${merged.length}${symbolLog}`);

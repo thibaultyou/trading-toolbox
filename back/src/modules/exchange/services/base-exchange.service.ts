@@ -64,15 +64,19 @@ export abstract class BaseExchangeService implements IExchangeService {
     }
   }
 
-  async getOpenOrders(): Promise<Order[]> {
+  async getOpenOrders(symbol?: string): Promise<Order[]> {
+    const symbolLog = symbol ? `, symbol=${symbol}` : '';
     this.logger.debug(`getOpenOrders() - start | accountId=${this.account.id}`);
 
     try {
-      const orders = await this.exchange.fetchOpenOrders();
-      this.logger.log(`getOpenOrders() - success | accountId=${this.account.id}, count=${orders.length}`);
+      const orders = await this.exchange.fetchOpenOrders(symbol);
+      this.logger.log(`getOpenOrders() - success | accountId=${this.account.id}, count=${orders.length}${symbolLog}`);
       return orders;
     } catch (error) {
-      this.logger.error(`getOpenOrders() - error | accountId=${this.account.id}, msg=${error.message}`, error.stack);
+      this.logger.error(
+        `getOpenOrders() - error | accountId=${this.account.id}${symbolLog}, msg=${error.message}`,
+        error.stack
+      );
       throw new ExchangeOperationFailedException('getOpenOrders', error.message);
     }
   }

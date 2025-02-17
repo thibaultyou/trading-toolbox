@@ -2,6 +2,7 @@
  * URLs used throughout the application for routing purposes.
  * - SWAGGER_DOCS: URL path for the Swagger documentation.
  * - ACCOUNTS: URL path for account-related endpoints.
+ * - AUTH: URL path for authentication-related endpoints.
  * - HEALTH: URL path for health check endpoint.
  * - MARKETS: URL path for market-related endpoints.
  * - ORDERS: URL path for order-related endpoints.
@@ -14,6 +15,7 @@
 export const Urls = {
   SWAGGER_DOCS: 'docs',
   ACCOUNTS: 'accounts',
+  AUTH: 'auth',
   HEALTH: 'health',
   MARKETS: 'markets',
   ORDERS: 'orders',

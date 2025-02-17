@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ConfigModule, ConfigService } from '@config';
 
+import { AuthController } from './auth.controller';
 import { User } from './entities/user.entity';
 import { PasswordService } from './services/password.service';
 import { UserMapperService } from './services/user-mapper.service';
@@ -28,7 +29,7 @@ import { UserService } from './user.service';
     })
   ],
   providers: [UserService, UserMapperService, JwtStrategy, PasswordService],
-  controllers: [UserController],
+  controllers: [AuthController, UserController],
   exports: [UserService]
 })
 export class UserModule {}

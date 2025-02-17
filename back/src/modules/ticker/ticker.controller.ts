@@ -12,13 +12,13 @@ import { TickerService } from './ticker.service';
 @ApiTags('Tickers')
 @UseGuards(JwtAuthGuard, AccountValidationGuard)
 @ApiBearerAuth()
-@Controller(Urls.TICKERS)
+@Controller(`${Urls.ACCOUNTS}/:accountId/${Urls.MARKETS}/:marketId/ticker`)
 export class TickerController extends BaseController {
   constructor(private readonly tickerService: TickerService) {
     super('TickerController');
   }
 
-  @Get('/accounts/:accountId/markets/:marketId')
+  @Get()
   @ValidateAccount()
   @ApiOperation({ summary: 'Get ticker price' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })

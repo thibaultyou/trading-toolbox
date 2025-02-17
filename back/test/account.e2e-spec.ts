@@ -15,16 +15,18 @@ describe('Account Module (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useLogger(false);
     await app.init();
     httpServer = app.getHttpServer();
 
     const randomUsername = 'testuser' + Date.now();
     const password = 'password123';
 
-    await request(httpServer).post('/users/register').send({ username: randomUsername, password }).expect(201);
+    // Use the new authentication endpoints:
+    await request(httpServer).post('/auth/register').send({ username: randomUsername, password }).expect(201);
 
     const loginResponse = await request(httpServer)
-      .post('/users/login')
+      .post('/auth/login')
       .send({ username: randomUsername, password })
       .expect(200);
 

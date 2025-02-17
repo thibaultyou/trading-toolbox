@@ -13,13 +13,13 @@ import { MarketService } from './market.service';
 @ApiTags('Markets')
 @UseGuards(JwtAuthGuard, AccountValidationGuard)
 @ApiBearerAuth()
-@Controller(Urls.MARKETS)
+@Controller(`${Urls.ACCOUNTS}/:accountId/${Urls.MARKETS}`)
 export class MarketController extends BaseController {
   constructor(private readonly marketService: MarketService) {
     super('Markets');
   }
 
-  @Get('/accounts/:accountId')
+  @Get()
   @ValidateAccount()
   @ApiOperation({
     summary: 'Fetch all contract market IDs'
@@ -39,7 +39,7 @@ export class MarketController extends BaseController {
     return this.marketService.findAccountContractMarketIds(accountId, quoteCurrency);
   }
 
-  @Get('/accounts/:accountId/market/:marketId')
+  @Get(':marketId')
   @ValidateAccount()
   @ApiOperation({
     summary: 'Fetch a single contract market'

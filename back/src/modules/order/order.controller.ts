@@ -30,7 +30,7 @@ import { OrderType } from './types/order-type.enum';
 @ApiTags('Orders')
 @UseGuards(JwtAuthGuard, AccountValidationGuard)
 @ApiBearerAuth()
-@Controller(Urls.ORDERS)
+@Controller(`${Urls.ACCOUNTS}/:accountId/${Urls.ORDERS}`)
 export class OrderController extends BaseController {
   constructor(
     private readonly orderService: OrderService,
@@ -39,7 +39,7 @@ export class OrderController extends BaseController {
     super('Orders');
   }
 
-  @Get('/accounts/:accountId/orders')
+  @Get()
   @ValidateAccount()
   @ApiOperation({ summary: 'Fetch all orders' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
@@ -56,7 +56,7 @@ export class OrderController extends BaseController {
     return orders.map((order) => this.orderMapper.toDto(order));
   }
 
-  @Get('/accounts/:accountId/orders/open')
+  @Get('open')
   @ValidateAccount()
   @ApiOperation({ summary: 'Fetch all open orders' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
@@ -70,7 +70,7 @@ export class OrderController extends BaseController {
     return openOrders.map((order) => this.orderMapper.toDto(order));
   }
 
-  @Get('/accounts/:accountId/orders/closed')
+  @Get('closed')
   @ValidateAccount()
   @ApiOperation({ summary: 'Fetch all closed orders' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
@@ -87,7 +87,7 @@ export class OrderController extends BaseController {
     return closedOrders.map((order) => this.orderMapper.toDto(order));
   }
 
-  @Post('/accounts/:accountId/orders')
+  @Post()
   @ValidateAccount()
   @ApiOperation({ summary: 'Create an order' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
@@ -131,22 +131,47 @@ export class OrderController extends BaseController {
     return this.orderMapper.toDto(createdOrder);
   }
 
-  @Get('/accounts/:accountId/markets/:marketId/orders/:orderId')
+  @Delete()
+  @ValidateAccount()
+  @ApiOperation({ summary: 'Cancel multiple orders by market ID' })
+  @ApiParam({
+    name: 'accountId',
+    required: true,
+    description: 'The ID of the account for which the order will be canceled'
+  })
+  @ApiQuery({
+    name: 'marketId',
+    required: true,
+    description: 'The market symbol for which to cancel orders (e.g., BTCUSDT)'
+  })
+  async cancelOrdersByMarket(
+    @Param('accountId') accountId: string,
+    @Query('marketId') marketId: string
+  ): Promise<OrderDto[]> {
+    const cancelledOrders = await this.orderService.cancelOrdersByMarket(accountId, marketId);
+    return cancelledOrders.map((order) => this.orderMapper.toDto(order));
+  }
+
+  @Get(':orderId')
   @ValidateAccount()
   @ApiOperation({ summary: 'Fetch an Order by ID' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
-  @ApiParam({ name: 'marketId', required: true, description: 'The ID of the market symbol' })
   @ApiParam({ name: 'orderId', required: true, description: 'The ID of the order to retrieve' })
+  @ApiQuery({
+    name: 'marketId',
+    required: false,
+    description: 'Optional market symbol if needed for context (e.g., BTCUSDT)'
+  })
   async getAccountOrderById(
     @Param('accountId') accountId: string,
-    @Param('marketId') marketId: string,
-    @Param('orderId') orderId: string
+    @Param('orderId') orderId: string,
+    @Query('marketId') marketId?: string
   ): Promise<OrderDto> {
     const order = await this.orderService.getOrderById(accountId, marketId, orderId);
     return this.orderMapper.toDto(order);
   }
 
-  @Patch('/accounts/:accountId/orders/:orderId')
+  @Patch(':orderId')
   @ValidateAccount()
   @ApiOperation({ summary: 'Update an order' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
@@ -165,7 +190,7 @@ export class OrderController extends BaseController {
     return this.orderMapper.toDto(updatedOrder);
   }
 
-  @Delete('/accounts/:accountId/orders/:orderId')
+  @Delete(':orderId')
   @ValidateAccount()
   @ApiOperation({ summary: 'Cancel an order' })
   @ApiParam({
@@ -177,26 +202,5 @@ export class OrderController extends BaseController {
   async cancelOrder(@Param('accountId') accountId: string, @Param('orderId') orderId: string): Promise<OrderDto> {
     const cancelledOrder = await this.orderService.cancelOrder(accountId, orderId);
     return this.orderMapper.toDto(cancelledOrder);
-  }
-
-  @Delete('/accounts/:accountId/markets/:marketId/orders')
-  @ValidateAccount()
-  @ApiOperation({ summary: 'Cancel multiple orders by market ID' })
-  @ApiParam({
-    name: 'accountId',
-    required: true,
-    description: 'The ID of the account for which the order will be canceled'
-  })
-  @ApiParam({
-    name: 'marketId',
-    required: true,
-    description: 'The ID of the market symbol to filter orders (e.g., BTCUSDT)'
-  })
-  async cancelOrdersByMarket(
-    @Param('accountId') accountId: string,
-    @Param('marketId') marketId: string
-  ): Promise<OrderDto[]> {
-    const cancelledOrders = await this.orderService.cancelOrdersByMarket(accountId, marketId);
-    return cancelledOrders.map((order) => this.orderMapper.toDto(order));
   }
 }

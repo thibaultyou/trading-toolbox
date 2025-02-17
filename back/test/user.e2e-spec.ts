@@ -22,6 +22,7 @@ describe('User Module (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useLogger(false);
     await app.init();
     httpServer = app.getHttpServer();
   });
@@ -30,9 +31,9 @@ describe('User Module (e2e)', () => {
     await app.close();
   });
 
-  it('POST /users/register - should create a new user', async () => {
+  it('POST /auth/register - should create a new user', async () => {
     const response = await request(httpServer)
-      .post('/users/register')
+      .post('/auth/register')
       .send({
         username: initialUsername,
         password: initialPassword
@@ -45,9 +46,9 @@ describe('User Module (e2e)', () => {
     createdUserId = response.body.id;
   });
 
-  it('POST /users/login - should authenticate the user and return a JWT', async () => {
+  it('POST /auth/login - should authenticate the user and return a JWT', async () => {
     const response = await request(httpServer)
-      .post('/users/login')
+      .post('/auth/login')
       .send({
         username: initialUsername,
         password: initialPassword
@@ -60,9 +61,19 @@ describe('User Module (e2e)', () => {
     jwtToken = response.body.access_token;
   });
 
-  it('PATCH /users - should update the user’s details (username and password)', async () => {
+  it('GET /users/me - should retrieve the current user details', async () => {
+    const response = await request(httpServer)
+      .get('/users/me')
+      .set('Authorization', `Bearer ${jwtToken}`)
+      .expect(HttpStatus.OK);
+
+    expect(response.body).toHaveProperty('id', createdUserId);
+    expect(response.body).toHaveProperty('username', initialUsername);
+  });
+
+  it('PATCH /users/me - should update the user’s details (username and password)', async () => {
     const updateResponse = await request(httpServer)
-      .patch('/users')
+      .patch('/users/me')
       .set('Authorization', `Bearer ${jwtToken}`)
       .send({
         username: updatedUsername,
@@ -74,9 +85,9 @@ describe('User Module (e2e)', () => {
     expect(updateResponse.body).toHaveProperty('username', updatedUsername);
   });
 
-  it('POST /users/login - should authenticate with updated credentials', async () => {
+  it('POST /auth/login - should authenticate with updated credentials', async () => {
     const loginAgain = await request(httpServer)
-      .post('/users/login')
+      .post('/auth/login')
       .send({
         username: updatedUsername,
         password: updatedPassword
@@ -89,13 +100,16 @@ describe('User Module (e2e)', () => {
     jwtToken = loginAgain.body.access_token;
   });
 
-  it('DELETE /users - should delete the authenticated user', async () => {
-    await request(httpServer).delete('/users').set('Authorization', `Bearer ${jwtToken}`).expect(HttpStatus.NO_CONTENT);
+  it('DELETE /users/me - should delete the authenticated user', async () => {
+    await request(httpServer)
+      .delete('/users/me')
+      .set('Authorization', `Bearer ${jwtToken}`)
+      .expect(HttpStatus.NO_CONTENT);
   });
 
-  it('POST /users/login - should fail with 401 Unauthorized for a deleted user', async () => {
+  it('POST /auth/login - should fail with 401 Unauthorized for a deleted user', async () => {
     await request(httpServer)
-      .post('/users/login')
+      .post('/auth/login')
       .send({
         username: updatedUsername,
         password: updatedPassword
@@ -103,9 +117,9 @@ describe('User Module (e2e)', () => {
       .expect(HttpStatus.UNAUTHORIZED);
   });
 
-  it('PATCH /users - should fail with 404 Not Found when updating a deleted user', async () => {
+  it('PATCH /users/me - should fail with 404 Not Found when updating a deleted user', async () => {
     await request(httpServer)
-      .patch('/users')
+      .patch('/users/me')
       .set('Authorization', `Bearer ${jwtToken}`)
       .send({ username: 'someOtherUser' })
       .expect(HttpStatus.NOT_FOUND);

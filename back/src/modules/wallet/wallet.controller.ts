@@ -14,7 +14,7 @@ import { WalletService } from './wallet.service';
 @ApiTags('Wallets')
 @UseGuards(JwtAuthGuard, AccountValidationGuard)
 @ApiBearerAuth()
-@Controller(Urls.WALLETS)
+@Controller(`${Urls.ACCOUNTS}/:accountId/${Urls.WALLETS}`)
 export class WalletController extends BaseController {
   constructor(
     private readonly walletService: WalletService,
@@ -23,7 +23,7 @@ export class WalletController extends BaseController {
     super('Wallets');
   }
 
-  @Get('/accounts/:accountId/wallets')
+  @Get()
   @ValidateAccount()
   @ApiOperation({ summary: 'Fetch wallets' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })

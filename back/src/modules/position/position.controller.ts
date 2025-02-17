@@ -17,7 +17,7 @@ import { PositionMapperService } from './services/position-mapper.service';
 @ApiTags('Positions')
 @UseGuards(JwtAuthGuard, AccountValidationGuard)
 @ApiBearerAuth()
-@Controller(Urls.POSITIONS)
+@Controller(`${Urls.ACCOUNTS}/:accountId/${Urls.POSITIONS}`)
 export class PositionController extends BaseController {
   constructor(
     private readonly positionService: PositionService,
@@ -27,7 +27,7 @@ export class PositionController extends BaseController {
     super('Positions');
   }
 
-  @Get('/accounts/:accountId/positions')
+  @Get()
   @ValidateAccount()
   @ApiOperation({ summary: 'Fetch open positions for a specific account, optionally filtered by symbol and/or side' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
@@ -46,20 +46,24 @@ export class PositionController extends BaseController {
     return positions.map((p) => this.positionMapper.toDto(p));
   }
 
-  @Delete('/accounts/:accountId/markets/:marketId/positions/:side')
+  @Delete()
   @ValidateAccount()
   @ApiOperation({ summary: 'Close a position' })
   @ApiParam({ name: 'accountId', required: true, description: 'The ID of the account' })
-  @ApiParam({
+  @ApiQuery({
     name: 'marketId',
     required: true,
-    description: 'The ID of the market symbol to filter orders (e.g., BTCUSDT)'
+    description: 'The market symbol (e.g., BTCUSDT) for which to close the position'
   })
-  @ApiParam({ name: 'side', required: true, description: 'The side of the position to close (e.g., buy or sell)' })
+  @ApiQuery({
+    name: 'side',
+    required: true,
+    description: 'The side of the position to close (e.g., buy or sell)'
+  })
   async closePosition(
     @Param('accountId') accountId: string,
-    @Param('marketId') marketId: string,
-    @Param('side') side: OrderSide
+    @Query('marketId') marketId: string,
+    @Query('side') side: OrderSide
   ): Promise<OrderDto> {
     const order = await this.positionService.closePosition(accountId, marketId, side);
     return this.orderMapper.fromExternal(order);

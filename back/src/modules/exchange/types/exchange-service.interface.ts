@@ -9,7 +9,7 @@ export interface IExchangeService {
   getBalances(): Promise<Balances>;
   getTicker(symbol: string): Promise<Ticker>;
   getMarkets(): Promise<Market[]>;
-  getOpenOrders(): Promise<Order[]>;
+  getOpenOrders(symbol?: string): Promise<Order[]>;
   getClosedOrders(symbol?: string, params?: Record<string, any>): Promise<Order[]>;
   getOrder(orderId: string, symbol: string): Promise<Order>;
   getOrders(symbol?: string, params?: Record<string, any>): Promise<Order[]>;

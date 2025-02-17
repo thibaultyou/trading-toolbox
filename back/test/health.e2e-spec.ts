@@ -26,6 +26,7 @@ describe('Health Module (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useLogger(false);
     await app.init();
   });
 

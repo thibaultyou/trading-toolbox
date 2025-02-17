@@ -95,7 +95,7 @@ After setup, interact with the API using the following options:
 ### Basic Workflow
 
 1. **Register a User**:
-   - **Endpoint**: `POST /users/register`
+   - **Endpoint**: `POST /auth/register`
    - Example payload:
      ```json
      {
@@ -105,7 +105,7 @@ After setup, interact with the API using the following options:
      ```
 
 2. **Log In to Get a JWT**:
-   - **Endpoint**: `POST /users/login`
+   - **Endpoint**: `POST /auth/login`
    - Use the returned JWT in subsequent requests.
 
 3. **Create a Trading Account**:
