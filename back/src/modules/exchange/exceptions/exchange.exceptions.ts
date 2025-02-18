@@ -12,6 +12,12 @@ export class ExchangeInitializationException extends BaseCustomException {
   }
 }
 
+export class ExchangeInvalidParameterException extends BaseCustomException {
+  constructor(message: string) {
+    super('EXCHANGE_INVALID_PARAMETER', message, HttpStatus.BAD_REQUEST);
+  }
+}
+
 export class ExchangeOperationFailedException extends BaseCustomException {
   constructor(operation: string, error: string) {
     super(

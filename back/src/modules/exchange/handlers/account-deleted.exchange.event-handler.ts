@@ -22,7 +22,7 @@ export class ExchangeModuleAccountDeletedEventHandler {
     this.logger.debug(`handle() - start | ${actionContext}`);
 
     try {
-      await this.exchangeService.cleanResources(accountId);
+      await this.exchangeService.cleanResources(accountId, event.account.exchange);
       this.logger.log(`handle() - success | ${actionContext}`);
     } catch (error) {
       this.logger.error(`handle() - error | ${actionContext}, msg=${error.message}`, error.stack);

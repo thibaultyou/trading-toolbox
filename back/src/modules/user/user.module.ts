@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { AccountModule } from '@account/account.module';
 import { ConfigModule, ConfigService } from '@config';
 
 import { AuthController } from './auth.controller';
@@ -26,7 +27,8 @@ import { UserService } from './user.service';
         secret: configService.env.JWT_SIGNING_SECRET,
         signOptions: { expiresIn: '4h' }
       })
-    })
+    }),
+    AccountModule
   ],
   providers: [UserService, UserMapperService, JwtStrategy, PasswordService],
   controllers: [AuthController, UserController],

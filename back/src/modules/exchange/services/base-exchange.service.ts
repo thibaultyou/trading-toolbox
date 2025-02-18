@@ -115,7 +115,7 @@ export abstract class BaseExchangeService implements IExchangeService {
     }
   }
 
-  async getOrder(orderId: string, symbol: string): Promise<Order> {
+  async getOrder(orderId: string, symbol?: string): Promise<Order> {
     this.logger.debug(`getOrder() - start | accountId=${this.account.id}, orderId=${orderId}, symbol=${symbol}`);
 
     try {

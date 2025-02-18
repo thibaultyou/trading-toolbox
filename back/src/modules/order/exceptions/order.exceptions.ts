@@ -2,6 +2,12 @@ import { HttpStatus } from '@nestjs/common';
 
 import { BaseCustomException } from '@common/exceptions/base-custom.exception';
 
+export class OrderInvalidParameterException extends BaseCustomException {
+  constructor(message: string) {
+    super('ORDER_INVALID_PARAMETER', message, HttpStatus.BAD_REQUEST);
+  }
+}
+
 export class OrderNotFoundException extends BaseCustomException {
   constructor(accountId: string, orderId?: string) {
     const orderInfo = orderId ? `, orderId=${orderId}` : '';

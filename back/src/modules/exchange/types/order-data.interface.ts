@@ -9,42 +9,9 @@ export interface IOrderData {
   qty: string;
   side: string;
   symbol: string;
-  // blockTradeId: string;
-  // cancelType: string;
-  // category: string;
-  // closeOnTrigger: boolean;
-  // createdTime: string;
-  // cumExecFee: string;
-  // cumExecValue: string;
-  // leavesQty: string;
-  // leavesValue: string;
-  // orderIv: string;
-  // isLeverage: string;
-  // lastPriceOnCreated: string;
-  // positionIdx: number;
-  // reduceOnly: boolean;
-  // rejectReason: string;
-  // slTriggerBy: string;
-  // stopLoss: string;
-  // stopOrderType: string;
-  // takeProfit: string;
-  // timeInForce: string;
-  // tpTriggerBy: string;
-  // triggerBy: string;
-  // triggerDirection: number;
-  // triggerPrice: string;
-  // updatedTime: string;
-  // placeType: string;
-  // smpType: string;
-  // smpGroup: number;
-  // smpOrderId: string;
-  // tpslMode: string;
-  // createType: string;
-  // tpLimitPrice: string;
-  // slLimitPrice: string;
 }
 
-// sample order
+// sample Bybit order
 // {
 //   "avgPrice": "0.5941",
 //   "blockTradeId": "",

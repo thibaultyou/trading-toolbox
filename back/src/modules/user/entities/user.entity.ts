@@ -26,6 +26,6 @@ export class User {
   @IsString()
   password: string;
 
-  @OneToMany(() => Account, (account) => account.user)
+  @OneToMany(() => Account, (account) => account.user, { cascade: true, onDelete: 'CASCADE' })
   accounts: Account[];
 }

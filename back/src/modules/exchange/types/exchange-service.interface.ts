@@ -11,7 +11,7 @@ export interface IExchangeService {
   getMarkets(): Promise<Market[]>;
   getOpenOrders(symbol?: string): Promise<Order[]>;
   getClosedOrders(symbol?: string, params?: Record<string, any>): Promise<Order[]>;
-  getOrder(orderId: string, symbol: string): Promise<Order>;
+  getOrder(orderId: string, symbol?: string): Promise<Order>;
   getOrders(symbol?: string, params?: Record<string, any>): Promise<Order[]>;
   getOpenPositions(): Promise<Position[]>;
   openOrder(

@@ -9,32 +9,10 @@ export interface IPositionData {
   size: string;
   takeProfit: string;
   stopLoss: string;
-  // bustPrice: string;
-  // category: string;
-  // createdTime: string;
-  // cumRealisedPnl: string;
-  // curRealisedPnl: string;
-  // liqPrice: string;
-  // positionBalance: string;
-  // positionIdx: number;
-  // positionMM: string;
-  // positionIM: string;
-  // positionStatus: string;
-  // riskId: number;
-  // riskLimitValue: string;
   tpslMode: string;
-  // tradeMode: number;
-  // autoAddMargin: number;
-  // trailingStop: string;
-  // updatedTime: string;
-  // adlRankIndicator: number;
-  // seq: number;
-  // isReduceOnly: boolean;
-  // mmrSysUpdateTime: string;
-  // leverageSysUpdatedTime: string;
 }
 
-// sample position
+// sample Bybit position
 // {
 //   "bustPrice": "0.0001",
 //   "category": "linear",

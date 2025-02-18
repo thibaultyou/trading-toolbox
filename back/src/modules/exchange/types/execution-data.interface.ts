@@ -11,21 +11,4 @@ export interface IExecutionData {
   orderType: string;
   symbol: string;
   side: string;
-  // blockTradeId: string;
-  // category: string;
-  // execFee: string;
-  // execId: string;
-  // execTime: string;
-  // execType: string;
-  // feeRate: string;
-  // indexPrice: string;
-  // isLeverage: string;
-  // isMaker: boolean;
-  // markIv: string;
-  // stopOrderType: string;
-  // tradeIv: string;
-  // underlyingPrice: string;
-  // closedSize: string;
-  // seq: number;
-  // createType: string;
 }

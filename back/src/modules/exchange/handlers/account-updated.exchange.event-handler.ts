@@ -22,7 +22,7 @@ export class ExchangeModuleAccountUpdatedEventHandler {
     this.logger.debug(`handle() - start (cleanup) | ${actionContext}`);
 
     try {
-      await this.exchangeService.cleanResources(accountId);
+      await this.exchangeService.cleanResources(accountId, event.account.exchange);
       this.logger.log(`handle() - success (cleanup) | ${actionContext}`);
     } catch (error) {
       this.logger.error(`handle() - error (cleanup) | ${actionContext}, msg=${error.message}`, error.stack);

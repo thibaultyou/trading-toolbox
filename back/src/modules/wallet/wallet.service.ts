@@ -23,7 +23,7 @@ export class WalletService implements IAccountTracker, IAccountSynchronizer<IWal
     private readonly exchangeService: ExchangeService,
     private readonly walletMapper: WalletMapperService,
     private readonly configService: ConfigService
-    // private readonly walletGateway: WalletGateway, // NOTE Needed for serveer-side updates
+    // private readonly walletGateway: WalletGateway, // NOTE Needed for server-side updates
   ) {}
 
   async startTrackingAccount(accountId: string): Promise<void> {

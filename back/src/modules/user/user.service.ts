@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { AccountService } from '@account/account.service';
 import { ConfigService } from '@config';
 
 import { UserCreateRequestDto } from './dtos/user-create.request.dto';
@@ -35,7 +36,8 @@ export class UserService {
     private readonly passwordService: PasswordService,
     private readonly eventEmitter: EventEmitter2,
     private readonly userMapper: UserMapperService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly accountService: AccountService
   ) {}
 
   async createUser(dto: UserCreateRequestDto): Promise<UserDto> {
@@ -139,7 +141,15 @@ export class UserService {
     this.logger.debug(`deleteUser() - start | userId=${userId}`);
 
     try {
-      const user = await this.findUserById(userId);
+      const user = await this.findUserByIdWithAccounts(userId);
+
+      if (user.accounts && user.accounts.length > 0) {
+        this.logger.debug(`deleteUser() - deleting ${user.accounts.length} linked account(s) for userId=${userId}`);
+        for (const account of user.accounts) {
+          await this.accountService.deleteAccount(userId, account.id);
+        }
+      }
+
       await this.usersRepository.remove(user);
 
       this.eventEmitter.emit(this.configService.events.User.DELETED, new UserDeletedEvent(userId));
@@ -170,6 +180,32 @@ export class UserService {
     return savedUser;
   }
 
+  private async findUserById(userId: string): Promise<User> {
+    this.logger.debug(`findUserById() - start | userId=${userId}`);
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      this.logger.warn(`findUserById() - not found | userId=${userId}`);
+      throw new UserNotFoundException(userId);
+    }
+
+    this.logger.log(`findUserById() - success | userId=${user.id}, username=${user.username}`);
+    return user;
+  }
+
+  private async findUserByIdWithAccounts(userId: string): Promise<User> {
+    this.logger.debug(`findUserByIdWithAccounts() - start | userId=${userId}`);
+    const user = await this.usersRepository.findOne({ where: { id: userId }, relations: ['accounts'] });
+
+    if (!user) {
+      this.logger.warn(`findUserByIdWithAccounts() - not found | userId=${userId}`);
+      throw new UserNotFoundException(userId);
+    }
+
+    this.logger.log(`findUserByIdWithAccounts() - success | userId=${user.id}, username=${user.username}`);
+    return user;
+  }
+
   private async findUserWithAccounts(username: string): Promise<User> {
     this.logger.debug(`findUserWithAccounts() - start | username=${username}`);
     const user = await this.usersRepository.findOne({
@@ -183,19 +219,6 @@ export class UserService {
     }
 
     this.logger.log(`findUserWithAccounts() - success | userId=${user.id}, username=${user.username}`);
-    return user;
-  }
-
-  private async findUserById(userId: string): Promise<User> {
-    this.logger.debug(`findUserById() - start | userId=${userId}`);
-    const user = await this.usersRepository.findOne({ where: { id: userId } });
-
-    if (!user) {
-      this.logger.warn(`findUserById() - not found | userId=${userId}`);
-      throw new UserNotFoundException(userId);
-    }
-
-    this.logger.log(`findUserById() - success | userId=${user.id}, username=${user.username}`);
     return user;
   }
 

@@ -4,6 +4,7 @@ database.db
 .env.prod
 .env.test
 .promptignore
+z_diff_output.txt
 z_dir2prompt_output.txt
 
 # Compiled output

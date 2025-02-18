@@ -167,7 +167,7 @@ export class OrderController extends BaseController {
     @Param('orderId') orderId: string,
     @Query('marketId') marketId?: string
   ): Promise<OrderDto> {
-    const order = await this.orderService.getOrderById(accountId, marketId, orderId);
+    const order = await this.orderService.getOrderById(accountId, orderId, marketId);
     return this.orderMapper.toDto(order);
   }
 

@@ -7,6 +7,7 @@ import { Account } from '@account/entities/account.entity';
 import { BitgetMapperService } from './bitget-mapper.service';
 import {
   ExchangeInitializationException,
+  ExchangeInvalidParameterException,
   ExchangeOperationFailedException,
   InvalidCredentialsException
 } from '../../exceptions/exchange.exceptions';
@@ -86,7 +87,7 @@ export class BitgetExchangeService extends BaseExchangeService {
   }
 
   async getOpenOrders(symbol?: string): Promise<Order[]> {
-    this.logger.debug(`getOpenOrders() - start | accountId=${this.account.id}`);
+    this.logger.debug(`getOpenOrders() - start | accountId=${this.account.id}${symbol ? `, symbol=${symbol}` : ''}`);
 
     try {
       const response = await this.client.getFuturesOpenOrders({ productType: 'USDT-FUTURES', symbol });
@@ -101,7 +102,7 @@ export class BitgetExchangeService extends BaseExchangeService {
   }
 
   async getClosedOrders(symbol?: string): Promise<Order[]> {
-    this.logger.debug(`getClosedOrders() - start | accountId=${this.account.id}, symbol=${symbol || ''}`);
+    this.logger.debug(`getClosedOrders() - start | accountId=${this.account.id}${symbol ? `, symbol=${symbol}` : ''}`);
 
     try {
       const response = await this.client.getFuturesHistoricOrders({
@@ -134,6 +135,43 @@ export class BitgetExchangeService extends BaseExchangeService {
         error.stack
       );
       throw new ExchangeOperationFailedException('getOrders', error.message);
+    }
+  }
+
+  async getOrder(orderId: string, symbol?: string): Promise<Order> {
+    this.logger.debug(
+      `getOrder() - start | accountId=${this.account.id}, orderId=${orderId}${symbol ? `, symbol=${symbol}` : ''}`
+    );
+
+    if (!symbol) {
+      const errorMsg = 'marketId is required for Bitget orders';
+      this.logger.error(`getOrder() - error | ${errorMsg}`);
+      throw new ExchangeInvalidParameterException(errorMsg);
+    }
+
+    try {
+      const response = await this.client.getFuturesOrder({
+        productType: 'USDT-FUTURES',
+        symbol,
+        orderId
+      });
+      const orderData = response.data;
+      let mappedOrder: Order;
+
+      if (orderData.state === 'live') {
+        mappedOrder = this.mapper.mapSingleOpenOrder(orderData);
+      } else {
+        mappedOrder = this.mapper.mapSingleClosedOrder(orderData);
+      }
+
+      this.logger.log(`getOrder() - success | accountId=${this.account.id}, orderId=${orderId}, symbol=${symbol}`);
+      return mappedOrder;
+    } catch (error) {
+      this.logger.error(
+        `getOrder() - error | accountId=${this.account.id}, orderId=${orderId}, symbol=${symbol}, msg=${error.message}`,
+        error.stack
+      );
+      throw new ExchangeOperationFailedException('getOrder', error.message);
     }
   }
 

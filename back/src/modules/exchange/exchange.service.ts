@@ -11,9 +11,10 @@ import { OrderType } from '@order/types/order-type.enum';
 
 import { ExchangeInitializedEvent } from './events/exchange-initialized.event';
 import { ExchangeTerminatedEvent } from './events/exchange-terminated.event';
-import { ExchangeNotFoundException, ExchangeOperationFailedException } from './exceptions/exchange.exceptions';
+import { ExchangeNotFoundException } from './exceptions/exchange.exceptions';
 import { ExchangeFactory } from './services/exchange-service.factory';
 import { IExchangeService } from './types/exchange-service.interface';
+import { ExchangeType } from './types/exchange-type.enum';
 
 @Injectable()
 export class ExchangeService {
@@ -83,7 +84,7 @@ export class ExchangeService {
       return balances;
     } catch (error) {
       this.logger.error(`getBalances() - error | accountId=${accountId}, msg=${error.message}`, error.stack);
-      throw new ExchangeOperationFailedException('getBalances', error.message);
+      throw error;
     }
   }
 
@@ -100,7 +101,7 @@ export class ExchangeService {
         `getTicker() - error | accountId=${accountId}, symbol=${symbol}, msg=${error.message}`,
         error.stack
       );
-      throw new ExchangeOperationFailedException('getTicker', error.message);
+      throw error;
     }
   }
 
@@ -114,7 +115,7 @@ export class ExchangeService {
       return markets;
     } catch (error) {
       this.logger.error(`getMarkets() - error | accountId=${accountId}, msg=${error.message}`, error.stack);
-      throw new ExchangeOperationFailedException('getMarkets', error.message);
+      throw error;
     }
   }
 
@@ -128,7 +129,7 @@ export class ExchangeService {
       return orders;
     } catch (error) {
       this.logger.error(`getOpenOrders() - error | accountId=${accountId}, msg=${error.message}`, error.stack);
-      throw new ExchangeOperationFailedException('getOpenOrders', error.message);
+      throw error;
     }
   }
 
@@ -142,7 +143,7 @@ export class ExchangeService {
       return orders;
     } catch (error) {
       this.logger.error(`getClosedOrders() - error | accountId=${accountId}, msg=${error.message}`, error.stack);
-      throw new ExchangeOperationFailedException('getClosedOrders', error.message);
+      throw error;
     }
   }
 
@@ -161,24 +162,28 @@ export class ExchangeService {
         `getOrders() - error | accountId=${accountId}${symbol ? `, symbol=${symbol}` : ''}, msg=${error.message}`,
         error.stack
       );
-      throw new ExchangeOperationFailedException('getOrders', error.message);
+      throw error;
     }
   }
 
-  async getOrder(accountId: string, symbol: string, orderId: string): Promise<Order> {
-    this.logger.debug(`getOrder() - start | accountId=${accountId}, symbol=${symbol}, orderId=${orderId}`);
+  async getOrder(accountId: string, orderId: string, symbol?: string): Promise<Order> {
+    this.logger.debug(
+      `getOrder() - start | accountId=${accountId}, orderId=${orderId}${symbol ? `, symbol=${symbol}` : ''}`
+    );
     const exchange = this.getExchange(accountId);
 
     try {
       const order = await exchange.getOrder(orderId, symbol);
-      this.logger.log(`getOrder() - success | accountId=${accountId}, orderId=${orderId}, symbol=${symbol}`);
+      this.logger.log(
+        `getOrder() - success | accountId=${accountId}, orderId=${orderId}${symbol ? `, symbol=${symbol}` : ''}`
+      );
       return order;
     } catch (error) {
       this.logger.error(
-        `getOrder() - error | accountId=${accountId}, orderId=${orderId}, symbol=${symbol}, msg=${error.message}`,
+        `getOrder() - error | accountId=${accountId}, orderId=${orderId}${symbol ? `, symbol=${symbol}` : ''}, msg=${error.message}`,
         error.stack
       );
-      throw new ExchangeOperationFailedException('getOrder', error.message);
+      throw error;
     }
   }
 
@@ -192,7 +197,7 @@ export class ExchangeService {
       return positions;
     } catch (error) {
       this.logger.error(`getOpenPositions() - error | accountId=${accountId}, msg=${error.message}`, error.stack);
-      throw new ExchangeOperationFailedException('getOpenPositions', error.message);
+      throw error;
     }
   }
 
@@ -228,7 +233,7 @@ export class ExchangeService {
         `openOrder() - error | accountId=${accountId}, symbol=${symbol}, msg=${error.message}`,
         error.stack
       );
-      throw new ExchangeOperationFailedException('openOrder', error.message);
+      throw error;
     }
   }
 
@@ -254,7 +259,7 @@ export class ExchangeService {
         `updateOrder() - error | accountId=${accountId}, orderId=${orderId}, symbol=${symbol}, msg=${error.message}`,
         error.stack
       );
-      throw new ExchangeOperationFailedException('updateOrder', error.message);
+      throw error;
     }
   }
 
@@ -284,7 +289,7 @@ export class ExchangeService {
         `closePosition() - error | accountId=${accountId}, symbol=${symbol}, side=${side}, msg=${error.message}`,
         error.stack
       );
-      throw new ExchangeOperationFailedException('closePosition', error.message);
+      throw error;
     }
   }
 
@@ -308,7 +313,7 @@ export class ExchangeService {
         `cancelOrder() - error | accountId=${accountId}, orderId=${orderId}, symbol=${symbol}, msg=${error.message}`,
         error.stack
       );
-      throw new ExchangeOperationFailedException('cancelOrder', error.message);
+      throw error;
     }
   }
 
@@ -332,11 +337,11 @@ export class ExchangeService {
         `cancelOrders() - error | accountId=${accountId}, symbol=${symbol}, msg=${error.message}`,
         error.stack
       );
-      throw new ExchangeOperationFailedException('cancelOrders', error.message);
+      throw error;
     }
   }
 
-  async cleanResources(accountId: string): Promise<void> {
+  async cleanResources(accountId: string, exchangeType: ExchangeType): Promise<void> {
     this.logger.debug(`cleanResources() - start | accountId=${accountId}`);
     const exchange = this.exchanges.get(accountId);
 
@@ -350,10 +355,13 @@ export class ExchangeService {
       this.exchanges.delete(accountId);
 
       this.logger.log(`cleanResources() - success | accountId=${accountId}`);
-      this.eventEmitter.emit(this.configService.events.Exchange.TERMINATED, new ExchangeTerminatedEvent(accountId));
+      this.eventEmitter.emit(
+        this.configService.events.Exchange.TERMINATED,
+        new ExchangeTerminatedEvent(accountId, exchangeType)
+      );
     } catch (error) {
       this.logger.error(`cleanResources() - error | accountId=${accountId}, msg=${error.message}`, error.stack);
-      throw new ExchangeOperationFailedException('cleanResources', error.message);
+      throw error;
     }
   }
 }

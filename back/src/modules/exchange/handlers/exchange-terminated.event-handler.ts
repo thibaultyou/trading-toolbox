@@ -24,8 +24,7 @@ export class ExchangeModuleExchangeTerminatedEventHandler {
     this.logger.debug(`handle() - start | ${actionContext}`);
 
     try {
-      const account = await this.accountService.getAccountByIdForSystem(accountId);
-      const wsService = this.exchangeWebsocketFactory.getWebsocketService(account.exchange);
+      const wsService = this.exchangeWebsocketFactory.getWebsocketService(event.exchangeType);
       wsService.stopTrackingAccount(accountId);
       this.logger.log(`handle() - success | ${actionContext}, tracking=stopped`);
     } catch (error) {

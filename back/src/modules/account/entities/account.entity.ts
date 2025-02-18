@@ -41,6 +41,6 @@ export class Account {
   @IsEnum(ExchangeType)
   exchange: ExchangeType;
 
-  @ManyToOne(() => User, (user) => user.accounts, { nullable: false })
+  @ManyToOne(() => User, (user) => user.accounts, { nullable: false, onDelete: 'CASCADE' })
   user: User;
 }

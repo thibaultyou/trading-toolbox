@@ -6,6 +6,7 @@ import { AccountNotFoundException } from '@account/exceptions/account.exceptions
 import { IAccountSynchronizer } from '@common/interfaces/account-synchronizer.interface';
 import { IAccountTracker } from '@common/interfaces/account-tracker.interface';
 import { ConfigService, Timers } from '@config';
+import { ExchangeInvalidParameterException } from '@exchange/exceptions/exchange.exceptions';
 import { ExchangeService } from '@exchange/exchange.service';
 
 import { OrderCreateRequestDto } from './dtos/order-create.request.dto';
@@ -122,8 +123,10 @@ export class OrderService implements IAccountTracker, IAccountSynchronizer<IOrde
     }
   }
 
-  async getOrderById(accountId: string, marketId: string, orderId: string): Promise<IOrder> {
-    this.logger.debug(`getOrderById() - start | accountId=${accountId}, marketId=${marketId}, orderId=${orderId}`);
+  async getOrderById(accountId: string, orderId: string, marketId?: string): Promise<IOrder> {
+    this.logger.debug(
+      `getOrderById() - start | accountId=${accountId}, orderId=${orderId}${marketId ? `, marketId=${marketId}` : ''}`
+    );
 
     if (!this.openOrders.has(accountId)) {
       this.logger.warn(`getOrderById() - skip | accountId=${accountId}, reason=Account not found`);
@@ -131,15 +134,22 @@ export class OrderService implements IAccountTracker, IAccountSynchronizer<IOrde
     }
 
     try {
-      const externalOrder = await this.exchangeService.getOrder(accountId, marketId, orderId);
+      const externalOrder = await this.exchangeService.getOrder(accountId, orderId, marketId);
       const order = this.orderMapper.fromExternal(externalOrder);
-      this.logger.log(`getOrderById() - success | accountId=${accountId}, orderId=${orderId}`);
+      this.logger.log(
+        `getOrderById() - success | accountId=${accountId}, orderId=${orderId}${marketId ? `, marketId=${marketId}` : ''}`
+      );
       return order;
     } catch (error) {
       this.logger.error(
         `getOrderById() - error | accountId=${accountId}, orderId=${orderId}, msg=${error.message}`,
         error.stack
       );
+
+      if (error instanceof ExchangeInvalidParameterException) {
+        throw error;
+      }
+
       throw new OrderNotFoundException(accountId, orderId);
     }
   }
